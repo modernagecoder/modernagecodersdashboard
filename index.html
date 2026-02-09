@@ -4925,14 +4925,14 @@
         // Open teacher management modal
         window.openTeacherManagementModal = async function () {
             if (!teacherManagementModal) return;
-            teacherManagementModal.style.display = 'flex';
+            teacherManagementModal.classList.add('active');
             await loadTeachersList();
         }
 
         // Close modal
         if (closeTeacherModalButton) {
             closeTeacherModalButton.addEventListener('click', () => {
-                teacherManagementModal.style.display = 'none';
+                teacherManagementModal.classList.remove('active');
                 // Clear form
                 newTeacherName.value = '';
                 newTeacherEmail.value = '';
@@ -4944,7 +4944,7 @@
         if (teacherManagementModal) {
             teacherManagementModal.addEventListener('click', (e) => {
                 if (e.target === teacherManagementModal) {
-                    teacherManagementModal.style.display = 'none';
+                    teacherManagementModal.classList.remove('active');
                 }
             });
         }
