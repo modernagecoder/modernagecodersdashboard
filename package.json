@@ -1,0 +1,16 @@
+{
+    "name": "skycoders-scheduler",
+    "version": "1.0.0",
+    "description": "Class Scheduling System with Zoom API Integration & Admin Panel",
+    "scripts": {
+        "dev": "vercel dev",
+        "deploy": "vercel --prod"
+    },
+    "dependencies": {
+        "node-fetch": "^2.7.0",
+        "firebase-admin": "^12.0.0"
+    },
+    "engines": {
+        "node": ">=18.0.0"
+    }
+}

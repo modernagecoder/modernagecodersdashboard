@@ -1,0 +1,151 @@
+/**
+ * API Endpoint: Delete Teacher Account
+ * 
+ * DELETE /api/delete-teacher
+ * Body: { uid: string }
+ * Headers: { Authorization: Bearer <admin-id-token> }
+ * 
+ * Deletes a teacher account from Firebase Auth and Firestore
+ */
+
+const { auth, db } = require('./_utils/firebase-admin');
+
+// CORS headers
+const corsHeaders = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'DELETE, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    'Content-Type': 'application/json'
+};
+
+/**
+ * Verify that the request is from an admin user
+ */
+async function verifyAdmin(authHeader) {
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return { valid: false, error: 'Missing or invalid Authorization header' };
+    }
+
+    const idToken = authHeader.split('Bearer ')[1];
+
+    try {
+        const decodedToken = await auth.verifyIdToken(idToken);
+        const uid = decodedToken.uid;
+
+        const userDoc = await db.collection('users').doc(uid).get();
+
+        if (!userDoc.exists) {
+            return { valid: false, error: 'User not found' };
+        }
+
+        const userData = userDoc.data();
+        if (userData.role !== 'admin') {
+            return { valid: false, error: 'Not authorized. Admin access required.' };
+        }
+
+        return { valid: true, adminUid: uid };
+
+    } catch (error) {
+        console.error('Token verification failed:', error);
+        return { valid: false, error: 'Invalid or expired token' };
+    }
+}
+
+module.exports = async (req, res) => {
+    // Handle CORS preflight
+    if (req.method === 'OPTIONS') {
+        res.status(200).set(corsHeaders).end();
+        return;
+    }
+
+    // Only allow DELETE
+    if (req.method !== 'DELETE') {
+        res.status(405).set(corsHeaders).json({
+            error: 'Method not allowed',
+            message: 'Use DELETE request'
+        });
+        return;
+    }
+
+    try {
+        // Verify admin authorization
+        const adminCheck = await verifyAdmin(req.headers.authorization);
+        if (!adminCheck.valid) {
+            res.status(401).set(corsHeaders).json({
+                error: 'Unauthorized',
+                message: adminCheck.error
+            });
+            return;
+        }
+
+        // Get UID from request body
+        const { uid } = req.body;
+
+        if (!uid) {
+            res.status(400).set(corsHeaders).json({
+                error: 'Invalid input',
+                message: 'User UID is required'
+            });
+            return;
+        }
+
+        // Prevent self-deletion
+        if (uid === adminCheck.adminUid) {
+            res.status(400).set(corsHeaders).json({
+                error: 'Invalid operation',
+                message: 'Cannot delete your own account'
+            });
+            return;
+        }
+
+        // Check if target user exists and is not an admin
+        const targetUserDoc = await db.collection('users').doc(uid).get();
+        if (!targetUserDoc.exists) {
+            res.status(404).set(corsHeaders).json({
+                error: 'Not found',
+                message: 'User not found'
+            });
+            return;
+        }
+
+        const targetUserData = targetUserDoc.data();
+        if (targetUserData.role === 'admin') {
+            res.status(403).set(corsHeaders).json({
+                error: 'Forbidden',
+                message: 'Cannot delete admin accounts'
+            });
+            return;
+        }
+
+        // Delete from Firebase Auth
+        await auth.deleteUser(uid);
+
+        // Delete from Firestore
+        await db.collection('users').doc(uid).delete();
+
+        console.log(`Teacher deleted: ${targetUserData.email} by admin`);
+
+        res.status(200).set(corsHeaders).json({
+            success: true,
+            message: 'Teacher account deleted successfully',
+            deletedUser: {
+                uid: uid,
+                email: targetUserData.email,
+                displayName: targetUserData.displayName
+            }
+        });
+
+    } catch (error) {
+        console.error('Error deleting teacher:', error);
+
+        let errorMessage = error.message;
+        if (error.code === 'auth/user-not-found') {
+            errorMessage = 'User not found in authentication system';
+        }
+
+        res.status(500).set(corsHeaders).json({
+            error: 'Failed to delete teacher',
+            message: errorMessage
+        });
+    }
+};

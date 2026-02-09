@@ -1,0 +1,110 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ============================================
+    // HELPER FUNCTIONS
+    // ============================================
+    
+    // Check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Get the current user's document from the users collection
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+    
+    // Check if current user is an admin
+    function isAdmin() {
+      return isAuthenticated() && getUserData().role == 'admin';
+    }
+    
+    // Check if current user is teacher or admin  
+    function isTeacherOrAdmin() {
+      return isAuthenticated() && (getUserData().role == 'teacher' || getUserData().role == 'admin');
+    }
+    
+    // Check if user is accessing their own data
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    // ============================================
+    // USERS COLLECTION
+    // ============================================
+    match /users/{userId} {
+      // Users can read their own profile
+      // Admins can read all user profiles
+      allow read: if isOwner(userId) || isAdmin();
+      
+      // Users can update their own profile (except role field)
+      allow update: if isOwner(userId) && 
+                       !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role']);
+      
+      // Only admins can create or delete users (via Admin SDK on backend)
+      // The Admin SDK bypasses these rules, so we deny client-side writes
+      allow create, delete: if false;
+    }
+    
+    // ============================================
+    // CLASS SLOTS COLLECTION
+    // ============================================
+    match /classSlots/{slotId} {
+      // Teachers can read all slots (needed for schedule view)
+      // Admins can read all slots
+      allow read: if isTeacherOrAdmin();
+      
+      // Teachers can create new slots (must be assigned to themselves or by admin)
+      allow create: if isTeacherOrAdmin() && (
+        request.resource.data.teacherId == request.auth.uid || isAdmin()
+      );
+      
+      // Teachers can update their own slots
+      // Admins can update any slot
+      allow update: if isAuthenticated() && (
+        resource.data.teacherId == request.auth.uid || isAdmin()
+      );
+      
+      // Teachers can delete their own slots
+      // Admins can delete any slot  
+      allow delete: if isAuthenticated() && (
+        resource.data.teacherId == request.auth.uid || isAdmin()
+      );
+    }
+    
+    // ============================================
+    // ANNOUNCEMENTS COLLECTION
+    // ============================================
+    match /announcements/{announcementId} {
+      // All authenticated users can read announcements
+      allow read: if isAuthenticated();
+      
+      // Only admins can create, update, or delete announcements
+      allow create, update, delete: if isAdmin();
+    }
+    
+    // ============================================
+    // READ RECEIPTS (for announcement tracking)
+    // ============================================
+    match /announcementReads/{readId} {
+      // Users can read their own read receipts
+      allow read: if isAuthenticated();
+      
+      // Users can create their own read receipts
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      
+      // No updates or deletes needed
+      allow update, delete: if false;
+    }
+    
+    // ============================================
+    // DENY ALL OTHER ACCESS
+    // ============================================
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
