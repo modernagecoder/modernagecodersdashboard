@@ -23,16 +23,26 @@ const corsHeaders = {
     'Content-Type': 'application/json'
 };
 
+// Helper to set multiple headers
+function setHeaders(res, headers) {
+    Object.entries(headers).forEach(([key, value]) => {
+        res.setHeader(key, value);
+    });
+}
+
 module.exports = async (req, res) => {
+    // Set CORS headers for all responses
+    setHeaders(res, corsHeaders);
+
     // Handle CORS preflight
     if (req.method === 'OPTIONS') {
-        res.status(200).set(corsHeaders).end();
+        res.status(200).end();
         return;
     }
 
     // Only allow POST
     if (req.method !== 'POST') {
-        res.status(405).set(corsHeaders).json({
+        res.status(405).json({
             error: 'Method not allowed',
             message: 'Use POST request'
         });
@@ -44,7 +54,7 @@ module.exports = async (req, res) => {
 
         // Validate input
         if (!licenseId || typeof licenseId !== 'number' || licenseId < 1 || licenseId > 4) {
-            res.status(400).set(corsHeaders).json({
+            res.status(400).json({
                 error: 'Invalid license ID',
                 message: 'License ID must be a number between 1 and 4'
             });
@@ -55,7 +65,7 @@ module.exports = async (req, res) => {
         const zoomUser = getLicenseUser(licenseId);
 
         if (!zoomUser) {
-            res.status(500).set(corsHeaders).json({
+            res.status(500).json({
                 error: 'License not configured',
                 message: `License ${licenseId} is not configured in environment variables`,
                 licenseId,
@@ -68,7 +78,7 @@ module.exports = async (req, res) => {
         // Check Zoom user availability
         const result = await isUserAvailable(zoomUser);
 
-        res.status(200).set(corsHeaders).json({
+        res.status(200).json({
             licenseId,
             available: result.available,
             status: result.status,
@@ -77,7 +87,7 @@ module.exports = async (req, res) => {
 
     } catch (error) {
         console.error('Error in check-license endpoint:', error);
-        res.status(500).set(corsHeaders).json({
+        res.status(500).json({
             error: 'Internal server error',
             message: error.message,
             available: null,

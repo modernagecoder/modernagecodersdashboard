@@ -26,16 +26,26 @@ const corsHeaders = {
     'Content-Type': 'application/json'
 };
 
+// Helper to set multiple headers
+function setHeaders(res, headers) {
+    Object.entries(headers).forEach(([key, value]) => {
+        res.setHeader(key, value);
+    });
+}
+
 module.exports = async (req, res) => {
+    // Set CORS headers for all responses
+    setHeaders(res, corsHeaders);
+
     // Handle CORS preflight
     if (req.method === 'OPTIONS') {
-        res.status(200).set(corsHeaders).end();
+        res.status(200).end();
         return;
     }
 
     // Only allow GET
     if (req.method !== 'GET') {
-        res.status(405).set(corsHeaders).json({
+        res.status(405).json({
             error: 'Method not allowed',
             message: 'Use GET request'
         });
@@ -85,7 +95,7 @@ module.exports = async (req, res) => {
 
         const allBusy = firstAvailable === null && results.every(r => r.status !== 'error' && r.status !== 'not_configured');
 
-        res.status(200).set(corsHeaders).json({
+        res.status(200).json({
             licenses: results,
             firstAvailable,
             allBusy,
@@ -95,7 +105,7 @@ module.exports = async (req, res) => {
 
     } catch (error) {
         console.error('Error in check-all-licenses endpoint:', error);
-        res.status(500).set(corsHeaders).json({
+        res.status(500).json({
             error: 'Internal server error',
             message: error.message,
             licenses: [],

@@ -18,6 +18,13 @@ const corsHeaders = {
     'Content-Type': 'application/json'
 };
 
+// Helper to set multiple headers
+function setHeaders(res, headers) {
+    Object.entries(headers).forEach(([key, value]) => {
+        res.setHeader(key, value);
+    });
+}
+
 /**
  * Verify that the request is from an admin user
  */
@@ -54,15 +61,18 @@ async function verifyAdmin(authHeader) {
 }
 
 module.exports = async (req, res) => {
+    // Set CORS headers for all responses
+    setHeaders(res, corsHeaders);
+
     // Handle CORS preflight
     if (req.method === 'OPTIONS') {
-        res.status(200).set(corsHeaders).end();
+        res.status(200).end();
         return;
     }
 
     // Only allow POST
     if (req.method !== 'POST') {
-        res.status(405).set(corsHeaders).json({
+        res.status(405).json({
             error: 'Method not allowed',
             message: 'Use POST request'
         });
@@ -73,7 +83,7 @@ module.exports = async (req, res) => {
         // Verify admin authorization
         const adminCheck = await verifyAdmin(req.headers.authorization);
         if (!adminCheck.valid) {
-            res.status(401).set(corsHeaders).json({
+            res.status(401).json({
                 error: 'Unauthorized',
                 message: adminCheck.error
             });
@@ -85,7 +95,7 @@ module.exports = async (req, res) => {
 
         // Validate input
         if (!email || !password || !displayName) {
-            res.status(400).set(corsHeaders).json({
+            res.status(400).json({
                 error: 'Invalid input',
                 message: 'Email, password, and displayName are required'
             });
@@ -93,7 +103,7 @@ module.exports = async (req, res) => {
         }
 
         if (password.length < 6) {
-            res.status(400).set(corsHeaders).json({
+            res.status(400).json({
                 error: 'Invalid password',
                 message: 'Password must be at least 6 characters'
             });
@@ -118,7 +128,7 @@ module.exports = async (req, res) => {
 
         console.log(`Teacher created: ${email} by admin ${adminCheck.adminData.email}`);
 
-        res.status(201).set(corsHeaders).json({
+        res.status(201).json({
             success: true,
             message: 'Teacher account created successfully',
             teacher: {
@@ -146,7 +156,7 @@ module.exports = async (req, res) => {
             statusCode = 400;
         }
 
-        res.status(statusCode).set(corsHeaders).json({
+        res.status(statusCode).json({
             error: 'Failed to create teacher',
             message: errorMessage
         });

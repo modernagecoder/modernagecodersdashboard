@@ -17,9 +17,19 @@ const corsHeaders = {
     'Content-Type': 'application/json'
 };
 
+// Helper to set multiple headers
+function setHeaders(res, headers) {
+    Object.entries(headers).forEach(([key, value]) => {
+        res.setHeader(key, value);
+    });
+}
+
 module.exports = async (req, res) => {
+    // Set CORS headers for all responses
+    setHeaders(res, corsHeaders);
+
     if (req.method === 'OPTIONS') {
-        res.status(200).set(corsHeaders).end();
+        res.status(200).end();
         return;
     }
 
@@ -67,5 +77,5 @@ module.exports = async (req, res) => {
         }
     }
 
-    res.status(200).set(corsHeaders).json(health);
+    res.status(200).json(health);
 };

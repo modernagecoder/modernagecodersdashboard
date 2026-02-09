@@ -18,6 +18,13 @@ const corsHeaders = {
     'Content-Type': 'application/json'
 };
 
+// Helper to set multiple headers
+function setHeaders(res, headers) {
+    Object.entries(headers).forEach(([key, value]) => {
+        res.setHeader(key, value);
+    });
+}
+
 /**
  * Verify that the request is from an admin user
  */
@@ -52,15 +59,18 @@ async function verifyAdmin(authHeader) {
 }
 
 module.exports = async (req, res) => {
+    // Set CORS headers for all responses
+    setHeaders(res, corsHeaders);
+
     // Handle CORS preflight
     if (req.method === 'OPTIONS') {
-        res.status(200).set(corsHeaders).end();
+        res.status(200).end();
         return;
     }
 
     // Only allow DELETE
     if (req.method !== 'DELETE') {
-        res.status(405).set(corsHeaders).json({
+        res.status(405).json({
             error: 'Method not allowed',
             message: 'Use DELETE request'
         });
@@ -71,7 +81,7 @@ module.exports = async (req, res) => {
         // Verify admin authorization
         const adminCheck = await verifyAdmin(req.headers.authorization);
         if (!adminCheck.valid) {
-            res.status(401).set(corsHeaders).json({
+            res.status(401).json({
                 error: 'Unauthorized',
                 message: adminCheck.error
             });
@@ -82,7 +92,7 @@ module.exports = async (req, res) => {
         const { uid } = req.body;
 
         if (!uid) {
-            res.status(400).set(corsHeaders).json({
+            res.status(400).json({
                 error: 'Invalid input',
                 message: 'User UID is required'
             });
@@ -91,7 +101,7 @@ module.exports = async (req, res) => {
 
         // Prevent self-deletion
         if (uid === adminCheck.adminUid) {
-            res.status(400).set(corsHeaders).json({
+            res.status(400).json({
                 error: 'Invalid operation',
                 message: 'Cannot delete your own account'
             });
@@ -101,7 +111,7 @@ module.exports = async (req, res) => {
         // Check if target user exists and is not an admin
         const targetUserDoc = await db.collection('users').doc(uid).get();
         if (!targetUserDoc.exists) {
-            res.status(404).set(corsHeaders).json({
+            res.status(404).json({
                 error: 'Not found',
                 message: 'User not found'
             });
@@ -110,7 +120,7 @@ module.exports = async (req, res) => {
 
         const targetUserData = targetUserDoc.data();
         if (targetUserData.role === 'admin') {
-            res.status(403).set(corsHeaders).json({
+            res.status(403).json({
                 error: 'Forbidden',
                 message: 'Cannot delete admin accounts'
             });
@@ -125,7 +135,7 @@ module.exports = async (req, res) => {
 
         console.log(`Teacher deleted: ${targetUserData.email} by admin`);
 
-        res.status(200).set(corsHeaders).json({
+        res.status(200).json({
             success: true,
             message: 'Teacher account deleted successfully',
             deletedUser: {
@@ -143,7 +153,7 @@ module.exports = async (req, res) => {
             errorMessage = 'User not found in authentication system';
         }
 
-        res.status(500).set(corsHeaders).json({
+        res.status(500).json({
             error: 'Failed to delete teacher',
             message: errorMessage
         });
