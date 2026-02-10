@@ -2843,10 +2843,10 @@
 
             <!-- Existing Teachers List -->
             <h4 style="color: var(--accent-secondary); margin-top: 0; margin-bottom: 1rem;">
-                📋 Existing Teachers
+                Existing Teachers
             </h4>
             <div style="margin-bottom: 1rem;">
-                <input type="text" id="teacher-search-input" placeholder="🔍 Search teachers by name or email..."
+                <input type="text" id="teacher-search-input" placeholder="Search teachers by name or email..."
                     style="width: 100%; padding: 0.6rem 1rem; border-radius: var(--border-radius); border: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-primary);">
             </div>
             <div id="teachers-list" style="max-height: 40vh; overflow-y: auto; padding-right: 10px;">
@@ -2863,7 +2863,7 @@
     <div id="student-management-modal" class="modal">
         <div class="modal-content" style="max-width: 700px; max-height: 85vh; overflow-y: auto;">
             <div class="modal-header">
-                <h3>🎓 Manage Students</h3>
+                <h3>Manage Students</h3>
                 <button class="close-button" id="close-student-modal-button">&times;</button>
             </div>
 
@@ -2872,7 +2872,7 @@
                 style="background-color: var(--bg-primary); padding: 20px; border-radius: var(--border-radius); border: 1px solid var(--border-color); margin-bottom: 2rem;">
                 <h4
                     style="color: var(--accent-green); margin-top: 0; margin-bottom: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
-                    ➕ Add New Student
+                    Add New Student
                 </h4>
                 <div style="display: grid; gap: 1rem;">
                     <div>
@@ -2905,11 +2905,10 @@
 
             <!-- Existing Students List -->
             <h4 style="color: var(--accent-secondary); margin-top: 0; margin-bottom: 1rem;">
-                📋 Existing Students
+                Existing Students
             </h4>
             <div style="margin-bottom: 1rem;">
-                <input type="text" id="student-search-input"
-                    placeholder="🔍 Search students by name, email, or teacher..."
+                <input type="text" id="student-search-input" placeholder="Search students by name, email, or teacher..."
                     style="width: 100%; padding: 0.6rem 1rem; border-radius: var(--border-radius); border: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-primary);">
             </div>
             <div id="students-list" style="max-height: 40vh; overflow-y: auto; padding-right: 10px;">
@@ -2926,7 +2925,7 @@
     <div id="assignment-modal" class="modal">
         <div class="modal-content" style="max-width: 550px;">
             <div class="modal-header">
-                <h3>📝 Post Assignment / Homework</h3>
+                <h3>Post Assignment / Homework</h3>
                 <button class="close-button" id="close-assignment-modal-button">&times;</button>
             </div>
             <div style="display: grid; gap: 1rem;">
@@ -2949,8 +2948,8 @@
                 <div>
                     <label>Assign to Students:</label>
                     <div id="assignment-students-search-container" style="position: relative;">
-                        <input type="text" id="assignment-students-search"
-                            placeholder="🔍 Search and select students..." autocomplete="off" style="width: 100%;">
+                        <input type="text" id="assignment-students-search" placeholder="Search and select students..."
+                            autocomplete="off" style="width: 100%;">
                         <div id="assignment-students-dropdown"
                             style="display: none; position: absolute; top: 100%; left: 0; right: 0; max-height: 200px; overflow-y: auto; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: var(--border-radius); z-index: 10; margin-top: 4px;">
                         </div>
@@ -4125,7 +4124,10 @@
                         const qUsers = query(usersCollectionRef, orderBy("displayName"));
                         const usersSnapshot = await getDocs(qUsers);
                         usersSnapshot.forEach(doc => {
-                            allTeachersData.push({ id: doc.id, ...doc.data() });
+                            const data = doc.data();
+                            if (data.role === 'teacher' || data.role === 'admin') {
+                                allTeachersData.push({ uid: doc.id, id: doc.id, ...data });
+                            }
                         });
                         console.log("Fetched teachers for admin:", allTeachersData.length);
                     } catch (e) {
@@ -5531,10 +5533,10 @@
                     (t.email || '').toLowerCase().includes(query)
                 )
                 : _cachedTeachers;
-            renderTeacherCards(filtered);
+            renderTeacherCards(filtered, _teacherStudentData);
         }
 
-        function renderTeacherCards(teachers) {
+        function renderTeacherCards(teachers, studentData) {
             if (!teachersList) return;
             teachersList.innerHTML = '';
 
@@ -5555,13 +5557,14 @@
                     background-color: var(--bg-primary);
                     border: 1px solid var(--border-color);
                     border-radius: var(--border-radius);
+                    transition: border-color 0.2s;
                 `;
 
                 const createdDate = teacher.createdAt ? new Date(teacher.createdAt).toLocaleDateString() : 'Unknown';
-                const studentCount = (_cachedStudents || []).filter(s => s.assignedTeacherId === teacher.uid).length;
+                const studentCount = (studentData || []).filter(s => s.assignedTeacherId === teacher.uid).length;
                 const studentBadge = studentCount > 0
-                    ? `<span style="display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 0.72rem; font-weight: 600; background: rgba(76, 175, 80, 0.2); color: var(--accent-green); margin-top: 4px;">🎓 ${studentCount} student${studentCount > 1 ? 's' : ''} assigned</span>`
-                    : `<span style="display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 0.72rem; font-weight: 600; background: rgba(255, 255, 255, 0.05); color: var(--text-muted); margin-top: 4px;">No students assigned</span>`;
+                    ? `<span style="display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 0.72rem; font-weight: 500; background: rgba(76, 175, 80, 0.15); color: var(--accent-green); margin-top: 4px;">${studentCount} student${studentCount > 1 ? 's' : ''} assigned</span>`
+                    : `<span style="display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 0.72rem; font-weight: 500; background: rgba(255, 255, 255, 0.05); color: var(--text-muted); margin-top: 4px;">No students assigned</span>`;
 
                 teacherCard.innerHTML = `
                     <div>
@@ -5570,7 +5573,7 @@
                         <div>${studentBadge}</div>
                         <div style="font-size: 0.75em; color: var(--text-muted);">Added: ${createdDate}</div>
                     </div>
-                    <button class="btn btn-danger btn-small delete-teacher-btn" data-uid="${teacher.uid}" data-name="${teacher.displayName}" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;">
+                    <button class="btn btn-danger btn-small delete-teacher-btn" data-uid="${teacher.uid}" data-name="${teacher.displayName}" style="padding: 0.4rem 0.8rem; font-size: 0.82rem;">
                         Delete
                     </button>
                 `;
@@ -5589,6 +5592,7 @@
         }
 
         // Load teachers list
+        let _teacherStudentData = [];
         async function loadTeachersList() {
             if (!teachersList) return;
 
@@ -5596,23 +5600,30 @@
 
             try {
                 const token = await getIdToken();
-                const response = await fetch('/api/list-teachers', {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
+                // Fetch teachers and students in parallel for student count badges
+                const [teachersRes, studentsRes] = await Promise.all([
+                    fetch('/api/list-teachers', {
+                        method: 'GET',
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    }),
+                    fetch('/api/list-students', {
+                        method: 'GET',
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    })
+                ]);
 
-                const data = await response.json();
+                const teachersData = await teachersRes.json();
+                const studentsData = await studentsRes.json();
 
-                if (!response.ok) {
-                    throw new Error(data.message || 'Failed to load teachers');
+                if (!teachersRes.ok) {
+                    throw new Error(teachersData.message || 'Failed to load teachers');
                 }
 
-                _cachedTeachers = data.teachers || [];
+                _cachedTeachers = teachersData.teachers || [];
+                _teacherStudentData = studentsData.students || [];
 
                 if (_cachedTeachers.length === 0) {
-                    teachersList.innerHTML = '<div style="text-align: center; padding: 2rem; color: var(--text-muted);">No teachers found. Add your first teacher above!</div>';
+                    teachersList.innerHTML = '<div style="text-align: center; padding: 2rem; color: var(--text-muted);">No teachers found. Add your first teacher above.</div>';
                     return;
                 }
 
@@ -5809,20 +5820,29 @@
                 return;
             }
 
+            // Build teacher options once for all cards
+            const teacherOptions = (allTeachersData || []).map(t =>
+                ({ uid: t.uid, label: t.displayName || t.email })
+            );
+
             students.forEach(student => {
                 const card = document.createElement('div');
-                card.style.cssText = `padding: 1rem; margin-bottom: 0.75rem; background-color: var(--bg-primary); border: 1px solid var(--border-color); border-radius: var(--border-radius);`;
+                card.style.cssText = `padding: 1rem; margin-bottom: 0.75rem; background-color: var(--bg-primary); border: 1px solid var(--border-color); border-radius: var(--border-radius); transition: border-color 0.2s;`;
                 card.dataset.uid = student.uid;
 
                 const createdDate = student.createdAt ? new Date(student.createdAt).toLocaleDateString() : 'Unknown';
-                const batchesText = (student.batches && student.batches.length > 0) ? student.batches.join(', ') : 'No batches';
+                const batchesText = (student.batches && student.batches.length > 0) ? student.batches.join(', ') : 'None';
                 const teacherBadge = student.assignedTeacherName
-                    ? `<span style="display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; background: rgba(100, 108, 255, 0.2); color: var(--accent-primary);">👨‍🏫 ${student.assignedTeacherName}</span>`
-                    : `<span style="display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; background: rgba(255, 255, 255, 0.05); color: var(--text-muted);">No teacher assigned</span>`;
+                    ? `<span style="display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 500; background: rgba(100, 108, 255, 0.15); color: var(--accent-primary);">${student.assignedTeacherName}</span>`
+                    : `<span style="display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 500; background: rgba(255, 255, 255, 0.05); color: var(--text-muted);">Unassigned</span>`;
+
+                const teacherSelectOptions = teacherOptions.map(t =>
+                    `<option value="${t.uid}" ${t.uid === student.assignedTeacherId ? 'selected' : ''}>${t.label}</option>`
+                ).join('');
 
                 card.innerHTML = `
                     <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                        <div style="flex: 1;">
+                        <div style="flex: 1; min-width: 0;">
                             <div style="font-weight: 600; color: var(--text-primary); margin-bottom: 4px;">${student.displayName || 'Unknown'}</div>
                             <div style="font-size: 0.85em; color: var(--text-muted);">${student.email}</div>
                             <div style="font-size: 0.78em; color: var(--accent-secondary); margin-top: 4px;">Batches: ${batchesText}</div>
@@ -5830,10 +5850,10 @@
                             <div style="font-size: 0.75em; color: var(--text-muted); margin-top: 4px;">Added: ${createdDate}</div>
                         </div>
                         <div style="display: flex; gap: 6px; flex-shrink: 0; margin-left: 12px;">
-                            <button class="btn btn-secondary btn-small edit-student-btn" data-uid="${student.uid}" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;">
-                                ✏️ Edit
+                            <button class="btn btn-secondary btn-small edit-student-btn" data-uid="${student.uid}" style="padding: 0.4rem 0.8rem; font-size: 0.82rem;">
+                                Edit
                             </button>
-                            <button class="btn btn-danger btn-small delete-student-btn" data-uid="${student.uid}" data-name="${student.displayName}" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;">
+                            <button class="btn btn-danger btn-small delete-student-btn" data-uid="${student.uid}" data-name="${student.displayName}" style="padding: 0.4rem 0.8rem; font-size: 0.82rem;">
                                 Delete
                             </button>
                         </div>
@@ -5847,15 +5867,13 @@
                             <div>
                                 <label style="font-size: 0.8rem;">Assign to Teacher:</label>
                                 <select class="edit-teacher" style="width: 100%;">
-                                    <option value="">— No Teacher Assigned —</option>
-                                    ${(allTeachersData || []).map(t =>
-                    `<option value="${t.uid}" ${t.uid === student.assignedTeacherId ? 'selected' : ''}>${t.displayName || t.email}</option>`
-                ).join('')}
+                                    <option value="">-- None --</option>
+                                    ${teacherSelectOptions}
                                 </select>
                             </div>
                             <div style="display: flex; gap: 8px; justify-content: flex-end;">
                                 <button class="btn btn-secondary btn-small cancel-edit-btn" data-uid="${student.uid}" style="padding: 0.35rem 0.75rem; font-size: 0.82rem;">Cancel</button>
-                                <button class="btn btn-success btn-small save-edit-btn" data-uid="${student.uid}" style="padding: 0.35rem 0.75rem; font-size: 0.82rem;">💾 Save Changes</button>
+                                <button class="btn btn-success btn-small save-edit-btn" data-uid="${student.uid}" style="padding: 0.35rem 0.75rem; font-size: 0.82rem;">Save Changes</button>
                             </div>
                         </div>
                     </div>
@@ -5863,7 +5881,7 @@
                 studentsList.appendChild(card);
             });
 
-            // Edit button
+            // Edit button - toggle form visibility
             document.querySelectorAll('.edit-student-btn').forEach(btn => {
                 btn.addEventListener('click', (e) => {
                     const uid = e.currentTarget.dataset.uid;
@@ -5881,10 +5899,11 @@
                 });
             });
 
-            // Save edit
+            // Save edit — capture button reference before async to prevent null crash
             document.querySelectorAll('.save-edit-btn').forEach(btn => {
                 btn.addEventListener('click', async (e) => {
-                    const uid = e.currentTarget.dataset.uid;
+                    const saveBtn = e.currentTarget;
+                    const uid = saveBtn.dataset.uid;
                     const form = document.querySelector(`.student-edit-form[data-uid="${uid}"]`);
                     if (!form) return;
 
@@ -5894,8 +5913,8 @@
                     const batches = batchesInput.value.split(',').map(b => b.trim()).filter(b => b.length > 0);
                     const assignedTeacherId = teacherSelect.value;
 
-                    e.currentTarget.disabled = true;
-                    e.currentTarget.textContent = 'Saving...';
+                    saveBtn.disabled = true;
+                    saveBtn.textContent = 'Saving...';
 
                     try {
                         const token = await getIdToken();
@@ -5911,13 +5930,16 @@
                         const data = await response.json();
                         if (!response.ok) throw new Error(data.message || 'Failed to update student');
 
-                        showNotification('Student updated successfully!', 'success');
+                        showNotification('Student updated successfully.', 'success');
                         await loadStudentsList();
                     } catch (error) {
                         console.error('Error updating student:', error);
                         showNotification(`Error: ${error.message}`, 'error');
-                        e.currentTarget.disabled = false;
-                        e.currentTarget.textContent = '💾 Save Changes';
+                        // Button may still exist if loadStudentsList wasn't called
+                        if (saveBtn && saveBtn.parentNode) {
+                            saveBtn.disabled = false;
+                            saveBtn.textContent = 'Save Changes';
+                        }
                     }
                 });
             });
@@ -5949,7 +5971,7 @@
                 _cachedStudents = data.students || [];
 
                 if (_cachedStudents.length === 0) {
-                    studentsList.innerHTML = '<div style="text-align: center; padding: 2rem; color: var(--text-muted);">No students found. Add your first student above!</div>';
+                    studentsList.innerHTML = '<div style="text-align: center; padding: 2rem; color: var(--text-muted);">No students found. Add your first student above.</div>';
                     return;
                 }
 
@@ -6108,7 +6130,7 @@
             const postAssignmentBtn = document.createElement('button');
             postAssignmentBtn.id = 'post-assignment-button';
             postAssignmentBtn.className = 'btn btn-warning';
-            postAssignmentBtn.textContent = '📝 Post Assignment';
+            postAssignmentBtn.textContent = 'Post Assignment';
             postAssignmentBtn.style.marginLeft = '10px';
             postAssignmentBtn.addEventListener('click', async () => {
                 if (!assignmentDueDatePicker) {
