@@ -2845,6 +2845,10 @@
             <h4 style="color: var(--accent-secondary); margin-top: 0; margin-bottom: 1rem;">
                 📋 Existing Teachers
             </h4>
+            <div style="margin-bottom: 1rem;">
+                <input type="text" id="teacher-search-input" placeholder="🔍 Search teachers by name or email..."
+                    style="width: 100%; padding: 0.6rem 1rem; border-radius: var(--border-radius); border: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-primary);">
+            </div>
             <div id="teachers-list" style="max-height: 40vh; overflow-y: auto; padding-right: 10px;">
                 <div id="teachers-loader" style="text-align: center; padding: 2rem; color: var(--text-muted);">
                     Loading teachers...
@@ -2887,6 +2891,12 @@
                         <label for="new-student-batches">Batches (comma-separated):</label>
                         <input type="text" id="new-student-batches" placeholder="e.g., Grade 8, Python Batch">
                     </div>
+                    <div>
+                        <label for="new-student-teacher">Assign to Teacher:</label>
+                        <select id="new-student-teacher" style="width: 100%;">
+                            <option value="">— No Teacher Assigned —</option>
+                        </select>
+                    </div>
                     <button id="create-student-button" class="btn btn-success" style="width:100%;">
                         Create Student Account
                     </button>
@@ -2897,6 +2907,11 @@
             <h4 style="color: var(--accent-secondary); margin-top: 0; margin-bottom: 1rem;">
                 📋 Existing Students
             </h4>
+            <div style="margin-bottom: 1rem;">
+                <input type="text" id="student-search-input"
+                    placeholder="🔍 Search students by name, email, or teacher..."
+                    style="width: 100%; padding: 0.6rem 1rem; border-radius: var(--border-radius); border: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-primary);">
+            </div>
             <div id="students-list" style="max-height: 40vh; overflow-y: auto; padding-right: 10px;">
                 <div id="students-loader" style="text-align: center; padding: 2rem; color: var(--text-muted);">
                     Loading students...
@@ -2930,6 +2945,18 @@
                 <div>
                     <label for="assignment-batch">Batch / Class:</label>
                     <input type="text" id="assignment-batch" placeholder="e.g., Grade 8, Python Batch">
+                </div>
+                <div>
+                    <label>Assign to Students:</label>
+                    <div id="assignment-students-search-container" style="position: relative;">
+                        <input type="text" id="assignment-students-search"
+                            placeholder="🔍 Search and select students..." autocomplete="off" style="width: 100%;">
+                        <div id="assignment-students-dropdown"
+                            style="display: none; position: absolute; top: 100%; left: 0; right: 0; max-height: 200px; overflow-y: auto; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: var(--border-radius); z-index: 10; margin-top: 4px;">
+                        </div>
+                    </div>
+                    <div id="assignment-selected-students"
+                        style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px;"></div>
                 </div>
                 <button id="save-assignment-button" class="btn btn-success" style="width:100%;">Post Assignment</button>
             </div>
@@ -4030,6 +4057,8 @@
                         currentUser.isAdmin = false;
                         currentUser.originalDisplayName = originalDisplayName;
                         currentUser.studentBatches = userData.batches || [];
+                        currentUser.assignedTeacherId = userData.assignedTeacherId || '';
+                        currentUser.assignedTeacherName = userData.assignedTeacherName || '';
                         authView.classList.add('hidden');
                         appView.classList.add('hidden');
                         document.getElementById('student-dashboard').classList.remove('hidden');
@@ -5484,6 +5513,81 @@
             return await user.getIdToken();
         }
 
+        // Teacher search
+        const teacherSearchInput = document.getElementById('teacher-search-input');
+        let _cachedTeachers = [];
+
+        if (teacherSearchInput) {
+            teacherSearchInput.addEventListener('input', () => {
+                const query = teacherSearchInput.value.toLowerCase().trim();
+                renderFilteredTeachers(query);
+            });
+        }
+
+        function renderFilteredTeachers(query) {
+            const filtered = query
+                ? _cachedTeachers.filter(t =>
+                    (t.displayName || '').toLowerCase().includes(query) ||
+                    (t.email || '').toLowerCase().includes(query)
+                )
+                : _cachedTeachers;
+            renderTeacherCards(filtered);
+        }
+
+        function renderTeacherCards(teachers) {
+            if (!teachersList) return;
+            teachersList.innerHTML = '';
+
+            if (teachers.length === 0) {
+                teachersList.innerHTML = '<div style="text-align: center; padding: 2rem; color: var(--text-muted);">No teachers match your search.</div>';
+                return;
+            }
+
+            teachers.forEach(teacher => {
+                const teacherCard = document.createElement('div');
+                teacherCard.className = 'teacher-card';
+                teacherCard.style.cssText = `
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    padding: 1rem;
+                    margin-bottom: 0.75rem;
+                    background-color: var(--bg-primary);
+                    border: 1px solid var(--border-color);
+                    border-radius: var(--border-radius);
+                `;
+
+                const createdDate = teacher.createdAt ? new Date(teacher.createdAt).toLocaleDateString() : 'Unknown';
+                const studentCount = (_cachedStudents || []).filter(s => s.assignedTeacherId === teacher.uid).length;
+                const studentBadge = studentCount > 0
+                    ? `<span style="display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 0.72rem; font-weight: 600; background: rgba(76, 175, 80, 0.2); color: var(--accent-green); margin-top: 4px;">🎓 ${studentCount} student${studentCount > 1 ? 's' : ''} assigned</span>`
+                    : `<span style="display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 0.72rem; font-weight: 600; background: rgba(255, 255, 255, 0.05); color: var(--text-muted); margin-top: 4px;">No students assigned</span>`;
+
+                teacherCard.innerHTML = `
+                    <div>
+                        <div style="font-weight: 600; color: var(--text-primary);">${teacher.displayName || 'Unknown'}</div>
+                        <div style="font-size: 0.85em; color: var(--text-muted);">${teacher.email}</div>
+                        <div>${studentBadge}</div>
+                        <div style="font-size: 0.75em; color: var(--text-muted);">Added: ${createdDate}</div>
+                    </div>
+                    <button class="btn btn-danger btn-small delete-teacher-btn" data-uid="${teacher.uid}" data-name="${teacher.displayName}" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;">
+                        Delete
+                    </button>
+                `;
+
+                teachersList.appendChild(teacherCard);
+            });
+
+            // Add delete button listeners
+            document.querySelectorAll('.delete-teacher-btn').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    const uid = e.currentTarget.dataset.uid;
+                    const name = e.currentTarget.dataset.name;
+                    await deleteTeacher(uid, name);
+                });
+            });
+        }
+
         // Load teachers list
         async function loadTeachersList() {
             if (!teachersList) return;
@@ -5505,51 +5609,15 @@
                     throw new Error(data.message || 'Failed to load teachers');
                 }
 
-                teachersList.innerHTML = '';
+                _cachedTeachers = data.teachers || [];
 
-                if (data.teachers.length === 0) {
+                if (_cachedTeachers.length === 0) {
                     teachersList.innerHTML = '<div style="text-align: center; padding: 2rem; color: var(--text-muted);">No teachers found. Add your first teacher above!</div>';
                     return;
                 }
 
-                data.teachers.forEach(teacher => {
-                    const teacherCard = document.createElement('div');
-                    teacherCard.className = 'teacher-card';
-                    teacherCard.style.cssText = `
-                        display: flex;
-                        justify-content: space-between;
-                        align-items: center;
-                        padding: 1rem;
-                        margin-bottom: 0.75rem;
-                        background-color: var(--bg-primary);
-                        border: 1px solid var(--border-color);
-                        border-radius: var(--border-radius);
-                    `;
-
-                    const createdDate = teacher.createdAt ? new Date(teacher.createdAt).toLocaleDateString() : 'Unknown';
-
-                    teacherCard.innerHTML = `
-                        <div>
-                            <div style="font-weight: 600; color: var(--text-primary);">${teacher.displayName || 'Unknown'}</div>
-                            <div style="font-size: 0.85em; color: var(--text-muted);">${teacher.email}</div>
-                            <div style="font-size: 0.75em; color: var(--text-muted);">Added: ${createdDate}</div>
-                        </div>
-                        <button class="btn btn-danger btn-small delete-teacher-btn" data-uid="${teacher.uid}" data-name="${teacher.displayName}" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;">
-                            Delete
-                        </button>
-                    `;
-
-                    teachersList.appendChild(teacherCard);
-                });
-
-                // Add delete button listeners
-                document.querySelectorAll('.delete-teacher-btn').forEach(btn => {
-                    btn.addEventListener('click', async (e) => {
-                        const uid = e.target.dataset.uid;
-                        const name = e.target.dataset.name;
-                        await deleteTeacher(uid, name);
-                    });
-                });
+                const query = teacherSearchInput ? teacherSearchInput.value.toLowerCase().trim() : '';
+                renderFilteredTeachers(query);
 
             } catch (error) {
                 console.error('Error loading teachers:', error);
@@ -5669,10 +5737,26 @@
         const newStudentEmail = document.getElementById('new-student-email');
         const newStudentPassword = document.getElementById('new-student-password');
         const newStudentBatches = document.getElementById('new-student-batches');
+        const newStudentTeacher = document.getElementById('new-student-teacher');
+        const studentSearchInput = document.getElementById('student-search-input');
+
+        // Cache loaded students for search filtering
+        let _cachedStudents = [];
+
+        // Populate teacher dropdown in student create form
+        function populateStudentTeacherDropdown() {
+            if (!newStudentTeacher) return;
+            const teachers = allTeachersData || [];
+            newStudentTeacher.innerHTML = '<option value="">— No Teacher Assigned —</option>';
+            teachers.forEach(t => {
+                newStudentTeacher.innerHTML += `<option value="${t.uid}">${t.displayName || t.email}</option>`;
+            });
+        }
 
         window.openStudentManagementModal = async function () {
             if (!studentManagementModal) return;
             studentManagementModal.classList.add('active');
+            populateStudentTeacherDropdown();
             await loadStudentsList();
         }
 
@@ -5683,6 +5767,8 @@
                 newStudentEmail.value = '';
                 newStudentPassword.value = '';
                 newStudentBatches.value = '';
+                if (newStudentTeacher) newStudentTeacher.value = '';
+                if (studentSearchInput) studentSearchInput.value = '';
             });
         }
 
@@ -5691,6 +5777,158 @@
                 if (e.target === studentManagementModal) {
                     studentManagementModal.classList.remove('active');
                 }
+            });
+        }
+
+        // Student search filtering
+        if (studentSearchInput) {
+            studentSearchInput.addEventListener('input', () => {
+                const query = studentSearchInput.value.toLowerCase().trim();
+                renderFilteredStudents(query);
+            });
+        }
+
+        function renderFilteredStudents(query) {
+            const filtered = query
+                ? _cachedStudents.filter(s =>
+                    (s.displayName || '').toLowerCase().includes(query) ||
+                    (s.email || '').toLowerCase().includes(query) ||
+                    (s.assignedTeacherName || '').toLowerCase().includes(query) ||
+                    (s.batches || []).some(b => b.toLowerCase().includes(query))
+                )
+                : _cachedStudents;
+            renderStudentCards(filtered);
+        }
+
+        function renderStudentCards(students) {
+            if (!studentsList) return;
+            studentsList.innerHTML = '';
+
+            if (students.length === 0) {
+                studentsList.innerHTML = '<div style="text-align: center; padding: 2rem; color: var(--text-muted);">No students match your search.</div>';
+                return;
+            }
+
+            students.forEach(student => {
+                const card = document.createElement('div');
+                card.style.cssText = `padding: 1rem; margin-bottom: 0.75rem; background-color: var(--bg-primary); border: 1px solid var(--border-color); border-radius: var(--border-radius);`;
+                card.dataset.uid = student.uid;
+
+                const createdDate = student.createdAt ? new Date(student.createdAt).toLocaleDateString() : 'Unknown';
+                const batchesText = (student.batches && student.batches.length > 0) ? student.batches.join(', ') : 'No batches';
+                const teacherBadge = student.assignedTeacherName
+                    ? `<span style="display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; background: rgba(100, 108, 255, 0.2); color: var(--accent-primary);">👨‍🏫 ${student.assignedTeacherName}</span>`
+                    : `<span style="display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; background: rgba(255, 255, 255, 0.05); color: var(--text-muted);">No teacher assigned</span>`;
+
+                card.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                        <div style="flex: 1;">
+                            <div style="font-weight: 600; color: var(--text-primary); margin-bottom: 4px;">${student.displayName || 'Unknown'}</div>
+                            <div style="font-size: 0.85em; color: var(--text-muted);">${student.email}</div>
+                            <div style="font-size: 0.78em; color: var(--accent-secondary); margin-top: 4px;">Batches: ${batchesText}</div>
+                            <div style="margin-top: 6px;">${teacherBadge}</div>
+                            <div style="font-size: 0.75em; color: var(--text-muted); margin-top: 4px;">Added: ${createdDate}</div>
+                        </div>
+                        <div style="display: flex; gap: 6px; flex-shrink: 0; margin-left: 12px;">
+                            <button class="btn btn-secondary btn-small edit-student-btn" data-uid="${student.uid}" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;">
+                                ✏️ Edit
+                            </button>
+                            <button class="btn btn-danger btn-small delete-student-btn" data-uid="${student.uid}" data-name="${student.displayName}" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;">
+                                Delete
+                            </button>
+                        </div>
+                    </div>
+                    <div class="student-edit-form" data-uid="${student.uid}" style="display: none; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border-color);">
+                        <div style="display: grid; gap: 0.75rem;">
+                            <div>
+                                <label style="font-size: 0.8rem;">Batches (comma-separated):</label>
+                                <input type="text" class="edit-batches" value="${(student.batches || []).join(', ')}" style="width: 100%;">
+                            </div>
+                            <div>
+                                <label style="font-size: 0.8rem;">Assign to Teacher:</label>
+                                <select class="edit-teacher" style="width: 100%;">
+                                    <option value="">— No Teacher Assigned —</option>
+                                    ${(allTeachersData || []).map(t =>
+                    `<option value="${t.uid}" ${t.uid === student.assignedTeacherId ? 'selected' : ''}>${t.displayName || t.email}</option>`
+                ).join('')}
+                                </select>
+                            </div>
+                            <div style="display: flex; gap: 8px; justify-content: flex-end;">
+                                <button class="btn btn-secondary btn-small cancel-edit-btn" data-uid="${student.uid}" style="padding: 0.35rem 0.75rem; font-size: 0.82rem;">Cancel</button>
+                                <button class="btn btn-success btn-small save-edit-btn" data-uid="${student.uid}" style="padding: 0.35rem 0.75rem; font-size: 0.82rem;">💾 Save Changes</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                studentsList.appendChild(card);
+            });
+
+            // Edit button
+            document.querySelectorAll('.edit-student-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const uid = e.currentTarget.dataset.uid;
+                    const form = document.querySelector(`.student-edit-form[data-uid="${uid}"]`);
+                    if (form) form.style.display = form.style.display === 'none' ? 'block' : 'none';
+                });
+            });
+
+            // Cancel edit
+            document.querySelectorAll('.cancel-edit-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const uid = e.currentTarget.dataset.uid;
+                    const form = document.querySelector(`.student-edit-form[data-uid="${uid}"]`);
+                    if (form) form.style.display = 'none';
+                });
+            });
+
+            // Save edit
+            document.querySelectorAll('.save-edit-btn').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    const uid = e.currentTarget.dataset.uid;
+                    const form = document.querySelector(`.student-edit-form[data-uid="${uid}"]`);
+                    if (!form) return;
+
+                    const batchesInput = form.querySelector('.edit-batches');
+                    const teacherSelect = form.querySelector('.edit-teacher');
+
+                    const batches = batchesInput.value.split(',').map(b => b.trim()).filter(b => b.length > 0);
+                    const assignedTeacherId = teacherSelect.value;
+
+                    e.currentTarget.disabled = true;
+                    e.currentTarget.textContent = 'Saving...';
+
+                    try {
+                        const token = await getIdToken();
+                        const response = await fetch('/api/update-student', {
+                            method: 'PUT',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${token}`
+                            },
+                            body: JSON.stringify({ uid, batches, assignedTeacherId })
+                        });
+
+                        const data = await response.json();
+                        if (!response.ok) throw new Error(data.message || 'Failed to update student');
+
+                        showNotification('Student updated successfully!', 'success');
+                        await loadStudentsList();
+                    } catch (error) {
+                        console.error('Error updating student:', error);
+                        showNotification(`Error: ${error.message}`, 'error');
+                        e.currentTarget.disabled = false;
+                        e.currentTarget.textContent = '💾 Save Changes';
+                    }
+                });
+            });
+
+            // Delete button
+            document.querySelectorAll('.delete-student-btn').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    const uid = e.currentTarget.dataset.uid;
+                    const name = e.currentTarget.dataset.name;
+                    await deleteStudent(uid, name);
+                });
             });
         }
 
@@ -5708,41 +5946,15 @@
                 const data = await response.json();
                 if (!response.ok) throw new Error(data.message || 'Failed to load students');
 
-                studentsList.innerHTML = '';
+                _cachedStudents = data.students || [];
 
-                if (data.students.length === 0) {
+                if (_cachedStudents.length === 0) {
                     studentsList.innerHTML = '<div style="text-align: center; padding: 2rem; color: var(--text-muted);">No students found. Add your first student above!</div>';
                     return;
                 }
 
-                data.students.forEach(student => {
-                    const card = document.createElement('div');
-                    card.style.cssText = `display: flex; justify-content: space-between; align-items: center; padding: 1rem; margin-bottom: 0.75rem; background-color: var(--bg-primary); border: 1px solid var(--border-color); border-radius: var(--border-radius);`;
-
-                    const createdDate = student.createdAt ? new Date(student.createdAt).toLocaleDateString() : 'Unknown';
-                    const batchesText = (student.batches && student.batches.length > 0) ? student.batches.join(', ') : 'No batches';
-
-                    card.innerHTML = `
-                        <div>
-                            <div style="font-weight: 600; color: var(--text-primary);">${student.displayName || 'Unknown'}</div>
-                            <div style="font-size: 0.85em; color: var(--text-muted);">${student.email}</div>
-                            <div style="font-size: 0.78em; color: var(--accent-secondary);">Batches: ${batchesText}</div>
-                            <div style="font-size: 0.75em; color: var(--text-muted);">Added: ${createdDate}</div>
-                        </div>
-                        <button class="btn btn-danger btn-small delete-student-btn" data-uid="${student.uid}" data-name="${student.displayName}" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;">
-                            Delete
-                        </button>
-                    `;
-                    studentsList.appendChild(card);
-                });
-
-                document.querySelectorAll('.delete-student-btn').forEach(btn => {
-                    btn.addEventListener('click', async (e) => {
-                        const uid = e.target.dataset.uid;
-                        const name = e.target.dataset.name;
-                        await deleteStudent(uid, name);
-                    });
-                });
+                const query = studentSearchInput ? studentSearchInput.value.toLowerCase().trim() : '';
+                renderFilteredStudents(query);
 
             } catch (error) {
                 console.error('Error loading students:', error);
@@ -5756,6 +5968,7 @@
                 const email = newStudentEmail.value.trim();
                 const password = newStudentPassword.value;
                 const batches = newStudentBatches.value.split(',').map(b => b.trim()).filter(b => b.length > 0);
+                const assignedTeacherId = newStudentTeacher ? newStudentTeacher.value : '';
 
                 if (!name || !email || !password) {
                     showNotification('Please fill in name, email, and password.', 'warning');
@@ -5778,7 +5991,7 @@
                             'Content-Type': 'application/json',
                             'Authorization': `Bearer ${token}`
                         },
-                        body: JSON.stringify({ displayName: name, email, password, batches })
+                        body: JSON.stringify({ displayName: name, email, password, batches, assignedTeacherId })
                     });
 
                     const data = await response.json();
@@ -5789,6 +6002,7 @@
                     newStudentEmail.value = '';
                     newStudentPassword.value = '';
                     newStudentBatches.value = '';
+                    if (newStudentTeacher) newStudentTeacher.value = '';
                     await loadStudentsList();
 
                 } catch (error) {
@@ -5843,8 +6057,51 @@
         const assignmentDescInput = document.getElementById('assignment-description');
         const assignmentDueDateInput = document.getElementById('assignment-due-date');
         const assignmentBatchInput = document.getElementById('assignment-batch');
+        const assignStudentsSearch = document.getElementById('assignment-students-search');
+        const assignStudentsDropdown = document.getElementById('assignment-students-dropdown');
+        const assignSelectedStudents = document.getElementById('assignment-selected-students');
 
         let assignmentDueDatePicker = null;
+        let _selectedAssignmentStudentIds = [];
+
+        // Fetch students assigned to current teacher (or all for admin)
+        async function getAssignableStudents() {
+            try {
+                const usersSnapshot = await getDocs(query(collection(db, "users"), where("role", "==", "student")));
+                const students = [];
+                usersSnapshot.forEach(docSnap => {
+                    const data = docSnap.data();
+                    // For teachers: show only their assigned students
+                    // For admins: show all students
+                    if (currentUser.isAdmin || data.assignedTeacherId === currentUser.uid) {
+                        students.push({ uid: docSnap.id, displayName: data.displayName, email: data.email, batches: data.batches || [] });
+                    }
+                });
+                return students;
+            } catch (error) {
+                console.error('Error fetching assignable students:', error);
+                return [];
+            }
+        }
+
+        function renderAssignmentStudentChips() {
+            if (!assignSelectedStudents) return;
+            assignSelectedStudents.innerHTML = _selectedAssignmentStudentIds.map(s =>
+                `<span style="display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 16px; font-size: 0.78rem; font-weight: 600; background: rgba(100, 108, 255, 0.2); color: var(--accent-primary);">
+                    ${s.displayName}
+                    <span class="remove-assign-student" data-uid="${s.uid}" style="cursor: pointer; font-size: 1rem; line-height: 1; margin-left: 2px;">&times;</span>
+                </span>`
+            ).join('');
+
+            // Remove chip handler
+            assignSelectedStudents.querySelectorAll('.remove-assign-student').forEach(el => {
+                el.addEventListener('click', (e) => {
+                    const uid = e.currentTarget.dataset.uid;
+                    _selectedAssignmentStudentIds = _selectedAssignmentStudentIds.filter(s => s.uid !== uid);
+                    renderAssignmentStudentChips();
+                });
+            });
+        }
 
         // Add "Post Assignment" button to the add-slot button area
         if (addSlotButton && addSlotButton.parentElement) {
@@ -5853,7 +6110,7 @@
             postAssignmentBtn.className = 'btn btn-warning';
             postAssignmentBtn.textContent = '📝 Post Assignment';
             postAssignmentBtn.style.marginLeft = '10px';
-            postAssignmentBtn.addEventListener('click', () => {
+            postAssignmentBtn.addEventListener('click', async () => {
                 if (!assignmentDueDatePicker) {
                     assignmentDueDatePicker = flatpickr(assignmentDueDateInput, {
                         dateFormat: "Y-m-d",
@@ -5861,10 +6118,69 @@
                         minDate: "today"
                     });
                 }
+                // Load assignable students for the dropdown
+                const students = await getAssignableStudents();
+                if (assignStudentsSearch) {
+                    assignStudentsSearch.value = '';
+                    assignStudentsSearch.addEventListener('focus', () => {
+                        showAssignmentStudentDropdown(students, '');
+                    });
+                    assignStudentsSearch.addEventListener('input', () => {
+                        showAssignmentStudentDropdown(students, assignStudentsSearch.value.trim().toLowerCase());
+                    });
+                }
+                _selectedAssignmentStudentIds = [];
+                renderAssignmentStudentChips();
                 assignmentModal.classList.add('active');
             });
             addSlotButton.parentElement.appendChild(postAssignmentBtn);
         }
+
+        function showAssignmentStudentDropdown(allStudents, searchQuery) {
+            if (!assignStudentsDropdown) return;
+            const filtered = searchQuery
+                ? allStudents.filter(s =>
+                    (s.displayName || '').toLowerCase().includes(searchQuery) ||
+                    (s.email || '').toLowerCase().includes(searchQuery)
+                )
+                : allStudents;
+
+            const available = filtered.filter(s => !_selectedAssignmentStudentIds.some(sel => sel.uid === s.uid));
+
+            if (available.length === 0) {
+                assignStudentsDropdown.innerHTML = '<div style="padding: 10px; color: var(--text-muted); font-size: 0.85rem;">No students found</div>';
+            } else {
+                assignStudentsDropdown.innerHTML = available.map(s =>
+                    `<div class="assign-student-option" data-uid="${s.uid}" data-name="${s.displayName}" style="padding: 8px 12px; cursor: pointer; font-size: 0.85rem; color: var(--text-primary); border-bottom: 1px solid var(--border-color); transition: background 0.15s;">
+                        <div style="font-weight: 500;">${s.displayName}</div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted);">${s.email}</div>
+                    </div>`
+                ).join('');
+            }
+            assignStudentsDropdown.style.display = 'block';
+
+            assignStudentsDropdown.querySelectorAll('.assign-student-option').forEach(el => {
+                el.addEventListener('mouseenter', () => el.style.background = 'rgba(100, 108, 255, 0.1)');
+                el.addEventListener('mouseleave', () => el.style.background = 'none');
+                el.addEventListener('click', () => {
+                    const uid = el.dataset.uid;
+                    const name = el.dataset.name;
+                    if (!_selectedAssignmentStudentIds.some(s => s.uid === uid)) {
+                        _selectedAssignmentStudentIds.push({ uid, displayName: name });
+                        renderAssignmentStudentChips();
+                    }
+                    assignStudentsDropdown.style.display = 'none';
+                    assignStudentsSearch.value = '';
+                });
+            });
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            if (assignStudentsDropdown && !e.target.closest('#assignment-students-search-container')) {
+                assignStudentsDropdown.style.display = 'none';
+            }
+        });
 
         if (closeAssignmentModalButton) {
             closeAssignmentModalButton.addEventListener('click', () => {
@@ -5895,11 +6211,13 @@
 
                 try {
                     const batches = batch.split(',').map(b => b.trim()).filter(b => b.length > 0);
+                    const studentIds = _selectedAssignmentStudentIds.map(s => s.uid);
                     await addDoc(collection(db, "assignments"), {
                         title,
                         description,
                         dueDate,
                         batches,
+                        studentIds,
                         teacherId: currentUser.uid,
                         teacherName: currentUser.originalDisplayName || currentTeacherName,
                         createdAt: serverTimestamp(),
@@ -5911,6 +6229,8 @@
                     assignmentDescInput.value = '';
                     assignmentDueDateInput.value = '';
                     assignmentBatchInput.value = '';
+                    _selectedAssignmentStudentIds = [];
+                    if (assignSelectedStudents) assignSelectedStudents.innerHTML = '';
                     assignmentModal.classList.remove('active');
 
                 } catch (error) {
@@ -5965,7 +6285,13 @@
             window._unsubStudentClasses = onSnapshot(classesQuery, (snapshot) => {
                 window._allStudentClasses = [];
                 snapshot.forEach(docSnap => {
-                    window._allStudentClasses.push({ id: docSnap.id, ...docSnap.data() });
+                    const slotData = { id: docSnap.id, ...docSnap.data() };
+                    // Filter: show classes from assigned teacher, or where batch matches
+                    const matchesTeacher = currentUser.assignedTeacherId && slotData.teacherId === currentUser.assignedTeacherId;
+                    const matchesBatch = batches.length > 0 && (slotData.batches || []).some(b => batches.includes(b));
+                    if (matchesTeacher || matchesBatch || (!currentUser.assignedTeacherId && batches.length === 0)) {
+                        window._allStudentClasses.push(slotData);
+                    }
                 });
                 updateStudentStats();
                 renderStudentUpcomingClasses();
@@ -5986,7 +6312,15 @@
             window._unsubStudentAssignments = onSnapshot(assignmentsQuery, (snapshot) => {
                 window._allStudentAssignments = [];
                 snapshot.forEach(docSnap => {
-                    window._allStudentAssignments.push({ id: docSnap.id, ...docSnap.data() });
+                    const assgnData = { id: docSnap.id, ...docSnap.data() };
+                    // Filter: show assignments that explicitly include this student, or match batch, or from assigned teacher
+                    const explicitlyAssigned = (assgnData.studentIds || []).includes(currentUser.uid);
+                    const matchesTeacher = currentUser.assignedTeacherId && assgnData.teacherId === currentUser.assignedTeacherId;
+                    const matchesBatch = batches.length > 0 && (assgnData.batches || []).some(b => batches.includes(b));
+                    const hasNoTargeting = (!assgnData.studentIds || assgnData.studentIds.length === 0) && (!assgnData.batches || assgnData.batches.length === 0);
+                    if (explicitlyAssigned || matchesTeacher || matchesBatch || hasNoTargeting) {
+                        window._allStudentAssignments.push(assgnData);
+                    }
                 });
                 renderStudentAssignments();
                 updateStudentStats();

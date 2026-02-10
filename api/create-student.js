@@ -89,7 +89,7 @@ module.exports = async (req, res) => {
         }
 
         // Get request body
-        const { email, password, displayName, batches } = req.body;
+        const { email, password, displayName, batches, assignedTeacherId } = req.body;
 
         // Validate input
         if (!email || !password || !displayName) {
@@ -113,6 +113,16 @@ module.exports = async (req, res) => {
             ? batches.map(b => b.trim()).filter(b => b.length > 0)
             : [];
 
+        // Resolve assigned teacher name if provided
+        let assignedTeacherName = '';
+        if (assignedTeacherId) {
+            const teacherDoc = await db.collection('users').doc(assignedTeacherId).get();
+            if (teacherDoc.exists) {
+                const teacherData = teacherDoc.data();
+                assignedTeacherName = teacherData.displayName || teacherData.email;
+            }
+        }
+
         // Create user in Firebase Auth
         const userRecord = await auth.createUser({
             email: email.trim(),
@@ -126,6 +136,8 @@ module.exports = async (req, res) => {
             displayName: displayName.trim(),
             role: 'student',
             batches: sanitizedBatches,
+            assignedTeacherId: assignedTeacherId || '',
+            assignedTeacherName: assignedTeacherName,
             createdAt: new Date().toISOString(),
             createdBy: adminCheck.adminUid
         });
@@ -139,7 +151,9 @@ module.exports = async (req, res) => {
                 uid: userRecord.uid,
                 email: userRecord.email,
                 displayName: userRecord.displayName,
-                batches: sanitizedBatches
+                batches: sanitizedBatches,
+                assignedTeacherId: assignedTeacherId || '',
+                assignedTeacherName: assignedTeacherName
             }
         });
 

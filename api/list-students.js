@@ -102,6 +102,8 @@ module.exports = async (req, res) => {
                 email: userData.email,
                 displayName: userData.displayName,
                 batches: userData.batches || [],
+                assignedTeacherId: userData.assignedTeacherId || '',
+                assignedTeacherName: userData.assignedTeacherName || '',
                 createdAt: userData.createdAt
             });
         });
