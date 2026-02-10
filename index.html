@@ -2158,6 +2158,314 @@
         /* ================================================================= */
         /* END: CSS FOR ANNOUNCEMENT HISTORY                               */
         /* ================================================================= */
+
+        /* ================================================================= */
+        /* START: CSS FOR STUDENT DASHBOARD                                  */
+        /* ================================================================= */
+        #student-dashboard {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 1.5rem;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .student-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .student-header .welcome-text {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .student-header .welcome-text span {
+            color: var(--accent-secondary);
+        }
+
+        .student-header .header-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .student-stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .student-stat-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            padding: 1.25rem;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .student-stat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        .student-stat-card .stat-icon {
+            font-size: 1.8rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .student-stat-card .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--accent-secondary);
+            font-family: 'Fira Code', monospace;
+        }
+
+        .student-stat-card .stat-label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-top: 0.25rem;
+        }
+
+        .student-main-grid {
+            display: grid;
+            grid-template-columns: 340px 1fr;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .student-main-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .student-stats-row {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .student-header {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+        }
+
+        .student-calendar-panel {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            padding: 1.25rem;
+        }
+
+        .student-calendar-panel .flatpickr-calendar {
+            width: 100% !important;
+            box-shadow: none !important;
+            background: transparent !important;
+        }
+
+        .student-calendar-panel .flatpickr-day.has-class {
+            background: rgba(78, 205, 196, 0.2);
+            border-color: var(--accent-secondary);
+        }
+
+        .student-calendar-panel .flatpickr-day.has-assignment {
+            position: relative;
+        }
+
+        .student-calendar-panel .flatpickr-day.has-assignment::after {
+            content: '';
+            position: absolute;
+            bottom: 3px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 5px;
+            height: 5px;
+            background: var(--accent-orange);
+            border-radius: 50%;
+        }
+
+        .student-right-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .student-panel-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            padding: 1.25rem;
+        }
+
+        .student-panel-card h3 {
+            font-size: 1.1rem;
+            color: var(--accent-secondary);
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .class-event-card {
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            padding: 0.9rem 1rem;
+            margin-bottom: 0.75rem;
+            border-left: 4px solid var(--accent-secondary);
+            transition: all 0.2s ease;
+        }
+
+        .class-event-card:hover {
+            transform: translateX(4px);
+            background: rgba(78, 205, 196, 0.08);
+        }
+
+        .class-event-card .event-time {
+            font-family: 'Fira Code', monospace;
+            font-size: 0.85rem;
+            color: var(--accent-secondary);
+            font-weight: 600;
+        }
+
+        .class-event-card .event-topic {
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-top: 0.2rem;
+        }
+
+        .class-event-card .event-teacher {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 0.15rem;
+        }
+
+        .assignment-card {
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            padding: 0.9rem 1rem;
+            margin-bottom: 0.75rem;
+            border-left: 4px solid var(--accent-orange);
+            transition: all 0.2s ease;
+        }
+
+        .assignment-card:hover {
+            transform: translateX(4px);
+            background: rgba(255, 167, 38, 0.08);
+        }
+
+        .assignment-card .assignment-title {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .assignment-card .assignment-due {
+            font-family: 'Fira Code', monospace;
+            font-size: 0.8rem;
+            color: var(--accent-orange);
+            margin-top: 0.2rem;
+        }
+
+        .assignment-card .assignment-desc {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-top: 0.3rem;
+            line-height: 1.4;
+        }
+
+        .assignment-card .assignment-teacher {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            margin-top: 0.3rem;
+            font-style: italic;
+        }
+
+        .attendance-bar-container {
+            background: var(--bg-primary);
+            border-radius: 10px;
+            height: 14px;
+            overflow: hidden;
+            margin: 0.75rem 0;
+        }
+
+        .attendance-bar {
+            height: 100%;
+            border-radius: 10px;
+            transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            background: linear-gradient(90deg, var(--accent-green), var(--accent-secondary));
+        }
+
+        .attendance-bar.low {
+            background: linear-gradient(90deg, var(--accent-red), var(--accent-orange));
+        }
+
+        .attendance-log-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            font-size: 0.85rem;
+        }
+
+        .attendance-log-item .att-date {
+            color: var(--text-muted);
+        }
+
+        .attendance-log-item .att-status {
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 0.78rem;
+            font-weight: 600;
+        }
+
+        .att-status.present {
+            background: rgba(76, 175, 80, 0.2);
+            color: var(--accent-green);
+        }
+
+        .att-status.absent {
+            background: rgba(244, 67, 54, 0.2);
+            color: var(--accent-red);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .empty-state .empty-icon {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            opacity: 0.5;
+        }
+
+        .day-classes-header {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .day-classes-header .selected-date-text {
+            color: var(--accent-secondary);
+        }
+
+        /* ================================================================= */
+        /* END: CSS FOR STUDENT DASHBOARD                                    */
+        /* ================================================================= */
     </style>
 
 </head>
@@ -2167,7 +2475,7 @@
     <div id="auth-view" class="container">
         <h1 class="text-center mb-3">Class Scheduler</h1>
         <div id="login-form">
-            <h2 class="text-center mb-2">Teacher Login</h2>
+            <h2 class="text-center mb-2">Login</h2>
             <label for="login-email">Email Address</label>
             <input type="email" id="login-email" placeholder="e.g., teacher@example.com" required class="mb-1">
             <label for="login-password">Password</label>
@@ -2195,6 +2503,8 @@
                         Announcements</button>
                     <button id="manage-teachers-button" class="btn btn-primary hidden"
                         onclick="openTeacherManagementModal()">👥 Manage Teachers</button>
+                    <button id="manage-students-button" class="btn btn-primary hidden"
+                        onclick="openStudentManagementModal()">🎓 Manage Students</button>
                     <button id="teacher-overview-button" class="btn btn-secondary hidden">Teacher Overview</button>
                     <button id="logout-button" class="btn btn-outline-primary">Logout</button>
                 </div>
@@ -2538,6 +2848,196 @@
             <div id="teachers-list" style="max-height: 40vh; overflow-y: auto; padding-right: 10px;">
                 <div id="teachers-loader" style="text-align: center; padding: 2rem; color: var(--text-muted);">
                     Loading teachers...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- ADMIN: STUDENT MANAGEMENT MODAL -->
+    <!-- ============================================ -->
+    <div id="student-management-modal" class="modal">
+        <div class="modal-content" style="max-width: 700px; max-height: 85vh; overflow-y: auto;">
+            <div class="modal-header">
+                <h3>🎓 Manage Students</h3>
+                <button class="close-button" id="close-student-modal-button">&times;</button>
+            </div>
+
+            <!-- Create New Student Section -->
+            <div id="create-student-section"
+                style="background-color: var(--bg-primary); padding: 20px; border-radius: var(--border-radius); border: 1px solid var(--border-color); margin-bottom: 2rem;">
+                <h4
+                    style="color: var(--accent-green); margin-top: 0; margin-bottom: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
+                    ➕ Add New Student
+                </h4>
+                <div style="display: grid; gap: 1rem;">
+                    <div>
+                        <label for="new-student-name">Student Name:</label>
+                        <input type="text" id="new-student-name" placeholder="Enter full name" required>
+                    </div>
+                    <div>
+                        <label for="new-student-email">Email Address:</label>
+                        <input type="email" id="new-student-email" placeholder="student@example.com" required>
+                    </div>
+                    <div>
+                        <label for="new-student-password">Password:</label>
+                        <input type="password" id="new-student-password" placeholder="Minimum 6 characters" required>
+                    </div>
+                    <div>
+                        <label for="new-student-batches">Batches (comma-separated):</label>
+                        <input type="text" id="new-student-batches" placeholder="e.g., Grade 8, Python Batch">
+                    </div>
+                    <button id="create-student-button" class="btn btn-success" style="width:100%;">
+                        Create Student Account
+                    </button>
+                </div>
+            </div>
+
+            <!-- Existing Students List -->
+            <h4 style="color: var(--accent-secondary); margin-top: 0; margin-bottom: 1rem;">
+                📋 Existing Students
+            </h4>
+            <div id="students-list" style="max-height: 40vh; overflow-y: auto; padding-right: 10px;">
+                <div id="students-loader" style="text-align: center; padding: 2rem; color: var(--text-muted);">
+                    Loading students...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- TEACHER: ASSIGNMENT MODAL -->
+    <!-- ============================================ -->
+    <div id="assignment-modal" class="modal">
+        <div class="modal-content" style="max-width: 550px;">
+            <div class="modal-header">
+                <h3>📝 Post Assignment / Homework</h3>
+                <button class="close-button" id="close-assignment-modal-button">&times;</button>
+            </div>
+            <div style="display: grid; gap: 1rem;">
+                <div>
+                    <label for="assignment-title">Title:</label>
+                    <input type="text" id="assignment-title" placeholder="e.g., Chapter 5 Exercises" required>
+                </div>
+                <div>
+                    <label for="assignment-description">Description:</label>
+                    <textarea id="assignment-description" placeholder="Describe the assignment..." rows="3"></textarea>
+                </div>
+                <div>
+                    <label for="assignment-due-date">Due Date:</label>
+                    <input type="text" id="assignment-due-date" placeholder="Select date" required>
+                </div>
+                <div>
+                    <label for="assignment-batch">Batch / Class:</label>
+                    <input type="text" id="assignment-batch" placeholder="e.g., Grade 8, Python Batch">
+                </div>
+                <button id="save-assignment-button" class="btn btn-success" style="width:100%;">Post Assignment</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- STUDENT DASHBOARD (shown for student role) -->
+    <!-- ============================================ -->
+    <div id="student-dashboard" class="hidden">
+        <div class="student-header">
+            <div class="welcome-text">👋 Welcome, <span id="student-display-name">Student</span></div>
+            <div class="header-actions">
+                <button id="student-notification-bell" title="View Announcements" class="hidden">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="currentColor"
+                        viewBox="0 0 16 16">
+                        <path
+                            d="M8 16a2 2 0 0 0 2-2H6a2 2 0 0 0 2 2zM8 1.918l-.797.161A4.002 4.002 0 0 0 4 6c0 .628-.134 2.197-.459 3.742-.16.767-.376 1.566-.663 2.258h10.244c-.287-.692-.502-1.49-.663-2.258C12.134 8.197 12 6.628 12 6a4.002 4.002 0 0 0-3.203-3.92L8 1.917zM14.22 12c.223.447.481.801.78 1H1c.299-.199.557-.553.78-1C2.68 10.2 3 6.88 3 6c0-2.42 1.72-4.44 4.005-4.901a1 1 0 1 1 1.99 0A5.002 5.002 0 0 1 13 6c0 .88.32 4.2 1.22 6z" />
+                    </svg>
+                    <span id="student-notification-dot"></span>
+                </button>
+                <button id="student-logout-button" class="btn btn-outline-primary">Logout</button>
+            </div>
+        </div>
+
+        <!-- Stats Row -->
+        <div class="student-stats-row">
+            <div class="student-stat-card">
+                <div class="stat-icon">📚</div>
+                <div class="stat-number" id="student-today-classes">0</div>
+                <div class="stat-label">Today's Classes</div>
+            </div>
+            <div class="student-stat-card">
+                <div class="stat-icon">📅</div>
+                <div class="stat-number" id="student-week-classes">0</div>
+                <div class="stat-label">This Week</div>
+            </div>
+            <div class="student-stat-card">
+                <div class="stat-icon">✅</div>
+                <div class="stat-number" id="student-attendance-rate">—</div>
+                <div class="stat-label">Attendance Rate</div>
+            </div>
+            <div class="student-stat-card">
+                <div class="stat-icon">📝</div>
+                <div class="stat-number" id="student-pending-assignments">0</div>
+                <div class="stat-label">Pending Tasks</div>
+            </div>
+        </div>
+
+        <!-- Main Grid: Calendar + Content -->
+        <div class="student-main-grid">
+            <!-- Calendar Panel -->
+            <div class="student-calendar-panel">
+                <h3 style="color: var(--accent-secondary); margin-bottom: 1rem; font-size: 1rem;">📆 Calendar</h3>
+                <div id="student-calendar-container"></div>
+                <div id="student-day-events" style="margin-top: 1rem;">
+                    <div class="day-classes-header">📖 <span class="selected-date-text"
+                            id="student-selected-date-text">Select a date</span></div>
+                    <div id="student-day-classes-list">
+                        <div class="empty-state">
+                            <div class="empty-icon">📋</div>
+                            <div>Click a date to see classes</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Panel: Upcoming + Assignments + Attendance -->
+            <div class="student-right-panel">
+                <!-- Upcoming Classes -->
+                <div class="student-panel-card">
+                    <h3>🕐 Upcoming Classes</h3>
+                    <div id="student-upcoming-classes">
+                        <div class="empty-state">
+                            <div class="empty-icon">📭</div>
+                            <div>No upcoming classes</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Assignments -->
+                <div class="student-panel-card">
+                    <h3>📝 Assignments & Homework</h3>
+                    <div id="student-assignments-list">
+                        <div class="empty-state">
+                            <div class="empty-icon">🎉</div>
+                            <div>No pending assignments</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Attendance -->
+                <div class="student-panel-card">
+                    <h3>📊 Attendance</h3>
+                    <div id="student-attendance-section">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="color: var(--text-muted); font-size: 0.9rem;">Overall Attendance</span>
+                            <span id="student-attendance-percent"
+                                style="font-family: 'Fira Code', monospace; font-weight: 700; color: var(--accent-green);">—%</span>
+                        </div>
+                        <div class="attendance-bar-container">
+                            <div class="attendance-bar" id="student-attendance-bar" style="width: 0%;"></div>
+                        </div>
+                        <div id="student-attendance-log"
+                            style="max-height: 200px; overflow-y: auto; margin-top: 0.5rem;">
+                            <div class="empty-state" style="padding: 1rem;">No attendance records yet</div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -3524,6 +4024,24 @@
                         isAdmin = true;
                         currentTeacherName = `${originalDisplayName} (Admin)`;
                         userDisplayName.classList.add('is-admin');
+                    } else if (userData.role === 'student') {
+                        // STUDENT LOGIN: Route to student dashboard
+                        currentUser.isStudent = true;
+                        currentUser.isAdmin = false;
+                        currentUser.originalDisplayName = originalDisplayName;
+                        currentUser.studentBatches = userData.batches || [];
+                        authView.classList.add('hidden');
+                        appView.classList.add('hidden');
+                        document.getElementById('student-dashboard').classList.remove('hidden');
+                        document.getElementById('student-display-name').textContent = originalDisplayName;
+                        [loginEmailInput, loginPasswordInput].forEach(input => { if (input) input.value = ''; });
+                        if (loginButton) { loginButton.disabled = false; loginButton.innerHTML = 'Login Securely'; }
+                        showNotification(`Welcome, ${originalDisplayName}! Your dashboard is ready.`, 'success');
+                        document.getElementById('student-logout-button').addEventListener('click', async () => {
+                            try { await signOut(auth); } catch (e) { showNotification(`Logout failed: ${e.message}`, 'error'); }
+                        });
+                        initStudentDashboard();
+                        return; // Exit early — skip teacher/admin flow
                     } else {
                         currentTeacherName = originalDisplayName;
                         userDisplayName.classList.remove('is-admin');
@@ -3545,14 +4063,17 @@
 
                 listenForAnnouncements();
 
+                const manageStudentsButton = document.getElementById('manage-students-button');
                 if (isAdmin) {
                     manageAnnouncementsButton.classList.remove('hidden');
                     manageTeachersButton.classList.remove('hidden');
+                    if (manageStudentsButton) manageStudentsButton.classList.remove('hidden');
                     notificationBell.classList.add('hidden');
                 } else {
                     // Correctly hide the manage buttons for non-admins
                     manageAnnouncementsButton.classList.add('hidden');
                     manageTeachersButton.classList.add('hidden');
+                    if (manageStudentsButton) manageStudentsButton.classList.add('hidden');
                     notificationBell.classList.remove('hidden');
                 }
 
@@ -3600,6 +4121,7 @@
             } else { // User is logged out
                 currentUser = null; currentTeacherName = ""; allTeachersData = [];
                 authView.classList.remove('hidden'); appView.classList.add('hidden');
+                document.getElementById('student-dashboard').classList.add('hidden');
                 dayScheduleView.classList.add('hidden');
                 userDisplayName.classList.remove('is-admin');
 
@@ -3609,6 +4131,8 @@
                 }
                 manageAnnouncementsButton.classList.add('hidden');
                 manageTeachersButton.classList.add('hidden');
+                const manageStudentsBtn = document.getElementById('manage-students-button');
+                if (manageStudentsBtn) manageStudentsBtn.classList.add('hidden');
                 notificationBell.classList.add('hidden');
                 notificationDot.classList.remove('visible');
 
@@ -3630,8 +4154,12 @@
                     loginButton.innerHTML = 'Login Securely';
                 }
 
-                teacherOverviewButton.classList.add('hidden'); // NEW: Hide button on logout
-                salaryHighlightBox.classList.add('hidden'); // Hide salary box on logout
+                teacherOverviewButton.classList.add('hidden');
+                salaryHighlightBox.classList.add('hidden');
+                // Clean up student dashboard state
+                if (window._studentCalendar) { window._studentCalendar.destroy(); window._studentCalendar = null; }
+                if (window._unsubStudentClasses) { window._unsubStudentClasses(); window._unsubStudentClasses = null; }
+                if (window._unsubStudentAssignments) { window._unsubStudentAssignments(); window._unsubStudentAssignments = null; }
                 if (auth.currentUser === null) {
                     showNotification("Logged out. See you soon!", "success");
                 }
@@ -5127,6 +5655,543 @@
 
         // =================================================================
         // END: ADMIN TEACHER MANAGEMENT
+        // =================================================================
+
+        // =================================================================
+        // START: ADMIN STUDENT MANAGEMENT
+        // =================================================================
+
+        const studentManagementModal = document.getElementById('student-management-modal');
+        const closeStudentModalButton = document.getElementById('close-student-modal-button');
+        const studentsList = document.getElementById('students-list');
+        const createStudentButton = document.getElementById('create-student-button');
+        const newStudentName = document.getElementById('new-student-name');
+        const newStudentEmail = document.getElementById('new-student-email');
+        const newStudentPassword = document.getElementById('new-student-password');
+        const newStudentBatches = document.getElementById('new-student-batches');
+
+        window.openStudentManagementModal = async function () {
+            if (!studentManagementModal) return;
+            studentManagementModal.classList.add('active');
+            await loadStudentsList();
+        }
+
+        if (closeStudentModalButton) {
+            closeStudentModalButton.addEventListener('click', () => {
+                studentManagementModal.classList.remove('active');
+                newStudentName.value = '';
+                newStudentEmail.value = '';
+                newStudentPassword.value = '';
+                newStudentBatches.value = '';
+            });
+        }
+
+        if (studentManagementModal) {
+            studentManagementModal.addEventListener('click', (e) => {
+                if (e.target === studentManagementModal) {
+                    studentManagementModal.classList.remove('active');
+                }
+            });
+        }
+
+        async function loadStudentsList() {
+            if (!studentsList) return;
+            studentsList.innerHTML = '<div style="text-align: center; padding: 2rem; color: var(--text-muted);">Loading students...</div>';
+
+            try {
+                const token = await getIdToken();
+                const response = await fetch('/api/list-students', {
+                    method: 'GET',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.message || 'Failed to load students');
+
+                studentsList.innerHTML = '';
+
+                if (data.students.length === 0) {
+                    studentsList.innerHTML = '<div style="text-align: center; padding: 2rem; color: var(--text-muted);">No students found. Add your first student above!</div>';
+                    return;
+                }
+
+                data.students.forEach(student => {
+                    const card = document.createElement('div');
+                    card.style.cssText = `display: flex; justify-content: space-between; align-items: center; padding: 1rem; margin-bottom: 0.75rem; background-color: var(--bg-primary); border: 1px solid var(--border-color); border-radius: var(--border-radius);`;
+
+                    const createdDate = student.createdAt ? new Date(student.createdAt).toLocaleDateString() : 'Unknown';
+                    const batchesText = (student.batches && student.batches.length > 0) ? student.batches.join(', ') : 'No batches';
+
+                    card.innerHTML = `
+                        <div>
+                            <div style="font-weight: 600; color: var(--text-primary);">${student.displayName || 'Unknown'}</div>
+                            <div style="font-size: 0.85em; color: var(--text-muted);">${student.email}</div>
+                            <div style="font-size: 0.78em; color: var(--accent-secondary);">Batches: ${batchesText}</div>
+                            <div style="font-size: 0.75em; color: var(--text-muted);">Added: ${createdDate}</div>
+                        </div>
+                        <button class="btn btn-danger btn-small delete-student-btn" data-uid="${student.uid}" data-name="${student.displayName}" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;">
+                            Delete
+                        </button>
+                    `;
+                    studentsList.appendChild(card);
+                });
+
+                document.querySelectorAll('.delete-student-btn').forEach(btn => {
+                    btn.addEventListener('click', async (e) => {
+                        const uid = e.target.dataset.uid;
+                        const name = e.target.dataset.name;
+                        await deleteStudent(uid, name);
+                    });
+                });
+
+            } catch (error) {
+                console.error('Error loading students:', error);
+                studentsList.innerHTML = `<div style="text-align: center; padding: 2rem; color: var(--accent-red);">Error: ${error.message}</div>`;
+            }
+        }
+
+        if (createStudentButton) {
+            createStudentButton.addEventListener('click', async () => {
+                const name = newStudentName.value.trim();
+                const email = newStudentEmail.value.trim();
+                const password = newStudentPassword.value;
+                const batches = newStudentBatches.value.split(',').map(b => b.trim()).filter(b => b.length > 0);
+
+                if (!name || !email || !password) {
+                    showNotification('Please fill in name, email, and password.', 'warning');
+                    return;
+                }
+                if (password.length < 6) {
+                    showNotification('Password must be at least 6 characters.', 'warning');
+                    return;
+                }
+
+                createStudentButton.disabled = true;
+                const originalText = createStudentButton.textContent;
+                createStudentButton.innerHTML = '<span class="loader"></span> Creating...';
+
+                try {
+                    const token = await getIdToken();
+                    const response = await fetch('/api/create-student', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify({ displayName: name, email, password, batches })
+                    });
+
+                    const data = await response.json();
+                    if (!response.ok) throw new Error(data.message || 'Failed to create student');
+
+                    showNotification(`Student "${name}" created successfully!`, 'success');
+                    newStudentName.value = '';
+                    newStudentEmail.value = '';
+                    newStudentPassword.value = '';
+                    newStudentBatches.value = '';
+                    await loadStudentsList();
+
+                } catch (error) {
+                    console.error('Error creating student:', error);
+                    showNotification(`Error: ${error.message}`, 'error');
+                } finally {
+                    createStudentButton.disabled = false;
+                    createStudentButton.textContent = originalText;
+                }
+            });
+        }
+
+        async function deleteStudent(uid, name) {
+            const confirmed = confirm(`Are you sure you want to delete student "${name}"?\n\nThis will permanently remove their account.`);
+            if (!confirmed) return;
+
+            try {
+                const token = await getIdToken();
+                const response = await fetch('/api/delete-student', {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ uid })
+                });
+
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.message || 'Failed to delete student');
+
+                showNotification(`Student "${name}" deleted successfully.`, 'success');
+                await loadStudentsList();
+
+            } catch (error) {
+                console.error('Error deleting student:', error);
+                showNotification(`Error: ${error.message}`, 'error');
+            }
+        }
+
+        // =================================================================
+        // END: ADMIN STUDENT MANAGEMENT
+        // =================================================================
+
+        // =================================================================
+        // START: TEACHER ASSIGNMENT POSTING
+        // =================================================================
+
+        const assignmentModal = document.getElementById('assignment-modal');
+        const closeAssignmentModalButton = document.getElementById('close-assignment-modal-button');
+        const saveAssignmentButton = document.getElementById('save-assignment-button');
+        const assignmentTitleInput = document.getElementById('assignment-title');
+        const assignmentDescInput = document.getElementById('assignment-description');
+        const assignmentDueDateInput = document.getElementById('assignment-due-date');
+        const assignmentBatchInput = document.getElementById('assignment-batch');
+
+        let assignmentDueDatePicker = null;
+
+        // Add "Post Assignment" button to the add-slot button area
+        if (addSlotButton && addSlotButton.parentElement) {
+            const postAssignmentBtn = document.createElement('button');
+            postAssignmentBtn.id = 'post-assignment-button';
+            postAssignmentBtn.className = 'btn btn-warning';
+            postAssignmentBtn.textContent = '📝 Post Assignment';
+            postAssignmentBtn.style.marginLeft = '10px';
+            postAssignmentBtn.addEventListener('click', () => {
+                if (!assignmentDueDatePicker) {
+                    assignmentDueDatePicker = flatpickr(assignmentDueDateInput, {
+                        dateFormat: "Y-m-d",
+                        theme: "dark",
+                        minDate: "today"
+                    });
+                }
+                assignmentModal.classList.add('active');
+            });
+            addSlotButton.parentElement.appendChild(postAssignmentBtn);
+        }
+
+        if (closeAssignmentModalButton) {
+            closeAssignmentModalButton.addEventListener('click', () => {
+                assignmentModal.classList.remove('active');
+            });
+        }
+
+        if (assignmentModal) {
+            assignmentModal.addEventListener('click', (e) => {
+                if (e.target === assignmentModal) assignmentModal.classList.remove('active');
+            });
+        }
+
+        if (saveAssignmentButton) {
+            saveAssignmentButton.addEventListener('click', async () => {
+                const title = assignmentTitleInput.value.trim();
+                const description = assignmentDescInput.value.trim();
+                const dueDate = assignmentDueDateInput.value.trim();
+                const batch = assignmentBatchInput.value.trim();
+
+                if (!title || !dueDate) {
+                    showNotification('Title and due date are required.', 'warning');
+                    return;
+                }
+
+                saveAssignmentButton.disabled = true;
+                saveAssignmentButton.innerHTML = '<span class="loader"></span> Posting...';
+
+                try {
+                    const batches = batch.split(',').map(b => b.trim()).filter(b => b.length > 0);
+                    await addDoc(collection(db, "assignments"), {
+                        title,
+                        description,
+                        dueDate,
+                        batches,
+                        teacherId: currentUser.uid,
+                        teacherName: currentUser.originalDisplayName || currentTeacherName,
+                        createdAt: serverTimestamp(),
+                        status: 'active'
+                    });
+
+                    showNotification('Assignment posted successfully!', 'success');
+                    assignmentTitleInput.value = '';
+                    assignmentDescInput.value = '';
+                    assignmentDueDateInput.value = '';
+                    assignmentBatchInput.value = '';
+                    assignmentModal.classList.remove('active');
+
+                } catch (error) {
+                    console.error('Error posting assignment:', error);
+                    showNotification(`Error: ${error.message}`, 'error');
+                } finally {
+                    saveAssignmentButton.disabled = false;
+                    saveAssignmentButton.textContent = 'Post Assignment';
+                }
+            });
+        }
+
+        // =================================================================
+        // END: TEACHER ASSIGNMENT POSTING
+        // =================================================================
+
+        // =================================================================
+        // START: STUDENT DASHBOARD LOGIC
+        // =================================================================
+
+        async function initStudentDashboard() {
+            if (!currentUser || !currentUser.isStudent) return;
+
+            const batches = currentUser.studentBatches || [];
+            const todayStr = getLocalDateString(new Date());
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            // --- Setup calendar ---
+            const calContainer = document.getElementById('student-calendar-container');
+            if (window._studentCalendar) window._studentCalendar.destroy();
+            window._studentCalendar = flatpickr(calContainer, {
+                inline: true,
+                theme: "dark",
+                onChange: function (selectedDates) {
+                    if (selectedDates.length > 0) {
+                        renderStudentDayClasses(selectedDates[0]);
+                    }
+                }
+            });
+
+            // --- Real-time listener for classes ---
+            if (window._unsubStudentClasses) window._unsubStudentClasses();
+
+            const classesQuery = query(collection(db, "classSlots"),
+                where("status", "in", ["scheduled", "completed"]),
+                orderBy("date"),
+                orderBy("startTime")
+            );
+
+            window._allStudentClasses = [];
+            window._unsubStudentClasses = onSnapshot(classesQuery, (snapshot) => {
+                window._allStudentClasses = [];
+                snapshot.forEach(docSnap => {
+                    window._allStudentClasses.push({ id: docSnap.id, ...docSnap.data() });
+                });
+                updateStudentStats();
+                renderStudentUpcomingClasses();
+                // Refresh day view if a date was selected
+                const selectedDate = window._studentCalendar?.selectedDates?.[0];
+                if (selectedDate) renderStudentDayClasses(selectedDate);
+            });
+
+            // --- Real-time listener for assignments ---
+            if (window._unsubStudentAssignments) window._unsubStudentAssignments();
+
+            const assignmentsQuery = query(collection(db, "assignments"),
+                where("status", "==", "active"),
+                orderBy("dueDate")
+            );
+
+            window._allStudentAssignments = [];
+            window._unsubStudentAssignments = onSnapshot(assignmentsQuery, (snapshot) => {
+                window._allStudentAssignments = [];
+                snapshot.forEach(docSnap => {
+                    window._allStudentAssignments.push({ id: docSnap.id, ...docSnap.data() });
+                });
+                renderStudentAssignments();
+                updateStudentStats();
+            });
+
+            // --- Load attendance ---
+            await renderStudentAttendance();
+        }
+
+        function updateStudentStats() {
+            const today = new Date();
+            const todayStr = getLocalDateString(today);
+            const dayOfWeek = today.getDay();
+            const weekStart = new Date(today);
+            weekStart.setDate(today.getDate() - dayOfWeek);
+            const weekEnd = new Date(weekStart);
+            weekEnd.setDate(weekStart.getDate() + 6);
+
+            const allClasses = window._allStudentClasses || [];
+
+            // Today's classes
+            const todayClasses = allClasses.filter(c => c.date === todayStr);
+            document.getElementById('student-today-classes').textContent = todayClasses.length;
+
+            // This week's classes
+            const weekStartStr = getLocalDateString(weekStart);
+            const weekEndStr = getLocalDateString(weekEnd);
+            const weekClasses = allClasses.filter(c => c.date >= weekStartStr && c.date <= weekEndStr);
+            document.getElementById('student-week-classes').textContent = weekClasses.length;
+
+            // Pending assignments
+            const allAssignments = window._allStudentAssignments || [];
+            const pendingAssignments = allAssignments.filter(a => a.dueDate >= todayStr);
+            document.getElementById('student-pending-assignments').textContent = pendingAssignments.length;
+        }
+
+        function renderStudentUpcomingClasses() {
+            const container = document.getElementById('student-upcoming-classes');
+            const todayStr = getLocalDateString(new Date());
+            const allClasses = window._allStudentClasses || [];
+
+            const upcoming = allClasses
+                .filter(c => c.date >= todayStr && c.status === 'scheduled')
+                .slice(0, 5);
+
+            if (upcoming.length === 0) {
+                container.innerHTML = '<div class="empty-state"><div class="empty-icon">📭</div><div>No upcoming classes scheduled</div></div>';
+                return;
+            }
+
+            container.innerHTML = upcoming.map(cls => {
+                const dateObj = new Date(cls.date.replace(/-/g, '/'));
+                const dateDisplay = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', weekday: 'short' });
+                const displayStart = calculateDisplayStartTime(cls.startTime);
+                const displayEnd = calculateDisplayEndTime(cls.startTime, cls.endTime);
+                return `
+                    <div class="class-event-card">
+                        <div class="event-time">${dateDisplay} · ${displayStart} – ${displayEnd}</div>
+                        <div class="event-topic">${cls.topic || 'Class Session'}</div>
+                        <div class="event-teacher">👨‍🏫 ${cls.teacherName || 'Teacher'}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderStudentDayClasses(date) {
+            const dateStr = getLocalDateString(date);
+            const dateDisplay = date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+            document.getElementById('student-selected-date-text').textContent = dateDisplay;
+
+            const container = document.getElementById('student-day-classes-list');
+            const allClasses = window._allStudentClasses || [];
+
+            const dayClasses = allClasses.filter(c => c.date === dateStr);
+
+            // Also show assignments due on this day
+            const allAssignments = window._allStudentAssignments || [];
+            const dayAssignments = allAssignments.filter(a => a.dueDate === dateStr);
+
+            if (dayClasses.length === 0 && dayAssignments.length === 0) {
+                container.innerHTML = '<div class="empty-state"><div class="empty-icon">📋</div><div>No classes or assignments on this day</div></div>';
+                return;
+            }
+
+            let html = '';
+
+            dayClasses.forEach(cls => {
+                const displayStart = calculateDisplayStartTime(cls.startTime);
+                const displayEnd = calculateDisplayEndTime(cls.startTime, cls.endTime);
+                const statusBadge = cls.status === 'completed' ?
+                    '<span style="color: var(--accent-green); font-size: 0.75rem;">✅ Completed</span>' :
+                    '<span style="color: var(--accent-secondary); font-size: 0.75rem;">🔵 Scheduled</span>';
+
+                html += `
+                    <div class="class-event-card">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div class="event-time">${displayStart} – ${displayEnd}</div>
+                            ${statusBadge}
+                        </div>
+                        <div class="event-topic">${cls.topic || 'Class Session'}</div>
+                        <div class="event-teacher">👨‍🏫 ${cls.teacherName || 'Teacher'}</div>
+                    </div>
+                `;
+            });
+
+            dayAssignments.forEach(asn => {
+                html += `
+                    <div class="assignment-card">
+                        <div class="assignment-title">📝 ${asn.title}</div>
+                        <div class="assignment-due">Due: ${dateDisplay}</div>
+                        ${asn.description ? `<div class="assignment-desc">${asn.description}</div>` : ''}
+                        <div class="assignment-teacher">By: ${asn.teacherName || 'Teacher'}</div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        function renderStudentAssignments() {
+            const container = document.getElementById('student-assignments-list');
+            const todayStr = getLocalDateString(new Date());
+            const allAssignments = window._allStudentAssignments || [];
+
+            const active = allAssignments.filter(a => a.dueDate >= todayStr);
+
+            if (active.length === 0) {
+                container.innerHTML = '<div class="empty-state"><div class="empty-icon">🎉</div><div>No pending assignments — you\'re all caught up!</div></div>';
+                return;
+            }
+
+            container.innerHTML = active.map(asn => {
+                const dueDate = new Date(asn.dueDate.replace(/-/g, '/'));
+                const daysUntilDue = Math.ceil((dueDate - new Date()) / (1000 * 60 * 60 * 24));
+                const urgencyColor = daysUntilDue <= 1 ? 'var(--accent-red)' : daysUntilDue <= 3 ? 'var(--accent-orange)' : 'var(--accent-green)';
+                const dueText = dueDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', weekday: 'short' });
+
+                return `
+                    <div class="assignment-card">
+                        <div class="assignment-title">${asn.title}</div>
+                        <div class="assignment-due" style="color: ${urgencyColor};">Due: ${dueText} ${daysUntilDue <= 1 ? '⚠️' : ''}</div>
+                        ${asn.description ? `<div class="assignment-desc">${asn.description}</div>` : ''}
+                        <div class="assignment-teacher">By: ${asn.teacherName || 'Teacher'}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function renderStudentAttendance() {
+            if (!currentUser) return;
+
+            try {
+                const attendanceQuery = query(
+                    collection(db, "attendance"),
+                    where("studentId", "==", currentUser.uid),
+                    orderBy("date", "desc"),
+                    limit(30)
+                );
+
+                const snapshot = await getDocs(attendanceQuery);
+                const records = [];
+                snapshot.forEach(docSnap => records.push(docSnap.data()));
+
+                const totalRecords = records.length;
+                const presentCount = records.filter(r => r.status === 'present').length;
+                const attendancePercentage = totalRecords > 0 ? Math.round((presentCount / totalRecords) * 100) : 0;
+
+                // Update stats card
+                document.getElementById('student-attendance-rate').textContent = totalRecords > 0 ? `${attendancePercentage}%` : '—';
+
+                // Update detailed attendance section
+                const percentEl = document.getElementById('student-attendance-percent');
+                const barEl = document.getElementById('student-attendance-bar');
+                const logEl = document.getElementById('student-attendance-log');
+
+                if (totalRecords > 0) {
+                    percentEl.textContent = `${attendancePercentage}%`;
+                    percentEl.style.color = attendancePercentage >= 75 ? 'var(--accent-green)' : 'var(--accent-red)';
+                    barEl.style.width = `${attendancePercentage}%`;
+                    barEl.className = `attendance-bar${attendancePercentage < 75 ? ' low' : ''}`;
+
+                    logEl.innerHTML = records.slice(0, 15).map(r => {
+                        const dateObj = new Date(r.date.replace(/-/g, '/'));
+                        const dateText = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                        const isPresent = r.status === 'present';
+                        return `
+                            <div class="attendance-log-item">
+                                <span class="att-date">${dateText}${r.topic ? ` — ${r.topic}` : ''}</span>
+                                <span class="att-status ${isPresent ? 'present' : 'absent'}">${isPresent ? 'Present' : 'Absent'}</span>
+                            </div>
+                        `;
+                    }).join('');
+                } else {
+                    percentEl.textContent = '—%';
+                    barEl.style.width = '0%';
+                    logEl.innerHTML = '<div class="empty-state" style="padding: 1rem;">No attendance records yet</div>';
+                }
+
+            } catch (error) {
+                console.error('Error loading attendance:', error);
+            }
+        }
+
+        // =================================================================
+        // END: STUDENT DASHBOARD LOGIC
         // =================================================================
 
         updateDateDisplay();
