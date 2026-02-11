@@ -2505,6 +2505,8 @@
                         onclick="openTeacherManagementModal()">👥 Manage Teachers</button>
                     <button id="manage-students-button" class="btn btn-primary hidden"
                         onclick="openStudentManagementModal()">🎓 Manage Students</button>
+                    <button id="manage-batches-button" class="btn btn-primary hidden"
+                        onclick="openBatchManagementModal()">📦 Manage Batches</button>
                     <button id="teacher-overview-button" class="btn btn-secondary hidden">Teacher Overview</button>
                     <button id="logout-button" class="btn btn-outline-primary">Logout</button>
                 </div>
@@ -2888,8 +2890,14 @@
                         <input type="password" id="new-student-password" placeholder="Minimum 6 characters" required>
                     </div>
                     <div>
-                        <label for="new-student-batches">Batches (comma-separated):</label>
-                        <input type="text" id="new-student-batches" placeholder="e.g., Grade 8, Python Batch">
+                        <label>Batch:</label>
+                        <div id="new-student-batch-container" style="position: relative;">
+                            <select id="new-student-batch-select" style="width: 100%;">
+                                <option value="">— Select Batch —</option>
+                            </select>
+                            <div id="new-student-batch-chips"
+                                style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px;"></div>
+                        </div>
                     </div>
                     <div>
                         <label for="new-student-teacher">Assign to Teacher:</label>
@@ -2920,6 +2928,46 @@
     </div>
 
     <!-- ============================================ -->
+    <!-- ADMIN: BATCH MANAGEMENT MODAL -->
+    <!-- ============================================ -->
+    <div id="batch-management-modal" class="modal">
+        <div class="modal-content" style="max-width: 550px; max-height: 85vh; overflow-y: auto;">
+            <div class="modal-header">
+                <h3>Manage Batches</h3>
+                <button class="close-button" id="close-batch-modal-button">&times;</button>
+            </div>
+
+            <!-- Add New Batch Section -->
+            <div
+                style="background-color: var(--bg-primary); padding: 20px; border-radius: var(--border-radius); border: 1px solid var(--border-color); margin-bottom: 2rem;">
+                <h4
+                    style="color: var(--accent-green); margin-top: 0; margin-bottom: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
+                    Add New Batch
+                </h4>
+                <div style="display: flex; gap: 10px; align-items: flex-end;">
+                    <div style="flex: 1;">
+                        <label for="new-batch-name">Batch Name:</label>
+                        <input type="text" id="new-batch-name" placeholder="e.g., Grade 8, Python Batch"
+                            style="margin-bottom: 0;">
+                    </div>
+                    <button id="add-batch-button" class="btn btn-success" style="height: 46px; white-space: nowrap;">Add
+                        Batch</button>
+                </div>
+            </div>
+
+            <!-- Existing Batches List -->
+            <h4 style="color: var(--accent-secondary); margin-top: 0; margin-bottom: 1rem;">
+                Existing Batches
+            </h4>
+            <div id="batches-list" style="max-height: 40vh; overflow-y: auto; padding-right: 10px;">
+                <div style="text-align: center; padding: 2rem; color: var(--text-muted);">
+                    No batches added yet.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================ -->
     <!-- TEACHER: ASSIGNMENT MODAL -->
     <!-- ============================================ -->
     <div id="assignment-modal" class="modal">
@@ -2943,7 +2991,9 @@
                 </div>
                 <div>
                     <label for="assignment-batch">Batch / Class:</label>
-                    <input type="text" id="assignment-batch" placeholder="e.g., Grade 8, Python Batch">
+                    <select id="assignment-batch" style="width: 100%;">
+                        <option value="">— Select Batch —</option>
+                    </select>
                 </div>
                 <div>
                     <label>Assign to Students:</label>
@@ -3392,6 +3442,86 @@
         ];
 
         let allTeachersData = []; // For admin to store teacher list {id, displayName, email, role}
+        let allBatchesData = []; // Global cache of batch names from Firestore
+        let _unsubBatchesListener = null; // Real-time listener for batches
+        let _selectedNewStudentBatches = []; // Chip-based selection state for new student form
+
+        // ---- Batch Management Helpers ----
+        function populateBatchDropdown(selectEl, options = {}) {
+            if (!selectEl) return;
+            const { includePersonalized = false, personalizedEntries = [], selectedBatches = [] } = options;
+            selectEl.innerHTML = '<option value="">— Select Batch —</option>';
+            allBatchesData.forEach(b => {
+                const opt = document.createElement('option');
+                opt.value = b.name;
+                opt.textContent = b.name;
+                if (selectedBatches.includes(b.name)) opt.disabled = true;
+                selectEl.appendChild(opt);
+            });
+            if (includePersonalized) {
+                const sep = document.createElement('option');
+                sep.disabled = true;
+                sep.textContent = '──────────';
+                selectEl.appendChild(sep);
+                const pOpt = document.createElement('option');
+                pOpt.value = '__personalized__';
+                pOpt.textContent = 'Personalized';
+                if (selectedBatches.includes('__personalized__')) pOpt.disabled = true;
+                selectEl.appendChild(pOpt);
+            }
+            // Add teacher-specific personalized student entries
+            if (personalizedEntries.length > 0) {
+                const sep2 = document.createElement('option');
+                sep2.disabled = true;
+                sep2.textContent = '── Personalized Students ──';
+                selectEl.appendChild(sep2);
+                personalizedEntries.forEach(entry => {
+                    const opt = document.createElement('option');
+                    opt.value = entry.value;
+                    opt.textContent = entry.label;
+                    selectEl.appendChild(opt);
+                });
+            }
+        }
+
+        function renderBatchChips(containerEl, selectedArr, selectEl, onChange) {
+            if (!containerEl) return;
+            containerEl.innerHTML = selectedArr.map(b => {
+                const label = b === '__personalized__' ? 'Personalized' : b;
+                return `<span style="display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 16px; font-size: 0.78rem; font-weight: 600; background: ${b === '__personalized__' ? 'rgba(255, 165, 0, 0.2)' : 'rgba(100, 108, 255, 0.2)'}; color: ${b === '__personalized__' ? 'var(--accent-orange)' : 'var(--accent-primary)'};">
+                    ${label}
+                    <span class="remove-batch-chip" data-batch="${b}" style="cursor: pointer; font-size: 1rem; line-height: 1; margin-left: 2px;">&times;</span>
+                </span>`;
+            }).join('');
+            containerEl.querySelectorAll('.remove-batch-chip').forEach(el => {
+                el.addEventListener('click', () => {
+                    const batchVal = el.dataset.batch;
+                    const idx = selectedArr.indexOf(batchVal);
+                    if (idx > -1) selectedArr.splice(idx, 1);
+                    renderBatchChips(containerEl, selectedArr, selectEl, onChange);
+                    if (selectEl) populateBatchDropdown(selectEl, { includePersonalized: true, selectedBatches: selectedArr });
+                    if (onChange) onChange(selectedArr);
+                });
+            });
+        }
+
+        // Load batches from Firestore with real-time listener
+        function loadBatchesRealtime() {
+            if (_unsubBatchesListener) _unsubBatchesListener();
+            _unsubBatchesListener = onSnapshot(
+                query(collection(db, "batches"), orderBy("name")),
+                (snapshot) => {
+                    allBatchesData = [];
+                    snapshot.forEach(docSnap => {
+                        allBatchesData.push({ id: docSnap.id, ...docSnap.data() });
+                    });
+                    console.log('Batches loaded:', allBatchesData.length);
+                },
+                (error) => {
+                    console.error('Error loading batches:', error);
+                }
+            );
+        }
 
         // =================================================================
         // START: NEW STATE FOR TEACHER OVERVIEW
@@ -4092,16 +4222,19 @@
                 listenForAnnouncements();
 
                 const manageStudentsButton = document.getElementById('manage-students-button');
+                const manageBatchesButton = document.getElementById('manage-batches-button');
                 if (isAdmin) {
                     manageAnnouncementsButton.classList.remove('hidden');
                     manageTeachersButton.classList.remove('hidden');
                     if (manageStudentsButton) manageStudentsButton.classList.remove('hidden');
+                    if (manageBatchesButton) manageBatchesButton.classList.remove('hidden');
                     notificationBell.classList.add('hidden');
                 } else {
                     // Correctly hide the manage buttons for non-admins
                     manageAnnouncementsButton.classList.add('hidden');
                     manageTeachersButton.classList.add('hidden');
                     if (manageStudentsButton) manageStudentsButton.classList.add('hidden');
+                    if (manageBatchesButton) manageBatchesButton.classList.add('hidden');
                     notificationBell.classList.remove('hidden');
                 }
 
@@ -4115,6 +4248,8 @@
                 });
 
                 allTeachersData = [];
+                // Load batches for all roles (admin, teacher)
+                loadBatchesRealtime();
                 if (isAdmin) {
                     teacherOverviewButton.classList.remove('hidden'); // NEW: Show overview button for admin
                     console.log("Admin user logged in.");
@@ -4164,6 +4299,8 @@
                 manageTeachersButton.classList.add('hidden');
                 const manageStudentsBtn = document.getElementById('manage-students-button');
                 if (manageStudentsBtn) manageStudentsBtn.classList.add('hidden');
+                const manageBatchesBtn = document.getElementById('manage-batches-button');
+                if (manageBatchesBtn) manageBatchesBtn.classList.add('hidden');
                 notificationBell.classList.add('hidden');
                 notificationDot.classList.remove('visible');
 
@@ -4191,6 +4328,8 @@
                 if (window._studentCalendar) { window._studentCalendar.destroy(); window._studentCalendar = null; }
                 if (window._unsubStudentClasses) { window._unsubStudentClasses(); window._unsubStudentClasses = null; }
                 if (window._unsubStudentAssignments) { window._unsubStudentAssignments(); window._unsubStudentAssignments = null; }
+                if (_unsubBatchesListener) { _unsubBatchesListener(); _unsubBatchesListener = null; }
+                allBatchesData = [];
                 if (auth.currentUser === null) {
                     showNotification("Logged out. See you soon!", "success");
                 }
@@ -5747,9 +5886,23 @@
         const newStudentName = document.getElementById('new-student-name');
         const newStudentEmail = document.getElementById('new-student-email');
         const newStudentPassword = document.getElementById('new-student-password');
-        const newStudentBatches = document.getElementById('new-student-batches');
+        const newStudentBatchSelect = document.getElementById('new-student-batch-select');
+        const newStudentBatchChips = document.getElementById('new-student-batch-chips');
         const newStudentTeacher = document.getElementById('new-student-teacher');
         const studentSearchInput = document.getElementById('student-search-input');
+
+        // Wire up the new student batch dropdown to chips
+        if (newStudentBatchSelect) {
+            newStudentBatchSelect.addEventListener('change', () => {
+                const val = newStudentBatchSelect.value;
+                if (val && !_selectedNewStudentBatches.includes(val)) {
+                    _selectedNewStudentBatches.push(val);
+                    renderBatchChips(newStudentBatchChips, _selectedNewStudentBatches, newStudentBatchSelect);
+                    populateBatchDropdown(newStudentBatchSelect, { includePersonalized: true, selectedBatches: _selectedNewStudentBatches });
+                }
+                newStudentBatchSelect.value = '';
+            });
+        }
 
         // Cache loaded students for search filtering
         let _cachedStudents = [];
@@ -5768,6 +5921,10 @@
             if (!studentManagementModal) return;
             studentManagementModal.classList.add('active');
             populateStudentTeacherDropdown();
+            // Populate batch dropdown for new student
+            _selectedNewStudentBatches = [];
+            renderBatchChips(newStudentBatchChips, _selectedNewStudentBatches, newStudentBatchSelect);
+            populateBatchDropdown(newStudentBatchSelect, { includePersonalized: true, selectedBatches: [] });
             await loadStudentsList();
         }
 
@@ -5777,7 +5934,9 @@
                 newStudentName.value = '';
                 newStudentEmail.value = '';
                 newStudentPassword.value = '';
-                newStudentBatches.value = '';
+                _selectedNewStudentBatches = [];
+                if (newStudentBatchChips) newStudentBatchChips.innerHTML = '';
+                if (newStudentBatchSelect) newStudentBatchSelect.value = '';
                 if (newStudentTeacher) newStudentTeacher.value = '';
                 if (studentSearchInput) studentSearchInput.value = '';
             });
@@ -5861,8 +6020,11 @@
                     <div class="student-edit-form" data-uid="${student.uid}" style="display: none; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border-color);">
                         <div style="display: grid; gap: 0.75rem;">
                             <div>
-                                <label style="font-size: 0.8rem;">Batches (comma-separated):</label>
-                                <input type="text" class="edit-batches" value="${(student.batches || []).join(', ')}" style="width: 100%;">
+                                <label style="font-size: 0.8rem;">Batch:</label>
+                                <select class="edit-batch-select" style="width: 100%;">
+                                    <option value="">— Select Batch —</option>
+                                </select>
+                                <div class="edit-batch-chips" style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px;" data-selected='${JSON.stringify(student.batches || [])}'></div>
                             </div>
                             <div>
                                 <label style="font-size: 0.8rem;">Assign to Teacher:</label>
@@ -5907,10 +6069,11 @@
                     const form = document.querySelector(`.student-edit-form[data-uid="${uid}"]`);
                     if (!form) return;
 
-                    const batchesInput = form.querySelector('.edit-batches');
+                    const batchChipsContainer = form.querySelector('.edit-batch-chips');
                     const teacherSelect = form.querySelector('.edit-teacher');
 
-                    const batches = batchesInput.value.split(',').map(b => b.trim()).filter(b => b.length > 0);
+                    // Read batches from the chip data attribute (updated by renderBatchChips)
+                    const batches = batchChipsContainer ? JSON.parse(batchChipsContainer.dataset.selected || '[]') : [];
                     const assignedTeacherId = teacherSelect.value;
 
                     saveBtn.disabled = true;
@@ -5989,7 +6152,7 @@
                 const name = newStudentName.value.trim();
                 const email = newStudentEmail.value.trim();
                 const password = newStudentPassword.value;
-                const batches = newStudentBatches.value.split(',').map(b => b.trim()).filter(b => b.length > 0);
+                const batches = [..._selectedNewStudentBatches];
                 const assignedTeacherId = newStudentTeacher ? newStudentTeacher.value : '';
 
                 if (!name || !email || !password) {
@@ -6023,7 +6186,9 @@
                     newStudentName.value = '';
                     newStudentEmail.value = '';
                     newStudentPassword.value = '';
-                    newStudentBatches.value = '';
+                    _selectedNewStudentBatches = [];
+                    if (newStudentBatchChips) newStudentBatchChips.innerHTML = '';
+                    if (newStudentBatchSelect) { newStudentBatchSelect.value = ''; populateBatchDropdown(newStudentBatchSelect, { includePersonalized: true, selectedBatches: [] }); }
                     if (newStudentTeacher) newStudentTeacher.value = '';
                     await loadStudentsList();
 
@@ -6067,6 +6232,172 @@
         // =================================================================
         // END: ADMIN STUDENT MANAGEMENT
         // =================================================================
+
+        // =================================================================
+        // START: ADMIN BATCH MANAGEMENT
+        // =================================================================
+
+        const batchManagementModal = document.getElementById('batch-management-modal');
+        const closeBatchModalButton = document.getElementById('close-batch-modal-button');
+        const addBatchButton = document.getElementById('add-batch-button');
+        const newBatchNameInput = document.getElementById('new-batch-name');
+        const batchesList = document.getElementById('batches-list');
+
+        window.openBatchManagementModal = function () {
+            if (!batchManagementModal) return;
+            batchManagementModal.classList.add('active');
+            renderBatchesList();
+        }
+
+        if (closeBatchModalButton) {
+            closeBatchModalButton.addEventListener('click', () => {
+                batchManagementModal.classList.remove('active');
+                if (newBatchNameInput) newBatchNameInput.value = '';
+            });
+        }
+
+        if (batchManagementModal) {
+            batchManagementModal.addEventListener('click', (e) => {
+                if (e.target === batchManagementModal) {
+                    batchManagementModal.classList.remove('active');
+                }
+            });
+        }
+
+        function renderBatchesList() {
+            if (!batchesList) return;
+            if (allBatchesData.length === 0) {
+                batchesList.innerHTML = '<div style="text-align: center; padding: 2rem; color: var(--text-muted);">No batches added yet. Use the form above to add your first batch.</div>';
+                return;
+            }
+            batchesList.innerHTML = allBatchesData.map(batch => `
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border: 1px solid var(--border-color); border-radius: var(--border-radius); margin-bottom: 8px; background: var(--bg-primary); transition: border-color 0.2s;">
+                    <div>
+                        <span style="font-weight: 600; color: var(--text-primary);">${batch.name}</span>
+                        <span style="font-size: 0.75rem; color: var(--text-muted); margin-left: 8px;">${batch.createdAt ? new Date(batch.createdAt.seconds ? batch.createdAt.seconds * 1000 : batch.createdAt).toLocaleDateString() : ''}</span>
+                    </div>
+                    <button class="btn btn-danger btn-small delete-batch-btn" data-id="${batch.id}" data-name="${batch.name}" style="padding: 0.3rem 0.7rem; font-size: 0.8rem;">
+                        Delete
+                    </button>
+                </div>
+            `).join('');
+
+            batchesList.querySelectorAll('.delete-batch-btn').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    const batchId = btn.dataset.id;
+                    const batchName = btn.dataset.name;
+                    const confirmed = confirm(`Are you sure you want to delete batch "${batchName}"?\n\nStudents currently using this batch won't be affected, but you won't be able to assign it to new students.`);
+                    if (!confirmed) return;
+                    try {
+                        await deleteDoc(doc(db, "batches", batchId));
+                        showNotification(`Batch "${batchName}" deleted.`, 'success');
+                        renderBatchesList();
+                    } catch (error) {
+                        console.error('Error deleting batch:', error);
+                        showNotification(`Error deleting batch: ${error.message}`, 'error');
+                    }
+                });
+            });
+        }
+
+        if (addBatchButton) {
+            addBatchButton.addEventListener('click', async () => {
+                const name = newBatchNameInput ? newBatchNameInput.value.trim() : '';
+                if (!name) {
+                    showNotification('Please enter a batch name.', 'warning');
+                    return;
+                }
+                // Check for duplicates
+                if (allBatchesData.some(b => b.name.toLowerCase() === name.toLowerCase())) {
+                    showNotification(`Batch "${name}" already exists.`, 'warning');
+                    return;
+                }
+                addBatchButton.disabled = true;
+                addBatchButton.textContent = 'Adding...';
+                try {
+                    await addDoc(collection(db, "batches"), {
+                        name: name,
+                        createdAt: serverTimestamp()
+                    });
+                    showNotification(`Batch "${name}" added successfully!`, 'success');
+                    if (newBatchNameInput) newBatchNameInput.value = '';
+                    renderBatchesList();
+                } catch (error) {
+                    console.error('Error adding batch:', error);
+                    showNotification(`Error: ${error.message}`, 'error');
+                } finally {
+                    addBatchButton.disabled = false;
+                    addBatchButton.textContent = 'Add Batch';
+                }
+            });
+        }
+
+        // Watch for real-time batch updates and re-render if modal is open
+        const _origLoadBatchesRealtime = loadBatchesRealtime;
+        loadBatchesRealtime = function () {
+            if (_unsubBatchesListener) _unsubBatchesListener();
+            _unsubBatchesListener = onSnapshot(
+                query(collection(db, "batches"), orderBy("name")),
+                (snapshot) => {
+                    allBatchesData = [];
+                    snapshot.forEach(docSnap => {
+                        allBatchesData.push({ id: docSnap.id, ...docSnap.data() });
+                    });
+                    console.log('Batches loaded:', allBatchesData.length);
+                    // Re-render list if modal is open
+                    if (batchManagementModal && batchManagementModal.classList.contains('active')) {
+                        renderBatchesList();
+                    }
+                },
+                (error) => {
+                    console.error('Error loading batches:', error);
+                }
+            );
+        };
+
+        // =================================================================
+        // END: ADMIN BATCH MANAGEMENT
+        // =================================================================
+
+        // =================================================================
+        // EDIT FORM: Batch Dropdown Initialization
+        // =================================================================
+        // Initialize edit form batch dropdowns when edit button is clicked
+        document.addEventListener('click', (e) => {
+            const editBtn = e.target.closest('.edit-student-btn');
+            if (!editBtn) return;
+            const uid = editBtn.dataset.uid;
+            const form = document.querySelector(`.student-edit-form[data-uid="${uid}"]`);
+            if (!form) return;
+
+            const selectEl = form.querySelector('.edit-batch-select');
+            const chipsEl = form.querySelector('.edit-batch-chips');
+            if (!selectEl || !chipsEl) return;
+
+            // Parse the current batches from data attribute
+            let currentBatches = [];
+            try { currentBatches = JSON.parse(chipsEl.dataset.selected || '[]'); } catch (e) { currentBatches = []; }
+
+            // Populate dropdown and render chips
+            populateBatchDropdown(selectEl, { includePersonalized: true, selectedBatches: currentBatches });
+            renderBatchChips(chipsEl, currentBatches, selectEl, (updated) => {
+                chipsEl.dataset.selected = JSON.stringify(updated);
+            });
+
+            // Wire up select change
+            selectEl.addEventListener('change', function handler() {
+                const val = selectEl.value;
+                if (val && !currentBatches.includes(val)) {
+                    currentBatches.push(val);
+                    chipsEl.dataset.selected = JSON.stringify(currentBatches);
+                    renderBatchChips(chipsEl, currentBatches, selectEl, (updated) => {
+                        chipsEl.dataset.selected = JSON.stringify(updated);
+                    });
+                    populateBatchDropdown(selectEl, { includePersonalized: true, selectedBatches: currentBatches });
+                }
+                selectEl.value = '';
+            });
+        });
 
         // =================================================================
         // START: TEACHER ASSIGNMENT POSTING
@@ -6153,6 +6484,19 @@
                 }
                 _selectedAssignmentStudentIds = [];
                 renderAssignmentStudentChips();
+
+                // Populate assignment batch dropdown with batches + personalized student entries
+                const personalizedEntries = [];
+                students.forEach(s => {
+                    if ((s.batches || []).includes('__personalized__')) {
+                        personalizedEntries.push({
+                            value: `__personalized_${s.uid}__`,
+                            label: `Personalized — ${s.displayName}`
+                        });
+                    }
+                });
+                populateBatchDropdown(assignmentBatchInput, { personalizedEntries });
+
                 assignmentModal.classList.add('active');
             });
             addSlotButton.parentElement.appendChild(postAssignmentBtn);
@@ -6221,7 +6565,7 @@
                 const title = assignmentTitleInput.value.trim();
                 const description = assignmentDescInput.value.trim();
                 const dueDate = assignmentDueDateInput.value.trim();
-                const batch = assignmentBatchInput.value.trim();
+                const batchVal = assignmentBatchInput.value;
 
                 if (!title || !dueDate) {
                     showNotification('Title and due date are required.', 'warning');
@@ -6232,7 +6576,7 @@
                 saveAssignmentButton.innerHTML = '<span class="loader"></span> Posting...';
 
                 try {
-                    const batches = batch.split(',').map(b => b.trim()).filter(b => b.length > 0);
+                    const batches = batchVal ? [batchVal] : [];
                     const studentIds = _selectedAssignmentStudentIds.map(s => s.uid);
                     await addDoc(collection(db, "assignments"), {
                         title,

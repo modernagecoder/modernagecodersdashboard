@@ -129,6 +129,17 @@ service cloud.firestore {
     }
     
     // ============================================
+    // BATCHES COLLECTION
+    // ============================================
+    match /batches/{batchId} {
+      // All authenticated users can read batches (for dropdown population)
+      allow read: if isAuthenticated();
+      
+      // Only admins can create, update, or delete batches
+      allow create, update, delete: if isAdmin();
+    }
+    
+    // ============================================
     // DENY ALL OTHER ACCESS
     // ============================================
     match /{document=**} {
