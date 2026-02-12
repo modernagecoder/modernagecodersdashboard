@@ -45,7 +45,7 @@
             --transition-speed: 0.2s;
             --font-primary: 'Poppins', sans-serif;
             --font-code: 'Fira Code', monospace;
-            /* testing  */
+            --accent-primary: #7AA2F7;
         }
 
         body {
@@ -1061,7 +1061,6 @@
             }
 
             #current-date-display {
-                font-size: 1.1rem;
                 font-size: 1.3rem;
                 font-weight: 600;
                 color: var(--text-primary);
@@ -2160,32 +2159,30 @@
         /* ================================================================= */
 
         /* ================================================================= */
-        /* START: CSS FOR STUDENT DASHBOARD                                  */
+        /* START: CSS FOR STUDENT DASHBOARD                                    */
         /* ================================================================= */
-        #student-dashboard {
-            max-width: 1100px;
-            margin: 0 auto;
-            padding: 1.5rem;
-            animation: fadeIn 0.5s ease;
-        }
 
+        /* --- Student Header --- */
         .student-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 2rem;
+            margin-bottom: 1.5rem;
             padding-bottom: 1rem;
             border-bottom: 1px solid var(--border-color);
         }
 
         .student-header .welcome-text {
-            font-size: 1.6rem;
+            font-size: 1.5rem;
             font-weight: 700;
             color: var(--text-primary);
         }
 
         .student-header .welcome-text span {
-            color: var(--accent-secondary);
+            background: linear-gradient(135deg, var(--accent-secondary), #7AA2F7);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
 
         .student-header .header-actions {
@@ -2194,20 +2191,137 @@
             align-items: center;
         }
 
+        /* --- Student Profile Card --- */
+        .student-profile-card {
+            display: flex;
+            align-items: center;
+            gap: 1.25rem;
+            padding: 1.25rem 1.5rem;
+            background: linear-gradient(135deg, rgba(122, 162, 247, 0.08), rgba(187, 154, 247, 0.08));
+            border: 1px solid rgba(122, 162, 247, 0.15);
+            border-radius: var(--border-radius);
+            margin-bottom: 1.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .student-profile-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #667eea, #BB9AF7, #7AA2F7);
+        }
+
+        .student-profile-avatar {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #fff;
+            flex-shrink: 0;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .student-profile-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .student-profile-name {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .student-profile-email {
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .student-profile-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 8px;
+        }
+
+        .student-profile-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 0.72rem;
+            font-weight: 600;
+        }
+
+        .student-profile-badge.batch {
+            background: rgba(100, 108, 255, 0.15);
+            color: var(--accent-main);
+        }
+
+        .student-profile-badge.teacher {
+            background: rgba(158, 206, 106, 0.15);
+            color: var(--accent-green);
+        }
+
+        .student-profile-badge.personalized {
+            background: rgba(255, 158, 100, 0.15);
+            color: var(--accent-orange);
+        }
+
+        /* --- Stat Cards (Gradient Glow) --- */
         .student-stats-row {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
             gap: 1rem;
-            margin-bottom: 2rem;
+            margin-bottom: 1.5rem;
         }
 
         .student-stat-card {
             background: var(--bg-secondary);
             border: 1px solid var(--border-color);
             border-radius: var(--border-radius);
-            padding: 1.25rem;
+            padding: 1.2rem 1rem;
             text-align: center;
             transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .student-stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            transition: opacity 0.3s ease;
+        }
+
+        .student-stat-card:nth-child(1)::before {
+            background: linear-gradient(90deg, #667eea, #764ba2);
+        }
+
+        .student-stat-card:nth-child(2)::before {
+            background: linear-gradient(90deg, #11998e, #38ef7d);
+        }
+
+        .student-stat-card:nth-child(3)::before {
+            background: linear-gradient(90deg, #f7971e, #ffd200);
+        }
+
+        .student-stat-card:nth-child(4)::before {
+            background: linear-gradient(90deg, #eb3349, #f45c43);
         }
 
         .student-stat-card:hover {
@@ -2216,23 +2330,113 @@
         }
 
         .student-stat-card .stat-icon {
-            font-size: 1.8rem;
-            margin-bottom: 0.5rem;
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 8px;
+            font-size: 1.2rem;
+        }
+
+        .student-stat-card:nth-child(1) .stat-icon {
+            background: rgba(102, 126, 234, 0.15);
+        }
+
+        .student-stat-card:nth-child(2) .stat-icon {
+            background: rgba(17, 153, 142, 0.15);
+        }
+
+        .student-stat-card:nth-child(3) .stat-icon {
+            background: rgba(247, 151, 30, 0.15);
+        }
+
+        .student-stat-card:nth-child(4) .stat-icon {
+            background: rgba(235, 51, 73, 0.15);
         }
 
         .student-stat-card .stat-number {
-            font-size: 2rem;
+            font-size: 1.8rem;
             font-weight: 700;
             color: var(--accent-secondary);
             font-family: 'Fira Code', monospace;
         }
 
         .student-stat-card .stat-label {
-            font-size: 0.85rem;
+            font-size: 0.78rem;
             color: var(--text-muted);
-            margin-top: 0.25rem;
+            margin-top: 2px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
+        /* --- Student Tabs Navigation --- */
+        .student-tabs {
+            display: flex;
+            gap: 2px;
+            background: var(--bg-primary);
+            border-radius: var(--border-radius);
+            padding: 3px;
+            margin-bottom: 1.5rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .student-tab {
+            flex: 1;
+            padding: 10px 16px;
+            border: none;
+            background: transparent;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: calc(var(--border-radius) - 3px);
+            transition: all 0.25s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .student-tab:hover {
+            color: var(--text-primary);
+            background: var(--bg-tertiary);
+        }
+
+        .student-tab.active {
+            background: var(--bg-secondary);
+            color: var(--accent-secondary);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .student-tab svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .student-tab-content {
+            display: none;
+        }
+
+        .student-tab-content.active {
+            display: block;
+            animation: fadeInTab 0.3s ease;
+        }
+
+        @keyframes fadeInTab {
+            from {
+                opacity: 0;
+                transform: translateY(6px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* --- Main Grid (Calendar + Content) --- */
         .student-main-grid {
             display: grid;
             grid-template-columns: 340px 1fr;
@@ -2254,8 +2458,27 @@
                 gap: 1rem;
                 text-align: center;
             }
+
+            .student-profile-card {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .student-profile-meta {
+                justify-content: center;
+            }
+
+            .student-tabs {
+                overflow-x: auto;
+            }
+
+            .student-tab {
+                font-size: 0.78rem;
+                white-space: nowrap;
+            }
         }
 
+        /* --- Calendar & Day Events --- */
         .student-calendar-panel {
             background: var(--bg-secondary);
             border: 1px solid var(--border-color);
@@ -2290,6 +2513,7 @@
             border-radius: 50%;
         }
 
+        /* --- Right Panel --- */
         .student-right-panel {
             display: flex;
             flex-direction: column;
@@ -2304,33 +2528,43 @@
         }
 
         .student-panel-card h3 {
-            font-size: 1.1rem;
-            color: var(--accent-secondary);
+            font-size: 1rem;
+            color: var(--text-primary);
             margin-bottom: 1rem;
             padding-bottom: 0.5rem;
             border-bottom: 1px solid var(--border-color);
             display: flex;
             align-items: center;
             gap: 8px;
+            font-weight: 700;
         }
 
+        .student-panel-card h3 svg {
+            width: 18px;
+            height: 18px;
+            color: var(--accent-secondary);
+            flex-shrink: 0;
+        }
+
+        /* --- Class Event Cards (Enhanced) --- */
         .class-event-card {
             background: var(--bg-tertiary);
-            border-radius: 8px;
-            padding: 0.9rem 1rem;
+            border-radius: 10px;
+            padding: 1rem 1.1rem;
             margin-bottom: 0.75rem;
             border-left: 4px solid var(--accent-secondary);
-            transition: all 0.2s ease;
+            transition: all 0.25s ease;
         }
 
         .class-event-card:hover {
             transform: translateX(4px);
             background: rgba(78, 205, 196, 0.08);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
         }
 
         .class-event-card .event-time {
             font-family: 'Fira Code', monospace;
-            font-size: 0.85rem;
+            font-size: 0.82rem;
             color: var(--accent-secondary);
             font-weight: 600;
         }
@@ -2338,55 +2572,110 @@
         .class-event-card .event-topic {
             font-weight: 600;
             color: var(--text-primary);
-            margin-top: 0.2rem;
+            margin-top: 4px;
+            font-size: 0.95rem;
         }
 
         .class-event-card .event-teacher {
             font-size: 0.8rem;
             color: var(--text-muted);
-            margin-top: 0.15rem;
+            margin-top: 4px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
         }
 
+        .class-event-card .event-batch-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            background: rgba(100, 108, 255, 0.15);
+            color: var(--accent-main);
+            margin-top: 6px;
+        }
+
+        /* --- Assignment Cards (Enhanced) --- */
         .assignment-card {
             background: var(--bg-tertiary);
-            border-radius: 8px;
-            padding: 0.9rem 1rem;
+            border-radius: 10px;
+            padding: 1rem 1.1rem;
             margin-bottom: 0.75rem;
             border-left: 4px solid var(--accent-orange);
-            transition: all 0.2s ease;
+            transition: all 0.25s ease;
         }
 
         .assignment-card:hover {
             transform: translateX(4px);
             background: rgba(255, 167, 38, 0.08);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+        }
+
+        .assignment-card .assignment-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 8px;
         }
 
         .assignment-card .assignment-title {
-            font-weight: 600;
+            font-weight: 700;
             color: var(--text-primary);
+            font-size: 0.95rem;
+        }
+
+        .assignment-card .assignment-due-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .assignment-card .assignment-due-pill.urgent {
+            background: rgba(247, 118, 142, 0.2);
+            color: var(--accent-red);
+        }
+
+        .assignment-card .assignment-due-pill.soon {
+            background: rgba(224, 175, 104, 0.2);
+            color: var(--accent-yellow);
+        }
+
+        .assignment-card .assignment-due-pill.safe {
+            background: rgba(158, 206, 106, 0.2);
+            color: var(--accent-green);
         }
 
         .assignment-card .assignment-due {
             font-family: 'Fira Code', monospace;
-            font-size: 0.8rem;
-            color: var(--accent-orange);
-            margin-top: 0.2rem;
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            margin-top: 4px;
         }
 
         .assignment-card .assignment-desc {
             font-size: 0.85rem;
             color: var(--text-muted);
-            margin-top: 0.3rem;
-            line-height: 1.4;
+            margin-top: 6px;
+            line-height: 1.5;
         }
 
         .assignment-card .assignment-teacher {
             font-size: 0.78rem;
             color: var(--text-muted);
-            margin-top: 0.3rem;
-            font-style: italic;
+            margin-top: 6px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
         }
 
+        /* --- Attendance Section --- */
         .attendance-bar-container {
             background: var(--bg-primary);
             border-radius: 10px;
@@ -2406,12 +2695,84 @@
             background: linear-gradient(90deg, var(--accent-red), var(--accent-orange));
         }
 
+        /* --- Attendance Heatmap --- */
+        .attendance-heatmap {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+            margin-top: 1rem;
+        }
+
+        .heatmap-day-label {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            text-align: center;
+            padding-bottom: 4px;
+            font-weight: 600;
+        }
+
+        .heatmap-cell {
+            aspect-ratio: 1;
+            border-radius: 4px;
+            background: var(--bg-primary);
+            position: relative;
+            cursor: default;
+            transition: transform 0.15s ease;
+            min-height: 20px;
+        }
+
+        .heatmap-cell:hover {
+            transform: scale(1.2);
+            z-index: 1;
+        }
+
+        .heatmap-cell.present {
+            background: rgba(158, 206, 106, 0.6);
+            box-shadow: 0 0 6px rgba(158, 206, 106, 0.3);
+        }
+
+        .heatmap-cell.absent {
+            background: rgba(247, 118, 142, 0.5);
+            box-shadow: 0 0 6px rgba(247, 118, 142, 0.3);
+        }
+
+        .heatmap-cell.no-class {
+            background: var(--bg-primary);
+        }
+
+        .heatmap-cell.future {
+            background: var(--bg-tertiary);
+            opacity: 0.4;
+        }
+
+        .heatmap-cell .heatmap-tooltip {
+            display: none;
+            position: absolute;
+            bottom: calc(100% + 6px);
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 0.7rem;
+            white-space: nowrap;
+            color: var(--text-primary);
+            z-index: 10;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .heatmap-cell:hover .heatmap-tooltip {
+            display: block;
+        }
+
+        /* --- Attendance Log --- */
         .attendance-log-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 0.5rem 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
             font-size: 0.85rem;
         }
 
@@ -2422,7 +2783,7 @@
         .attendance-log-item .att-status {
             padding: 2px 10px;
             border-radius: 12px;
-            font-size: 0.78rem;
+            font-size: 0.75rem;
             font-weight: 600;
         }
 
@@ -2436,6 +2797,7 @@
             color: var(--accent-red);
         }
 
+        /* --- Empty States --- */
         .empty-state {
             text-align: center;
             padding: 2rem;
@@ -2449,6 +2811,7 @@
             opacity: 0.5;
         }
 
+        /* --- Day Classes Header --- */
         .day-classes-header {
             font-size: 0.95rem;
             font-weight: 600;
@@ -2463,9 +2826,694 @@
             color: var(--accent-secondary);
         }
 
+        /* --- Loading Skeleton Shimmer --- */
+        .skeleton {
+            background: linear-gradient(90deg, var(--bg-tertiary) 25%, var(--bg-secondary) 50%, var(--bg-tertiary) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: 8px;
+        }
+
+        @keyframes shimmer {
+            0% {
+                background-position: 200% 0;
+            }
+
+            100% {
+                background-position: -200% 0;
+            }
+        }
+
         /* ================================================================= */
         /* END: CSS FOR STUDENT DASHBOARD                                    */
         /* ================================================================= */
+
+        /* --- Class Notes CSS --- */
+        .class-notes-section {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px dashed var(--border-color);
+        }
+
+        .class-notes-textarea {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-primary);
+            padding: 8px;
+            font-size: 0.85rem;
+            resize: vertical;
+            min-height: 60px;
+            font-family: inherit;
+        }
+
+        .class-notes-textarea:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+        }
+
+        .save-notes-btn {
+            margin-top: 6px;
+            padding: 4px 12px;
+            font-size: 0.75rem;
+        }
+
+        /* ================================================================= */
+        /* START: CSS FOR ADMIN DASHBOARD ENHANCEMENTS                       */
+        /* ================================================================= */
+
+        .admin-dashboard-container {
+            margin-bottom: 2rem;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        .admin-stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .admin-stat-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 1.5rem;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .admin-stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .admin-stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+        }
+
+        .admin-stat-card.revenue::before {
+            background: linear-gradient(90deg, #ffd700, #ffaa00);
+        }
+
+        .admin-stat-icon {
+            position: absolute;
+            top: 1.5rem;
+            right: 1.5rem;
+            width: 48px;
+            height: 48px;
+            opacity: 0.1;
+            color: white;
+        }
+
+        .admin-stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 0.5rem;
+            line-height: 1;
+        }
+
+        .admin-stat-label {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .admin-content-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 1.5rem;
+        }
+
+        @media (max-width: 900px) {
+            .admin-content-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .admin-card {
+            background: rgba(20, 20, 25, 0.6);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 1.5rem;
+            height: 100%;
+        }
+
+        .admin-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .admin-card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #fff;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .revenue-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .revenue-table th {
+            text-align: left;
+            padding: 12px;
+            color: var(--text-muted);
+            font-weight: 500;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .revenue-table td {
+            padding: 12px;
+            color: #fff;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .revenue-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .teacher-avatar-small {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: var(--accent-primary);
+            color: white;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            margin-right: 8px;
+        }
+
+        .quick-actions-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+
+        .action-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 1.2rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .action-card:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: var(--accent-primary);
+            transform: translateX(5px);
+        }
+
+        .action-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: rgba(58, 134, 255, 0.2);
+            color: var(--accent-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        .action-card.batches .action-icon {
+            background: rgba(255, 0, 110, 0.2);
+            color: var(--accent-secondary);
+        }
+
+        .action-card.teachers .action-icon {
+            background: rgba(255, 190, 11, 0.2);
+            color: #ffbe0b;
+        }
+
+        .action-info h4 {
+            margin: 0 0 4px 0;
+            color: #fff;
+            font-size: 1rem;
+        }
+
+        .action-info p {
+            margin: 0;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+        }
+
+        /* ================================================================= */
+        /* END: CSS FOR ADMIN DASHBOARD ENHANCEMENTS                         */
+        /* ================================================================= */
+
+        /* --- Enhanced Teacher Stat Cards --- */
+        .teacher-stat-enhanced {
+            position: relative;
+            overflow: hidden;
+            padding: 1.2rem 1.4rem !important;
+            border: 1px solid var(--border-color) !important;
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
+        }
+
+        .teacher-stat-enhanced::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+        }
+
+        .teacher-stat-enhanced:nth-child(1)::before {
+            background: linear-gradient(90deg, #7c3aed, #a78bfa);
+        }
+
+        .teacher-stat-enhanced:nth-child(2)::before {
+            background: linear-gradient(90deg, #059669, #34d399);
+        }
+
+        .teacher-stat-enhanced:nth-child(3)::before {
+            background: linear-gradient(90deg, #d97706, #fbbf24);
+        }
+
+        .teacher-stat-enhanced:nth-child(4)::before {
+            background: linear-gradient(90deg, #dc2626, #f87171);
+        }
+
+        .teacher-stat-enhanced:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25);
+        }
+
+        .teacher-stat-enhanced .stat-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 0.6rem;
+        }
+
+        .teacher-stat-enhanced:nth-child(1) .stat-icon {
+            background: rgba(124, 58, 237, 0.15);
+            color: #a78bfa;
+        }
+
+        .teacher-stat-enhanced:nth-child(2) .stat-icon {
+            background: rgba(5, 150, 105, 0.15);
+            color: #34d399;
+        }
+
+        .teacher-stat-enhanced:nth-child(3) .stat-icon {
+            background: rgba(217, 119, 6, 0.15);
+            color: #fbbf24;
+        }
+
+        .teacher-stat-enhanced:nth-child(4) .stat-icon {
+            background: rgba(220, 38, 38, 0.15);
+            color: #f87171;
+        }
+
+        .teacher-stat-enhanced .stat-icon svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .teacher-stat-enhanced .stat-value {
+            font-size: 1.6rem;
+            font-weight: 800;
+            line-height: 1.1;
+        }
+
+        .teacher-stat-enhanced .stat-label {
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            opacity: 0.7;
+            margin-top: 4px;
+        }
+
+        /* --- My Students Panel --- */
+        .teacher-panel-section {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            margin-top: 1.25rem;
+            overflow: hidden;
+        }
+
+        .teacher-panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem 1.25rem;
+            cursor: pointer;
+            user-select: none;
+            transition: background 0.2s ease;
+        }
+
+        .teacher-panel-header:hover {
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .teacher-panel-header h3 {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 0;
+        }
+
+        .teacher-panel-header h3 svg {
+            width: 16px;
+            height: 16px;
+            color: var(--accent-secondary);
+        }
+
+        .teacher-panel-header .panel-toggle {
+            width: 20px;
+            height: 20px;
+            color: var(--text-muted);
+            transition: transform 0.3s ease;
+        }
+
+        .teacher-panel-header .panel-toggle.expanded {
+            transform: rotate(180deg);
+        }
+
+        .teacher-panel-body {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.35s ease;
+        }
+
+        .teacher-panel-body.expanded {
+            max-height: 600px;
+        }
+
+        .teacher-panel-body-inner {
+            padding: 0 1.25rem 1.25rem;
+        }
+
+        .teacher-student-card {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 0.85rem 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .teacher-student-card:last-child {
+            border-bottom: none;
+        }
+
+        .teacher-student-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent-secondary), #7AA2F7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.78rem;
+            color: #0f0f14;
+            flex-shrink: 0;
+        }
+
+        .teacher-student-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .teacher-student-info .name {
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 0.88rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .teacher-student-info .detail {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .teacher-student-info .detail .badge {
+            display: inline-flex;
+            padding: 1px 7px;
+            border-radius: 8px;
+            font-size: 0.68rem;
+            font-weight: 600;
+        }
+
+        .teacher-student-info .detail .badge.batch {
+            background: rgba(100, 108, 255, 0.15);
+            color: var(--accent-main);
+        }
+
+        .teacher-student-info .detail .badge.personalized {
+            background: rgba(255, 167, 38, 0.15);
+            color: var(--accent-orange);
+        }
+
+        .teacher-students-empty {
+            text-align: center;
+            padding: 1.5rem 0;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        /* --- Today's Agenda --- */
+        .teacher-agenda-panel {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            margin-top: 1.25rem;
+            padding: 1rem 1.25rem;
+        }
+
+        .teacher-agenda-panel h3 {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .teacher-agenda-panel h3 svg {
+            width: 16px;
+            height: 16px;
+            color: var(--accent-green);
+        }
+
+        .agenda-timeline-item {
+            display: flex;
+            gap: 14px;
+            padding: 0.85rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+        }
+
+        .agenda-timeline-item:last-child {
+            border-bottom: none;
+        }
+
+        .agenda-time-col {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 60px;
+        }
+
+        .agenda-time-col .time-text {
+            font-family: 'Fira Code', monospace;
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: var(--accent-secondary);
+        }
+
+        .agenda-time-col .time-end {
+            font-family: 'Fira Code', monospace;
+            font-size: 0.68rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .agenda-detail-col {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .agenda-detail-col .agenda-topic {
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 0.9rem;
+        }
+
+        .agenda-detail-col .agenda-meta {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 4px;
+            flex-wrap: wrap;
+        }
+
+        .agenda-status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 10px;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            font-weight: 700;
+        }
+
+        .agenda-status-pill.scheduled {
+            background: rgba(78, 205, 196, 0.15);
+            color: var(--accent-secondary);
+        }
+
+        .agenda-status-pill.completed {
+            background: rgba(158, 206, 106, 0.15);
+            color: var(--accent-green);
+        }
+
+        .agenda-status-pill.cancelled {
+            background: rgba(247, 118, 142, 0.15);
+            color: var(--accent-red);
+        }
+
+        .agenda-batch-badge {
+            display: inline-block;
+            padding: 1px 8px;
+            border-radius: 8px;
+            font-size: 0.68rem;
+            font-weight: 600;
+            background: rgba(100, 108, 255, 0.15);
+            color: var(--accent-main);
+        }
+
+        .agenda-empty {
+            text-align: center;
+            padding: 1.5rem 0;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        /* --- Enhanced Slot Card Batch Badge --- */
+        .slot-batch-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 9px;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            background: rgba(100, 108, 255, 0.15);
+            color: var(--accent-main);
+            margin-top: 4px;
+        }
+
+        /* ================================================================= */
+        /* END: CSS FOR TEACHER DASHBOARD ENHANCEMENTS                       */
+        /* ================================================================= */
+        /* --- LOADING SKELETONS --- */
+        .skeleton {
+            background: linear-gradient(90deg, var(--bg-tertiary) 25%, var(--bg-secondary) 50%, var(--bg-tertiary) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: 4px;
+            color: transparent !important;
+            user-select: none;
+        }
+
+        .skeleton-text {
+            height: 1em;
+            width: 70%;
+            margin-bottom: 0.5em;
+            display: inline-block;
+        }
+
+        .skeleton-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+        }
+
+        @keyframes shimmer {
+            0% {
+                background-position: 200% 0;
+            }
+
+            100% {
+                background-position: -200% 0;
+            }
+        }
+
+        /* --- TRANSITIONS --- */
+        .fade-in {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        .slide-up {
+            animation: slideUp 0.3s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(20px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
     </style>
 
 </head>
@@ -2531,19 +3579,46 @@
 
                 <div id="all-stats-wrapper">
                     <div id="teacher-stats-container">
-                        <div class="stat-item">
+                        <div class="stat-item teacher-stat-enhanced">
+                            <div class="stat-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16">
+                                    <path
+                                        d="M11 6.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5v-1zm-3 0a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5v-1zm-5 3a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5v-1zm3 0a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5v-1z" />
+                                    <path
+                                        d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5zM1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4H1z" />
+                                </svg>
+                            </div>
                             <span class="stat-value" id="stats-selected-day">0</span>
-                            <span class="stat-label">CLASSES COMPLETED TODAY</span>
+                            <span class="stat-label">Classes Today</span>
                         </div>
-                        <div class="stat-item">
+                        <div class="stat-item teacher-stat-enhanced">
+                            <div class="stat-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16">
+                                    <path
+                                        d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5zM2 2a1 1 0 0 0-1 1v1h14V3a1 1 0 0 0-1-1H2zm13 3H1v9a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V5z" />
+                                </svg>
+                            </div>
                             <span class="stat-value" id="stats-current-month">0</span>
-                            <span class="stat-label">CLASSES THIS MONTH</span>
+                            <span class="stat-label">Classes This Month</span>
                         </div>
-                        <div class="stat-item">
+                        <div class="stat-item teacher-stat-enhanced">
+                            <div class="stat-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16">
+                                    <path
+                                        d="M4 10.781c.148 1.667 1.513 2.85 3.591 3.003V15h1.043v-1.216c2.27-.179 3.678-1.438 3.678-3.3 0-1.59-.947-2.51-2.956-3.028l-.722-.187V3.467c1.122.11 1.879.714 2.07 1.616h1.47c-.166-1.6-1.54-2.748-3.54-2.875V1H7.591v1.233c-1.939.23-3.27 1.472-3.27 3.156 0 1.454.966 2.483 2.661 2.917l.61.162v4.031c-1.149-.17-1.94-.8-2.131-1.718H4zm3.391-3.836c-1.043-.263-1.6-.825-1.6-1.616 0-.944.704-1.641 1.8-1.828v3.495l-.2-.05zm1.591 1.872c1.287.323 1.852.859 1.852 1.769 0 1.097-.826 1.828-2.2 1.939V8.73l.348.086z" />
+                                </svg>
+                            </div>
                             <span class="stat-value earnings" id="stats-today-earnings">₹0</span>
                             <span class="stat-label">Today's Earnings</span>
                         </div>
-                        <div class="stat-item">
+                        <div class="stat-item teacher-stat-enhanced">
+                            <div class="stat-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16">
+                                    <path d="M1 3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1H1zm7 8a2 2 0 1 0 0-4 2 2 0 0 0 0 4z" />
+                                    <path
+                                        d="M0 5a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H1a1 1 0 0 1-1-1V5zm3 0a2 2 0 0 1-2 2v4a2 2 0 0 1 2 2h10a2 2 0 0 1 2-2V7a2 2 0 0 1-2-2H3z" />
+                                </svg>
+                            </div>
                             <span class="stat-value earnings" id="stats-monthly-earnings">₹0</span>
                             <span class="stat-label">Monthly Earnings</span>
                         </div>
@@ -2638,6 +3713,159 @@
             </div>
         </div>
 
+        <!-- Start: Admin Dashboard Container (Hidden by default) -->
+        <div id="admin-dashboard-container" class="admin-dashboard-container hidden">
+            <!-- Stats Row -->
+            <div class="admin-stats-row">
+                <div class="admin-stat-card">
+                    <svg class="admin-stat-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z">
+                        </path>
+                    </svg>
+                    <div class="admin-stat-value" id="admin-total-students">0</div>
+                    <div class="admin-stat-label">Total Students</div>
+                </div>
+                <div class="admin-stat-card">
+                    <svg class="admin-stat-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z">
+                        </path>
+                    </svg>
+                    <div class="admin-stat-value" id="admin-total-teachers">0</div>
+                    <div class="admin-stat-label">Total Teachers</div>
+                </div>
+                <div class="admin-stat-card">
+                    <svg class="admin-stat-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10">
+                        </path>
+                    </svg>
+                    <div class="admin-stat-value" id="admin-total-batches">0</div>
+                    <div class="admin-stat-label">Active Batches</div>
+                </div>
+                <div class="admin-stat-card revenue">
+                    <svg class="admin-stat-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z">
+                        </path>
+                    </svg>
+                    <div class="admin-stat-value" id="admin-total-revenue">$0</div>
+                    <div class="admin-stat-label">Total Revenue</div>
+                </div>
+            </div>
+
+            <!-- Content Grid -->
+            <div class="admin-content-grid">
+                <!-- Revenue Breakdown -->
+                <div class="admin-card">
+                    <div class="admin-card-header">
+                        <h3 class="admin-card-title">
+                            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 002 2h2a2 2 0 002-2z">
+                                </path>
+                            </svg>
+                            Teacher Earnings
+                        </h3>
+                    </div>
+                    <div id="revenue-breakdown-list">
+                        <!-- Populated by JS -->
+                        <p class="text-muted">Loading data...</p>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="admin-card">
+                    <div class="admin-card-header">
+                        <h3 class="admin-card-title">
+                            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                            </svg>
+                            Quick Actions
+                        </h3>
+                    </div>
+                    <div class="quick-actions-grid">
+                        <div class="action-card"
+                            onclick="window.openStudentManagementModal()">
+                            <div class="action-icon">
+                                <i class="fas fa-user-graduate"></i>
+                            </div>
+                            <div class="action-info">
+                                <h4>Manage Students</h4>
+                                <p>Add, edit, or assign</p>
+                            </div>
+                        </div>
+                        <div class="action-card batches"
+                            onclick="window.openBatchManagementModal()">
+                            <div class="action-icon">
+                                <i class="fas fa-layer-group"></i>
+                            </div>
+                            <div class="action-info">
+                                <h4>Manage Batches</h4>
+                                <p>Create and organize</p>
+                            </div>
+                        </div>
+                        <div class="action-card teachers"
+                            onclick="window.openTeacherManagementModal()">
+                            <div class="action-icon">
+                                <i class="fas fa-chalkboard-teacher"></i>
+                            </div>
+                            <div class="action-info">
+                                <h4>Manage Teachers</h4>
+                                <p>Staff and permissions</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- End: Admin Dashboard Container -->
+
+        <!-- Teacher: My Students Panel -->
+        <div id="teacher-my-students-panel" class="teacher-panel-section hidden">
+
+
+            <div class="teacher-panel-header" onclick="toggleTeacherPanel('teacher-my-students-body', this)">
+                <h3>
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M7 14s-1 0-1-1 1-4 5-4 5 3 5 4-1 1-1 1H7zm4-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6z" />
+                        <path fill-rule="evenodd"
+                            d="M5.216 14A2.238 2.238 0 0 1 5 13c0-1.355.68-2.75 1.936-3.72A6.325 6.325 0 0 0 5 9c-4 0-5 3-5 4s1 1 1 1h4.216z" />
+                        <path d="M4.5 8a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z" />
+                    </svg>
+                    My Students <span id="teacher-students-count"
+                        style="font-weight:400; font-size:0.8rem; color:var(--text-muted);"></span>
+                </h3>
+                <svg class="panel-toggle" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16">
+                    <path
+                        d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z" />
+                </svg>
+            </div>
+            <div id="teacher-my-students-body" class="teacher-panel-body">
+                <div class="teacher-panel-body-inner">
+                    <div id="teacher-my-students-list">
+                        <div class="teacher-students-empty">Loading students...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Teacher: Today's Agenda Panel -->
+        <div id="teacher-agenda-panel" class="teacher-agenda-panel hidden">
+            <h3>
+                <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M8 3.5a.5.5 0 0 0-1 0V9a.5.5 0 0 0 .252.434l3.5 2a.5.5 0 0 0 .496-.868L8 8.71V3.5z" />
+                    <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm7-8A7 7 0 1 1 1 8a7 7 0 0 1 14 0z" />
+                </svg>
+                Today's Agenda
+            </h3>
+            <div id="teacher-agenda-list">
+                <div class="agenda-empty">No classes today</div>
+            </div>
+        </div>
+
         <div id="teacher-overview-view" class="hidden">
             <div id="overview-navigation">
                 <button id="overview-prev-week-button" class="btn nav-arrow" title="Previous Week">
@@ -2681,6 +3909,13 @@
                     <option value="none">Not Specified</option>
                     <option value="group">Group Class (₹200)</option>
                     <option value="personalized">Personalized Class (₹125)</option>
+                </select>
+            </div>
+
+            <div id="modal-batch-container" class="mb-2">
+                <label for="modal-batch-select">Batch / Student:</label>
+                <select id="modal-batch-select" style="width: 100%;">
+                    <option value="">— Select Batch —</option>
                 </select>
             </div>
 
@@ -3015,9 +4250,11 @@
     <!-- ============================================ -->
     <!-- STUDENT DASHBOARD (shown for student role) -->
     <!-- ============================================ -->
-    <div id="student-dashboard" class="hidden">
+    <div id="student-dashboard" class="hidden"
+        style="max-width: 1100px; margin: 0 auto; padding: 1.5rem; animation: fadeIn 0.5s ease;">
+        <!-- Header -->
         <div class="student-header">
-            <div class="welcome-text">👋 Welcome, <span id="student-display-name">Student</span></div>
+            <div class="welcome-text">Welcome back, <span id="student-display-name">Student</span></div>
             <div class="header-actions">
                 <button id="student-notification-bell" title="View Announcements" class="hidden">
                     <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="currentColor"
@@ -3031,88 +4268,204 @@
             </div>
         </div>
 
+        <!-- Profile Card -->
+        <div class="student-profile-card" id="student-profile-card">
+            <div class="student-profile-avatar" id="student-profile-avatar">S</div>
+            <div class="student-profile-info">
+                <div class="student-profile-name" id="student-profile-name">Student</div>
+                <div class="student-profile-email" id="student-profile-email"></div>
+                <div class="student-profile-meta" id="student-profile-meta"></div>
+            </div>
+        </div>
+
         <!-- Stats Row -->
         <div class="student-stats-row">
             <div class="student-stat-card">
-                <div class="stat-icon">📚</div>
+                <div class="stat-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor"
+                        viewBox="0 0 16 16" style="color: #667eea">
+                        <path
+                            d="M1 2.828c.885-.37 2.154-.769 3.388-.893 1.33-.134 2.458.063 3.112.752v9.746c-.935-.53-2.12-.603-3.213-.493-1.18.12-2.37.461-3.287.811V2.828zm7.5-.141c.654-.689 1.782-.886 3.112-.752 1.234.124 2.503.523 3.388.893v9.923c-.918-.35-2.107-.692-3.287-.81-1.094-.111-2.278-.039-3.213.492V2.687zM8 1.783C7.015.936 5.587.81 4.287.94c-1.514.153-3.042.672-3.994 1.105A.5.5 0 0 0 0 2.5v11a.5.5 0 0 0 .707.455c.882-.4 2.303-.881 3.68-1.02 1.409-.142 2.59.087 3.223.877a.5.5 0 0 0 .78 0c.633-.79 1.814-1.019 3.222-.877 1.378.139 2.8.62 3.681 1.02A.5.5 0 0 0 16 13.5v-11a.5.5 0 0 0-.293-.455c-.952-.433-2.48-.952-3.994-1.105C10.413.809 8.985.936 8 1.783z" />
+                    </svg>
+                </div>
                 <div class="stat-number" id="student-today-classes">0</div>
                 <div class="stat-label">Today's Classes</div>
             </div>
             <div class="student-stat-card">
-                <div class="stat-icon">📅</div>
+                <div class="stat-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor"
+                        viewBox="0 0 16 16" style="color: #11998e">
+                        <path
+                            d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5zM1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4H1z" />
+                    </svg>
+                </div>
                 <div class="stat-number" id="student-week-classes">0</div>
                 <div class="stat-label">This Week</div>
             </div>
             <div class="student-stat-card">
-                <div class="stat-icon">✅</div>
-                <div class="stat-number" id="student-attendance-rate">—</div>
-                <div class="stat-label">Attendance Rate</div>
+                <div class="stat-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor"
+                        viewBox="0 0 16 16" style="color: #f7971e">
+                        <path
+                            d="M10.97 4.97a.75.75 0 0 1 1.07 1.05l-3.99 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425a.267.267 0 0 1 .02-.022z" />
+                        <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z" />
+                    </svg>
+                </div>
+                <div class="stat-number" id="student-attendance-rate">&mdash;</div>
+                <div class="stat-label">Attendance</div>
             </div>
             <div class="student-stat-card">
-                <div class="stat-icon">📝</div>
+                <div class="stat-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor"
+                        viewBox="0 0 16 16" style="color: #eb3349">
+                        <path
+                            d="M14.5 3a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-.5.5h-13a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h13zm-13-1A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h13a1.5 1.5 0 0 0 1.5-1.5v-9A1.5 1.5 0 0 0 14.5 2h-13z" />
+                        <path
+                            d="M5 8a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7A.5.5 0 0 1 5 8zm0-2.5a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5zm0 5a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5zm-1-5a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0zM4 8a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0zm0 2.5a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0z" />
+                    </svg>
+                </div>
                 <div class="stat-number" id="student-pending-assignments">0</div>
                 <div class="stat-label">Pending Tasks</div>
             </div>
         </div>
 
-        <!-- Main Grid: Calendar + Content -->
-        <div class="student-main-grid">
-            <!-- Calendar Panel -->
-            <div class="student-calendar-panel">
-                <h3 style="color: var(--accent-secondary); margin-bottom: 1rem; font-size: 1rem;">📆 Calendar</h3>
-                <div id="student-calendar-container"></div>
-                <div id="student-day-events" style="margin-top: 1rem;">
-                    <div class="day-classes-header">📖 <span class="selected-date-text"
-                            id="student-selected-date-text">Select a date</span></div>
-                    <div id="student-day-classes-list">
-                        <div class="empty-state">
-                            <div class="empty-icon">📋</div>
-                            <div>Click a date to see classes</div>
+        <!-- Tab Navigation -->
+        <div class="student-tabs" id="student-tabs">
+            <button class="student-tab active" data-tab="schedule">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16">
+                    <path
+                        d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5zM1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4H1z" />
+                </svg>
+                Schedule
+            </button>
+            <button class="student-tab" data-tab="assignments">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16">
+                    <path
+                        d="M9.293 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V4.707A1 1 0 0 0 13.707 4L10 .293A1 1 0 0 0 9.293 0zM9.5 3.5v-2l3 3h-2a1 1 0 0 1-1-1zM4.5 9a.5.5 0 0 1 0-1h7a.5.5 0 0 1 0 1h-7zM4 10.5a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5zm.5 2.5a.5.5 0 0 1 0-1h4a.5.5 0 0 1 0 1h-4z" />
+                </svg>
+                Assignments
+            </button>
+            <button class="student-tab" data-tab="attendance">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16">
+                    <path
+                        d="M4 11H2v3h2v-3zm5-4H7v7h2V7zm5-5h-2v12h2V2zm-2-1a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1h-2zM6 7a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V7zm-5 4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1v-3z" />
+                </svg>
+                Attendance
+            </button>
+        </div>
+
+        <!-- TAB 1: Schedule (Calendar + Upcoming) -->
+        <div class="student-tab-content active" id="student-tab-schedule">
+            <div class="student-main-grid">
+                <div class="student-calendar-panel">
+                    <h3
+                        style="color: var(--accent-secondary); margin-bottom: 1rem; font-size: 1rem; display: flex; align-items: center; gap: 6px;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                            viewBox="0 0 16 16" style="color: var(--accent-secondary)">
+                            <path
+                                d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5zM1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4H1z" />
+                        </svg>
+                        Calendar
+                    </h3>
+                    <div id="student-calendar-container"></div>
+                    <div id="student-day-events" style="margin-top: 1rem;">
+                        <div class="day-classes-header">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor"
+                                viewBox="0 0 16 16" style="color: var(--accent-secondary)">
+                                <path
+                                    d="M1 2.828c.885-.37 2.154-.769 3.388-.893 1.33-.134 2.458.063 3.112.752v9.746c-.935-.53-2.12-.603-3.213-.493-1.18.12-2.37.461-3.287.811V2.828zm7.5-.141c.654-.689 1.782-.886 3.112-.752 1.234.124 2.503.523 3.388.893v9.923c-.918-.35-2.107-.692-3.287-.81-1.094-.111-2.278-.039-3.213.492V2.687z" />
+                            </svg>
+                            <span class="selected-date-text" id="student-selected-date-text">Select a date</span>
+                        </div>
+                        <div id="student-day-classes-list">
+                            <div class="empty-state">
+                                <div class="empty-icon">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" fill="currentColor"
+                                        viewBox="0 0 16 16" style="opacity:0.4">
+                                        <path
+                                            d="M14 1a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h12zM2 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H2z" />
+                                        <path
+                                            d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z" />
+                                    </svg>
+                                </div>
+                                <div>Click a date to see classes</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="student-right-panel">
+                    <div class="student-panel-card">
+                        <h3>
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16">
+                                <path
+                                    d="M8 3.5a.5.5 0 0 0-1 0V9a.5.5 0 0 0 .252.434l3.5 2a.5.5 0 0 0 .496-.868L8 8.71V3.5z" />
+                                <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm7-8A7 7 0 1 1 1 8a7 7 0 0 1 14 0z" />
+                            </svg>
+                            Upcoming Classes
+                        </h3>
+                        <div id="student-upcoming-classes">
+                            <div class="empty-state">
+                                <div class="empty-icon" style="font-size:1.5rem; opacity:0.4">—</div>
+                                <div>No upcoming classes scheduled</div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
+        </div>
 
-            <!-- Right Panel: Upcoming + Assignments + Attendance -->
-            <div class="student-right-panel">
-                <!-- Upcoming Classes -->
-                <div class="student-panel-card">
-                    <h3>🕐 Upcoming Classes</h3>
-                    <div id="student-upcoming-classes">
-                        <div class="empty-state">
-                            <div class="empty-icon">📭</div>
-                            <div>No upcoming classes</div>
-                        </div>
+        <!-- TAB 2: Assignments -->
+        <div class="student-tab-content" id="student-tab-assignments">
+            <div class="student-panel-card">
+                <h3>
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16">
+                        <path
+                            d="M9.293 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V4.707A1 1 0 0 0 13.707 4L10 .293A1 1 0 0 0 9.293 0zM9.5 3.5v-2l3 3h-2a1 1 0 0 1-1-1z" />
+                    </svg>
+                    Assignments &amp; Homework
+                </h3>
+                <div id="student-assignments-list">
+                    <div class="empty-state">
+                        <div class="empty-icon" style="font-size:1.5rem; opacity:0.4">—</div>
+                        <div>No pending assignments — you're all caught up!</div>
                     </div>
                 </div>
+            </div>
+        </div>
 
-                <!-- Assignments -->
-                <div class="student-panel-card">
-                    <h3>📝 Assignments & Homework</h3>
-                    <div id="student-assignments-list">
-                        <div class="empty-state">
-                            <div class="empty-icon">🎉</div>
-                            <div>No pending assignments</div>
-                        </div>
+        <!-- TAB 3: Attendance -->
+        <div class="student-tab-content" id="student-tab-attendance">
+            <div class="student-panel-card">
+                <h3>
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16">
+                        <path
+                            d="M4 11H2v3h2v-3zm5-4H7v7h2V7zm5-5h-2v12h2V2zm-2-1a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1h-2zM6 7a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V7zm-5 4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1v-3z" />
+                    </svg>
+                    Attendance Overview
+                </h3>
+                <div id="student-attendance-section">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="color: var(--text-muted); font-size: 0.9rem;">Overall Attendance</span>
+                        <span id="student-attendance-percent"
+                            style="font-family: 'Fira Code', monospace; font-weight: 700; color: var(--accent-green);">—%</span>
                     </div>
-                </div>
+                    <div class="attendance-bar-container">
+                        <div class="attendance-bar" id="student-attendance-bar" style="width: 0%;"></div>
+                    </div>
 
-                <!-- Attendance -->
-                <div class="student-panel-card">
-                    <h3>📊 Attendance</h3>
-                    <div id="student-attendance-section">
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <span style="color: var(--text-muted); font-size: 0.9rem;">Overall Attendance</span>
-                            <span id="student-attendance-percent"
-                                style="font-family: 'Fira Code', monospace; font-weight: 700; color: var(--accent-green);">—%</span>
-                        </div>
-                        <div class="attendance-bar-container">
-                            <div class="attendance-bar" id="student-attendance-bar" style="width: 0%;"></div>
-                        </div>
-                        <div id="student-attendance-log"
-                            style="max-height: 200px; overflow-y: auto; margin-top: 0.5rem;">
-                            <div class="empty-state" style="padding: 1rem;">No attendance records yet</div>
-                        </div>
+                    <!-- Heatmap -->
+                    <h4
+                        style="font-size: 0.85rem; color: var(--text-muted); margin: 1.25rem 0 0.5rem; font-weight: 600;">
+                        Monthly Heatmap</h4>
+                    <div class="attendance-heatmap" id="student-attendance-heatmap"></div>
+
+                    <!-- Log -->
+                    <h4
+                        style="font-size: 0.85rem; color: var(--text-muted); margin: 1.25rem 0 0.5rem; font-weight: 600;">
+                        Recent Records</h4>
+                    <div id="student-attendance-log" style="max-height: 250px; overflow-y: auto;">
+                        <div class="empty-state" style="padding: 1rem;">No attendance records yet</div>
                     </div>
                 </div>
             </div>
@@ -3155,6 +4508,17 @@
         // These settings control how Zoom license availability is checked
         const ZOOM_API_ENABLED = true;  // Set to false to use fallback (Firestore-only) mode
         const ZOOM_API_TIMEOUT = 10000; // 10 second timeout for API calls
+
+        // --- UTILITY: Debounce ---
+        function debounce(func, wait) {
+            let timeout;
+            return function (...args) {
+                const context = this;
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(context, args), wait);
+            };
+        }
+        window.debounce = debounce;
 
         /**
          * Check Zoom license availability via backend API
@@ -3357,11 +4721,75 @@
 
         const modalTagContainer = document.getElementById('modal-tag-container');
         const modalTagSelect = document.getElementById('modal-tag-select');
+        const modalBatchSelect = document.getElementById('modal-batch-select');
         const statsTodayEarnings = document.getElementById('stats-today-earnings');
         const statsMonthlyEarnings = document.getElementById('stats-monthly-earnings');
 
         const applyTagToFutureContainer = document.getElementById('apply-tag-to-future-container');
         const applyTagToFutureCheckbox = document.getElementById('apply-tag-to-future-checkbox');
+
+        // Slot batch dropdown: populate based on class type (group → batches, personalized → student names)
+        let _slotPersonalizedStudents = []; // cache for teacher's personalized students
+
+        async function populateSlotBatchDropdown(classType) {
+            if (!modalBatchSelect) return;
+            modalBatchSelect.innerHTML = '<option value="">\u2014 Select Batch \u2014</option>';
+
+            if (classType === 'group') {
+                // Show admin-created batch names
+                allBatchesData.forEach(b => {
+                    const opt = document.createElement('option');
+                    opt.value = b.name;
+                    opt.textContent = b.name;
+                    modalBatchSelect.appendChild(opt);
+                });
+            } else if (classType === 'personalized') {
+                // Show students registered with personalized class
+                modalBatchSelect.innerHTML = '<option value="">\u2014 Select Student \u2014</option>';
+                try {
+                    // Fetch students who have __personalized__ in their batches
+                    const teacherId = currentUser.isAdmin ? (modalTeacherSelect.value || currentUser.uid) : currentUser.uid;
+                    const studentsSnap = await getDocs(
+                        query(collection(db, "users"), where("role", "==", "student"))
+                    );
+                    _slotPersonalizedStudents = [];
+                    studentsSnap.forEach(docSnap => {
+                        const data = docSnap.data();
+                        const studentBatches = data.batches || [];
+                        // Show students who have __personalized__ OR are assigned to this teacher
+                        if (studentBatches.includes('__personalized__') || data.assignedTeacherId === teacherId) {
+                            if (studentBatches.includes('__personalized__')) {
+                                _slotPersonalizedStudents.push({
+                                    uid: docSnap.id,
+                                    name: data.displayName || data.email
+                                });
+                            }
+                        }
+                    });
+                    _slotPersonalizedStudents.forEach(s => {
+                        const opt = document.createElement('option');
+                        opt.value = `${s.name} personalized classes`;
+                        opt.textContent = `${s.name} personalized classes`;
+                        modalBatchSelect.appendChild(opt);
+                    });
+                    if (_slotPersonalizedStudents.length === 0) {
+                        const noOpt = document.createElement('option');
+                        noOpt.disabled = true;
+                        noOpt.textContent = 'No personalized students found';
+                        modalBatchSelect.appendChild(noOpt);
+                    }
+                } catch (err) {
+                    console.error('Error loading personalized students:', err);
+                }
+            }
+        }
+
+        // Re-populate batch dropdown when class type changes
+        if (modalTagSelect) {
+            modalTagSelect.addEventListener('change', () => {
+                populateSlotBatchDropdown(modalTagSelect.value);
+            });
+        }
 
         // =================================================================
         // START: NEW DOM ELEMENTS FOR TEACHER OVERVIEW
@@ -4035,10 +5463,6 @@
             }
         }
 
-        async function checkAndAutoCompleteSlots(dayString) {
-            return;
-        }
-
         async function checkForLongSessions() {
             if (!currentUser || !currentSelectedFullDate || longSessionMessageShownToday || currentUser.isAdmin) {
                 return;
@@ -4251,13 +5675,8 @@
                 // Load batches for all roles (admin, teacher)
                 loadBatchesRealtime();
                 if (isAdmin) {
-                    teacherOverviewButton.classList.remove('hidden'); // NEW: Show overview button for admin
-                    console.log("Admin user logged in.");
-                    showNotification(`Admin login successful: ${currentTeacherName}. Welcome!`, "success");
                     try {
-                        const usersCollectionRef = collection(db, "users");
-                        const qUsers = query(usersCollectionRef, orderBy("displayName"));
-                        const usersSnapshot = await getDocs(qUsers);
+                        const usersSnapshot = await getDocs(query(collection(db, "users")));
                         usersSnapshot.forEach(doc => {
                             const data = doc.data();
                             if (data.role === 'teacher' || data.role === 'admin') {
@@ -4270,70 +5689,77 @@
                         showNotification("Could not load teacher list.", "error");
                     }
                 } else {
-                    teacherOverviewButton.classList.add('hidden'); // NEW: Hide overview button for non-admin
+                    teacherOverviewButton.classList.add('hidden');
                     showNotification(`Login successful! Welcome, ${currentTeacherName}. Let's schedule.`, "success");
                 }
 
-                await checkAndDisplayPendingClassesWarning();
-                const today = new Date();
-                const dayOfWeek = today.getDay();
-                currentWeekStartDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() - dayOfWeek);
-                currentWeekStartDate.setHours(0, 0, 0, 0);
+            await checkAndDisplayPendingClassesWarning();
+            const today = new Date();
+            const dayOfWeek = today.getDay();
+            currentWeekStartDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() - dayOfWeek);
+            currentWeekStartDate.setHours(0, 0, 0, 0);
 
-                renderWeekSelector(currentWeekStartDate);
-                await selectDay(today); // Make sure to await this on login
-                // await checkAndDisplaySalaryMessage(); // <-- ADDED CALL FOR NEW FEATURE
+            renderWeekSelector(currentWeekStartDate);
+            await selectDay(today); // Make sure to await this on login
+            // await checkAndDisplaySalaryMessage(); // <-- ADDED CALL FOR NEW FEATURE
+            initTeacherEnhancements();
 
-            } else { // User is logged out
-                currentUser = null; currentTeacherName = ""; allTeachersData = [];
-                authView.classList.remove('hidden'); appView.classList.add('hidden');
-                document.getElementById('student-dashboard').classList.add('hidden');
-                dayScheduleView.classList.add('hidden');
-                userDisplayName.classList.remove('is-admin');
+        } else { // User is logged out
+            currentUser = null; currentTeacherName = ""; allTeachersData = [];
+            authView.classList.remove('hidden'); appView.classList.add('hidden');
+            document.getElementById('student-dashboard').classList.add('hidden');
+            dayScheduleView.classList.add('hidden');
+            // Hide teacher enhancements on logout
+            const myStudentsPanel = document.getElementById('teacher-my-students-panel');
+            const agendaPanel = document.getElementById('teacher-agenda-panel');
+            if (myStudentsPanel) myStudentsPanel.classList.add('hidden');
+            if (agendaPanel) agendaPanel.classList.add('hidden');
 
-                if (unsubscribeAnnouncementListener) {
-                    unsubscribeAnnouncementListener();
-                    unsubscribeAnnouncementListener = null;
-                }
-                manageAnnouncementsButton.classList.add('hidden');
-                manageTeachersButton.classList.add('hidden');
-                const manageStudentsBtn = document.getElementById('manage-students-button');
-                if (manageStudentsBtn) manageStudentsBtn.classList.add('hidden');
-                const manageBatchesBtn = document.getElementById('manage-batches-button');
-                if (manageBatchesBtn) manageBatchesBtn.classList.add('hidden');
-                notificationBell.classList.add('hidden');
-                notificationDot.classList.remove('visible');
+            userDisplayName.classList.remove('is-admin');
 
-                if (unsubscribeSlotsListener) { unsubscribeSlotsListener(); unsubscribeSlotsListener = null; }
-                currentSelectedFullDate = null;
-                currentWeekStartDate = null;
-                weekSelector.innerHTML = '';
-
-                if (motivationalQuoteEl) motivationalQuoteEl.textContent = '';
-                if (statsSelectedDay) statsSelectedDay.textContent = '0';
-                if (statsCurrentMonth) statsCurrentMonth.textContent = '0';
-                if (statsTodayEarnings) statsTodayEarnings.textContent = '₹0';
-                if (statsMonthlyEarnings) statsMonthlyEarnings.textContent = '₹0';
-                const statLabels = document.querySelectorAll('#teacher-stats-container .stat-label .stat-label-admin-note');
-                statLabels.forEach(note => note.remove());
-
-                if (loginButton) {
-                    loginButton.disabled = false;
-                    loginButton.innerHTML = 'Login Securely';
-                }
-
-                teacherOverviewButton.classList.add('hidden');
-                salaryHighlightBox.classList.add('hidden');
-                // Clean up student dashboard state
-                if (window._studentCalendar) { window._studentCalendar.destroy(); window._studentCalendar = null; }
-                if (window._unsubStudentClasses) { window._unsubStudentClasses(); window._unsubStudentClasses = null; }
-                if (window._unsubStudentAssignments) { window._unsubStudentAssignments(); window._unsubStudentAssignments = null; }
-                if (_unsubBatchesListener) { _unsubBatchesListener(); _unsubBatchesListener = null; }
-                allBatchesData = [];
-                if (auth.currentUser === null) {
-                    showNotification("Logged out. See you soon!", "success");
-                }
+            if (unsubscribeAnnouncementListener) {
+                unsubscribeAnnouncementListener();
+                unsubscribeAnnouncementListener = null;
             }
+            manageAnnouncementsButton.classList.add('hidden');
+            manageTeachersButton.classList.add('hidden');
+            const manageStudentsBtn = document.getElementById('manage-students-button');
+            if (manageStudentsBtn) manageStudentsBtn.classList.add('hidden');
+            const manageBatchesBtn = document.getElementById('manage-batches-button');
+            if (manageBatchesBtn) manageBatchesBtn.classList.add('hidden');
+            notificationBell.classList.add('hidden');
+            notificationDot.classList.remove('visible');
+
+            if (unsubscribeSlotsListener) { unsubscribeSlotsListener(); unsubscribeSlotsListener = null; }
+            currentSelectedFullDate = null;
+            currentWeekStartDate = null;
+            weekSelector.innerHTML = '';
+
+            if (motivationalQuoteEl) motivationalQuoteEl.textContent = '';
+            if (statsSelectedDay) statsSelectedDay.textContent = '0';
+            if (statsCurrentMonth) statsCurrentMonth.textContent = '0';
+            if (statsTodayEarnings) statsTodayEarnings.textContent = '₹0';
+            if (statsMonthlyEarnings) statsMonthlyEarnings.textContent = '₹0';
+            const statLabels = document.querySelectorAll('#teacher-stats-container .stat-label .stat-label-admin-note');
+            statLabels.forEach(note => note.remove());
+
+            if (loginButton) {
+                loginButton.disabled = false;
+                loginButton.innerHTML = 'Login Securely';
+            }
+
+            teacherOverviewButton.classList.add('hidden');
+            salaryHighlightBox.classList.add('hidden');
+            // Clean up student dashboard state
+            if (window._studentCalendar) { window._studentCalendar.destroy(); window._studentCalendar = null; }
+            if (window._unsubStudentClasses) { window._unsubStudentClasses(); window._unsubStudentClasses = null; }
+            if (window._unsubStudentAssignments) { window._unsubStudentAssignments(); window._unsubStudentAssignments = null; }
+            if (_unsubBatchesListener) { _unsubBatchesListener(); _unsubBatchesListener = null; }
+            allBatchesData = [];
+            if (auth.currentUser === null) {
+                showNotification("Logged out. See you soon!", "success");
+            }
+        }
         });
 
 
@@ -4726,6 +6152,8 @@
 
                 // Render the new timeline view with all slots for the day
                 renderLicenseTimeline(allSlots);
+                window._currentDaySlots = allSlots;
+                if (typeof renderTeacherAgenda === 'function') renderTeacherAgenda();
 
                 // Continue with existing logic to render class cards
                 let mySlots = [];
@@ -4848,13 +6276,25 @@
                 tagDisplay = `<span class="slot-tag">${tagText}</span>`;
             }
 
+            // JOIN BATCHES FOR DISPLAY
+            let batchDisplay = '';
+            if (slotData.batches && slotData.batches.length > 0) {
+                const visibleBatches = slotData.batches.filter(b => !b.startsWith('__'));
+                if (visibleBatches.length > 0) {
+                    batchDisplay = visibleBatches.map(b => `<span class="slot-batch-tag">${b}</span>`).join(' ');
+                }
+            }
+
             const displayStartTime = calculateDisplayStartTime(slotData.startTime);
             const displayEndTime = calculateDisplayEndTime(slotData.startTime, slotData.endTime);
             const originalTimeText = `(Scheduled: ${slotData.startTime} - ${slotData.endTime})`;
 
+            const isOwner = slotData.teacherId === currentUser.uid;
+            const isAdmin = currentUser && currentUser.isAdmin;
+
             let timestampHTML = '';
             // Only show timestamps for the owner or an admin
-            if (currentUser && (currentUser.isAdmin || slotData.teacherId === currentUser.uid)) {
+            if (currentUser && (isAdmin || isOwner)) {
                 const created = slotData.createdAt ? `Created: ${formatTimestampForDisplay(slotData.createdAt)}` : '';
                 // Only show 'Edited' if it's different from creation time.
                 const updated = slotData.updatedAt && slotData.updatedAt !== slotData.createdAt
@@ -4869,9 +6309,19 @@
             detailsDiv.innerHTML = `
                 <div class="topic">${slotData.topic}</div>
                 <strong>${displayStartTime} - ${displayEndTime} ${tagDisplay}</strong><br>
+                ${batchDisplay ? `<div style="margin-top:4px;">${batchDisplay}</div>` : ''}
                 <span class="teacher">Teacher: ${teacherNameDisplay} ${originalTimeText}</span>${licenseDisplay}
                 ${statusHTML}
                 ${timestampHTML}
+                
+                ${(slotData.status === 'completed' && (isOwner || isAdmin)) ? `
+                <div class="class-notes-section">
+                    <label style="font-size:0.75rem; color:var(--text-muted); margin-bottom:4px; display:block;">Class Notes (Private):</label>
+                    <textarea id="notes-${id}" class="class-notes-textarea" placeholder="Add private notes about this class (student progress, topics covered)...">${slotData.classNotes || ''}</textarea>
+                    <div style="text-align:right;">
+                        <button id="save-notes-btn-${id}" class="btn btn-sm btn-primary save-notes-btn" onclick="saveClassNotes('${id}')">Save Notes</button>
+                    </div>
+                </div>` : ''}
             `;
 
             const actionsDiv = document.createElement('div');
@@ -4882,8 +6332,6 @@
             const [endHours, endMinutes] = slotData.endTime.split(':').map(Number);
             const slotEndTimeObject = new Date(parseInt(slotDateParts[0]), parseInt(slotDateParts[1]) - 1, parseInt(slotDateParts[2]), endHours, endMinutes);
 
-            const isOwner = slotData.teacherId === currentUser.uid;
-            const isAdmin = currentUser && currentUser.isAdmin;
             const canControl = isOwner || isAdmin;
             const isFuture = now <= slotEndTimeObject;
 
@@ -5000,6 +6448,12 @@
                 if (startTimePicker) startTimePicker.setDate(existingData.startTime, true);
                 topicInput.value = existingData.topic;
                 modalTagSelect.value = existingData.tag || 'none';
+                // Pre-populate batch dropdown and select existing value
+                populateSlotBatchDropdown(existingData.tag || 'none');
+                const existingBatches = existingData.batches || [];
+                if (existingBatches.length > 0) {
+                    modalBatchSelect.value = existingBatches[0];
+                }
 
                 if (currentUser && currentUser.isAdmin && existingData.recurringId) {
                     applyTagToFutureContainer.classList.remove('hidden');
@@ -5028,6 +6482,7 @@
                 durationSelect.value = "60";
                 topicInput.value = '';
                 modalTagSelect.value = 'personalized';
+                populateSlotBatchDropdown('personalized');
                 recurringCheckbox.checked = true;
                 recurringContainer.classList.remove('hidden');
                 saveSlotButton.textContent = 'Save Slot';
@@ -5185,6 +6640,7 @@
                     licenseId: assignedLicenseId,
                     tag: tagToSave,
                     earnings: earningsToSave,
+                    batches: modalBatchSelect.value ? [modalBatchSelect.value] : [],
                 };
 
                 // ─── 8. UPDATE  vs  CREATE ──────────────────────────────
@@ -5315,6 +6771,43 @@
                 showNotification(`Error: ${error.message}`, "error");
             }
         }
+
+        async function saveClassNotes(slotId) {
+            const textarea = document.getElementById(`notes-${slotId}`);
+            if (!textarea) return;
+            const notes = textarea.value.trim();
+            const btn = document.getElementById(`save-notes-btn-${slotId}`);
+
+            if (btn) {
+                btn.textContent = 'Saving...';
+                btn.disabled = true;
+            }
+
+            try {
+                await updateDoc(doc(db, "classSlots", slotId), {
+                    classNotes: notes
+                });
+                showNotification("Class notes saved!", "success");
+                if (btn) {
+                    btn.textContent = 'Saved';
+                    setTimeout(() => {
+                        if (btn) {
+                            btn.textContent = 'Save Notes';
+                            btn.disabled = false;
+                        }
+                    }, 2000);
+                }
+            } catch (e) {
+                console.error("Error saving notes:", e);
+                showNotification("Failed to save notes", "error");
+                if (btn) {
+                    btn.textContent = 'Save Notes';
+                    btn.disabled = false;
+                }
+            }
+        }
+
+        window.saveClassNotes = saveClassNotes;
 
         async function reinstateClass(id) {
             const slotDocRef = doc(db, "classSlots", id);
@@ -5952,10 +7445,10 @@
 
         // Student search filtering
         if (studentSearchInput) {
-            studentSearchInput.addEventListener('input', () => {
+            studentSearchInput.addEventListener('input', debounce(() => {
                 const query = studentSearchInput.value.toLowerCase().trim();
                 renderFilteredStudents(query);
-            });
+            }, 300));
         }
 
         function renderFilteredStudents(query) {
@@ -6614,11 +8107,325 @@
         // =================================================================
 
         // =================================================================
+        // =================================================================
+        // START: TEACHER DASHBOARD ENHANCEMENTS
+        // =================================================================
+
+        function toggleTeacherPanel(bodyId, headerEl) {
+            const body = document.getElementById(bodyId);
+            const toggle = headerEl.querySelector('.panel-toggle');
+            if (!body) return;
+            body.classList.toggle('expanded');
+            if (toggle) toggle.classList.toggle('expanded');
+        }
+
+        async function loadTeacherMyStudents() {
+            if (!currentUser || currentUser.isStudent) return;
+
+            const listEl = document.getElementById('teacher-my-students-list');
+            const countEl = document.getElementById('teacher-students-count');
+            if (!listEl) return;
+
+            // SHOW SKELETON
+            listEl.innerHTML = Array(3).fill(0).map(() => `
+                <div class="teacher-student-card skeleton">
+                    <div class="teacher-student-avatar skeleton-avatar"></div>
+                    <div class="teacher-student-info">
+                        <div class="skeleton-text" style="width: 120px;"></div>
+                        <div class="skeleton-text" style="width: 180px;"></div>
+                    </div>
+                </div>
+            `).join('');
+
+            try {
+                const teacherId = currentUser.uid;
+                const studentsSnap = await getDocs(
+                    query(collection(db, "users"), where("role", "==", "student"))
+                );
+
+                const myStudents = [];
+                studentsSnap.forEach(docSnap => {
+                    const data = docSnap.data();
+                    const isAssigned = data.assignedTeacherId === teacherId;
+                    const hasPersonalized = (data.batches || []).some(b => b.startsWith('__personalized__' + teacherId));
+                    if (isAssigned || hasPersonalized) {
+                        myStudents.push({ uid: docSnap.id, ...data });
+                    }
+                });
+
+                if (countEl) countEl.textContent = myStudents.length > 0 ? `(${myStudents.length})` : '';
+
+                if (myStudents.length === 0) {
+                    listEl.innerHTML = '<div class="teacher-students-empty">No students assigned to you yet</div>';
+                    return;
+                }
+
+                listEl.innerHTML = myStudents.map(s => {
+                    const name = s.displayName || s.email || 'Student';
+                    const initials = name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+                    const batchNames = (s.batches || []).filter(b => !b.startsWith('__')).join(', ');
+                    const isPersonalized = (s.batches || []).some(b => b.startsWith('__personalized__'));
+
+                    let badges = '';
+                    if (batchNames) badges += `<span class="badge batch">${batchNames}</span>`;
+                    if (isPersonalized) badges += `<span class="badge personalized">Personalized</span>`;
+
+                    return `
+                        <div class="teacher-student-card">
+                            <div class="teacher-student-avatar">${initials}</div>
+                            <div class="teacher-student-info">
+                                <div class="name">${name}</div>
+                                <div class="detail">${s.email || ''}${badges ? ' · ' + badges : ''}</div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+            } catch (error) {
+                console.error('Error loading teacher students:', error);
+                listEl.innerHTML = '<div class="teacher-students-empty">Could not load students</div>';
+            }
+        }
+
+        function renderTeacherAgenda() {
+            const container = document.getElementById('teacher-agenda-list');
+            if (!container) return;
+
+            const allSlots = window._currentDaySlots || [];
+            const todayStr = getLocalDateString(new Date());
+            const currentDayStr = currentSelectedFullDate ? getLocalDateString(currentSelectedFullDate) : todayStr;
+
+            // Only show the agenda when viewing today
+            if (currentDayStr !== todayStr) {
+                container.innerHTML = '<div class="agenda-empty">Select today to view your agenda</div>';
+                return;
+            }
+
+            const todaySlots = allSlots
+                .filter(s => s.teacherId === currentUser.uid)
+                .sort((a, b) => (a.startTime || '').localeCompare(b.startTime || ''));
+
+            if (todaySlots.length === 0) {
+                container.innerHTML = '<div class="agenda-empty">No classes scheduled for today</div>';
+                return;
+            }
+
+            container.innerHTML = todaySlots.map(slot => {
+                const startDisplay = typeof calculateDisplayStartTime === 'function' ? calculateDisplayStartTime(slot.startTime) : slot.startTime;
+                const endDisplay = typeof calculateDisplayEndTime === 'function' ? calculateDisplayEndTime(slot.startTime, slot.endTime) : slot.endTime;
+
+                const statusClass = (slot.status || 'scheduled').toLowerCase();
+                const statusText = statusClass.charAt(0).toUpperCase() + statusClass.slice(1);
+                const batchNames = (slot.batches || []).filter(b => !b.startsWith('__'));
+
+                return `
+                    <div class="agenda-timeline-item">
+                        <div class="agenda-time-col">
+                            <span class="time-text">${startDisplay}</span>
+                            <span class="time-end">${endDisplay}</span>
+                        </div>
+                        <div class="agenda-detail-col">
+                            <div class="agenda-topic">${slot.topic || 'Class Session'}</div>
+                            <div class="agenda-meta">
+                                <span class="agenda-status-pill ${statusClass}">${statusText}</span>
+                                ${batchNames.map(b => `<span class="agenda-batch-badge">${b}</span>`).join('')}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function initTeacherEnhancements() {
+            if (!currentUser || currentUser.isStudent) return;
+
+            // Show the panels
+            const myStudentsPanel = document.getElementById('teacher-my-students-panel');
+            const agendaPanel = document.getElementById('teacher-agenda-panel');
+            if (myStudentsPanel) myStudentsPanel.classList.remove('hidden');
+            if (agendaPanel) agendaPanel.classList.remove('hidden');
+
+            // Load students list
+            await loadTeacherMyStudents();
+
+            // Render today's agenda (will be re-called when slots update)
+            renderTeacherAgenda();
+        }
+
+        // ===================================
+        // ADMIN DASHBOARD LOGIC
+        // ===================================
+
+        async function initAdminDashboard() {
+            const container = document.getElementById('admin-dashboard-container');
+            if (container) {
+                container.classList.remove('hidden');
+                await fetchPlatformStats();
+            }
+        }
+
+        async function fetchPlatformStats() {
+            try {
+                // 1. Fetch Users (Students & Teachers)
+                const usersSnap = await getDocs(collection(db, "users"));
+                let totalStudents = 0;
+                let totalTeachers = 0;
+                usersSnap.forEach(doc => {
+                    const d = doc.data();
+                    if (d.role === 'student') totalStudents++;
+                    if (d.role === 'teacher' || d.role === 'admin') totalTeachers++;
+                });
+
+                const sEl = document.getElementById('admin-total-students');
+                const tEl = document.getElementById('admin-total-teachers');
+                if (sEl) sEl.textContent = totalStudents;
+                if (tEl) tEl.textContent = totalTeachers;
+
+                // 2. Fetch Batches
+                const batchesSnap = await getDocs(collection(db, "batches"));
+                const bEl = document.getElementById('admin-total-batches');
+                if (bEl) bEl.textContent = batchesSnap.size;
+
+                // 3. Fetch Revenue (Completed Classes)
+                // We'll query all completed classSlots
+                const slotsQ = query(collection(db, "classSlots"), where("status", "==", "completed"));
+                const slotsSnap = await getDocs(slotsQ);
+
+                let totalRevenue = 0;
+                const teacherEarnings = {};
+
+                slotsSnap.forEach(doc => {
+                    const data = doc.data();
+                    const earning = data.earnings || 0;
+                    totalRevenue += earning;
+
+                    if (data.teacherName) {
+                        if (!teacherEarnings[data.teacherName]) teacherEarnings[data.teacherName] = 0;
+                        teacherEarnings[data.teacherName] += earning;
+                    }
+                });
+
+                const rEl = document.getElementById('admin-total-revenue');
+                if (rEl) rEl.textContent = `₹${totalRevenue.toLocaleString()}`;
+                renderRevenueBreakdown(teacherEarnings);
+
+            } catch (error) {
+                console.error("Error fetching admin stats:", error);
+                // showNotification("Failed to load admin dashboard data", "error");
+            }
+        }
+
+        function renderRevenueBreakdown(earningsMap) {
+            const listContainer = document.getElementById('revenue-breakdown-list');
+            if (!listContainer) return;
+
+            if (Object.keys(earningsMap).length === 0) {
+                listContainer.innerHTML = '<p class="text-muted">No revenue data available.</p>';
+                return;
+            }
+
+            // Convert to array and sort by earning
+            const sortedTeachers = Object.entries(earningsMap)
+                .map(([name, amount]) => ({ name, amount }))
+                .sort((a, b) => b.amount - a.amount);
+
+            let html = '<table class="revenue-table"><thead><tr><th>Teacher</th><th>Earnings</th></tr></thead><tbody>';
+
+            sortedTeachers.forEach(t => {
+                // Get initials
+                const initials = (t.name || 'T').split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+                html += `
+                    <tr>
+                        <td>
+                            <div style="display:flex; align-items:center;">
+                                <div class="teacher-avatar-small">${initials}</div>
+                                <span>${t.name}</span>
+                            </div>
+                        </td>
+                        <td>₹${t.amount.toLocaleString()}</td>
+                    </tr>
+                `;
+            });
+
+            html += '</tbody></table>';
+            listContainer.innerHTML = html;
+        }
+
+        // ===================================
+        // END: ADMIN DASHBOARD LOGIC
+        // ===================================
+
+        // =================================================================
+        // END: TEACHER DASHBOARD ENHANCEMENTS
+        // =================================================================
+
+        // =================================================================
         // START: STUDENT DASHBOARD LOGIC
         // =================================================================
 
+        // --- Tab Switching ---
+        (function () {
+            const tabsContainer = document.getElementById('student-tabs');
+            if (!tabsContainer) return;
+            tabsContainer.addEventListener('click', (e) => {
+                const tab = e.target.closest('.student-tab');
+                if (!tab) return;
+                const tabName = tab.dataset.tab;
+                tabsContainer.querySelectorAll('.student-tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                document.querySelectorAll('.student-tab-content').forEach(c => c.classList.remove('active'));
+                const targetPanel = document.getElementById(`student-tab-${tabName}`);
+                if (targetPanel) {
+                    targetPanel.classList.add('active');
+                    targetPanel.classList.add('fade-in');
+                    setTimeout(() => targetPanel.classList.remove('fade-in'), 300);
+                }
+            });
+        })();
+
+        // --- Profile Card ---
+        function populateStudentProfile() {
+            if (!currentUser || !currentUser.isStudent) return;
+            const name = currentUser.displayName || currentUser.originalDisplayName || 'Student';
+            const email = currentUser.email || '';
+            const batches = currentUser.studentBatches || [];
+            const teacherName = currentUser.assignedTeacherName || '';
+
+            document.getElementById('student-display-name').textContent = name.split(' ')[0];
+            document.getElementById('student-profile-name').textContent = name;
+            document.getElementById('student-profile-email').textContent = email;
+
+            // Avatar initials
+            const initialsEl = document.getElementById('student-profile-avatar');
+            const initials = name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+            initialsEl.textContent = initials;
+
+            // Badges
+            const metaEl = document.getElementById('student-profile-meta');
+            let badgesHtml = '';
+            batches.forEach(b => {
+                if (b.startsWith('__personalized__')) {
+                    badgesHtml += `<span class="student-profile-badge personalized">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" fill="currentColor" viewBox="0 0 16 16"><path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4zm-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10c-2.29 0-3.516.68-4.168 1.332-.678.678-.83 1.418-.832 1.664h10z"/></svg>
+                        Personalized</span>`;
+                } else {
+                    badgesHtml += `<span class="student-profile-badge batch">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" fill="currentColor" viewBox="0 0 16 16"><path d="M7 14s-1 0-1-1 1-4 5-4 5 3 5 4-1 1-1 1H7zm4-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/><path fill-rule="evenodd" d="M5.216 14A2.238 2.238 0 0 1 5 13c0-1.355.68-2.75 1.936-3.72A6.325 6.325 0 0 0 5 9c-4 0-5 3-5 4s1 1 1 1h4.216z"/><path d="M4.5 8a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z"/></svg>
+                        ${b}</span>`;
+                }
+            });
+            if (teacherName) {
+                badgesHtml += `<span class="student-profile-badge teacher">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" fill="currentColor" viewBox="0 0 16 16"><path d="M8 .51a.51.51 0 0 0-.248.065L.747 4.265a.51.51 0 0 0 0 .869l2.244 1.178v3.387c0 .294.158.563.41.706l5.05 2.863a.51.51 0 0 0 .5 0l5.05-2.863a.816.816 0 0 0 .41-.706V6.312l.916-.482V9.5a.5.5 0 0 0 1 0V5.07a.51.51 0 0 0-.254-.442L8.247.575A.51.51 0 0 0 8 .51z"/></svg>
+                    ${teacherName}</span>`;
+            }
+            metaEl.innerHTML = badgesHtml;
+        }
+
         async function initStudentDashboard() {
             if (!currentUser || !currentUser.isStudent) return;
+
+            populateStudentProfile();
 
             const batches = currentUser.studentBatches || [];
             const todayStr = getLocalDateString(new Date());
@@ -6652,7 +8459,6 @@
                 window._allStudentClasses = [];
                 snapshot.forEach(docSnap => {
                     const slotData = { id: docSnap.id, ...docSnap.data() };
-                    // Filter: show classes from assigned teacher, or where batch matches
                     const matchesTeacher = currentUser.assignedTeacherId && slotData.teacherId === currentUser.assignedTeacherId;
                     const matchesBatch = batches.length > 0 && (slotData.batches || []).some(b => batches.includes(b));
                     if (matchesTeacher || matchesBatch || (!currentUser.assignedTeacherId && batches.length === 0)) {
@@ -6661,7 +8467,6 @@
                 });
                 updateStudentStats();
                 renderStudentUpcomingClasses();
-                // Refresh day view if a date was selected
                 const selectedDate = window._studentCalendar?.selectedDates?.[0];
                 if (selectedDate) renderStudentDayClasses(selectedDate);
             });
@@ -6679,7 +8484,6 @@
                 window._allStudentAssignments = [];
                 snapshot.forEach(docSnap => {
                     const assgnData = { id: docSnap.id, ...docSnap.data() };
-                    // Filter: show assignments that explicitly include this student, or match batch, or from assigned teacher
                     const explicitlyAssigned = (assgnData.studentIds || []).includes(currentUser.uid);
                     const matchesTeacher = currentUser.assignedTeacherId && assgnData.teacherId === currentUser.assignedTeacherId;
                     const matchesBatch = batches.length > 0 && (assgnData.batches || []).some(b => batches.includes(b));
@@ -6707,17 +8511,14 @@
 
             const allClasses = window._allStudentClasses || [];
 
-            // Today's classes
             const todayClasses = allClasses.filter(c => c.date === todayStr);
             document.getElementById('student-today-classes').textContent = todayClasses.length;
 
-            // This week's classes
             const weekStartStr = getLocalDateString(weekStart);
             const weekEndStr = getLocalDateString(weekEnd);
             const weekClasses = allClasses.filter(c => c.date >= weekStartStr && c.date <= weekEndStr);
             document.getElementById('student-week-classes').textContent = weekClasses.length;
 
-            // Pending assignments
             const allAssignments = window._allStudentAssignments || [];
             const pendingAssignments = allAssignments.filter(a => a.dueDate >= todayStr);
             document.getElementById('student-pending-assignments').textContent = pendingAssignments.length;
@@ -6733,7 +8534,7 @@
                 .slice(0, 5);
 
             if (upcoming.length === 0) {
-                container.innerHTML = '<div class="empty-state"><div class="empty-icon">📭</div><div>No upcoming classes scheduled</div></div>';
+                container.innerHTML = '<div class="empty-state"><div class="empty-icon" style="font-size:1.5rem; opacity:0.4">—</div><div>No upcoming classes scheduled</div></div>';
                 return;
             }
 
@@ -6742,11 +8543,16 @@
                 const dateDisplay = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', weekday: 'short' });
                 const displayStart = calculateDisplayStartTime(cls.startTime);
                 const displayEnd = calculateDisplayEndTime(cls.startTime, cls.endTime);
+                const batchLabel = (cls.batches || []).filter(b => !b.startsWith('__')).join(', ');
                 return `
                     <div class="class-event-card">
                         <div class="event-time">${dateDisplay} · ${displayStart} – ${displayEnd}</div>
                         <div class="event-topic">${cls.topic || 'Class Session'}</div>
-                        <div class="event-teacher">👨‍🏫 ${cls.teacherName || 'Teacher'}</div>
+                        <div class="event-teacher">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" viewBox="0 0 16 16"><path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4zm-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10c-2.29 0-3.516.68-4.168 1.332-.678.678-.83 1.418-.832 1.664h10z"/></svg>
+                            ${cls.teacherName || 'Teacher'}
+                        </div>
+                        ${batchLabel ? `<div class="event-batch-badge">${batchLabel}</div>` : ''}
                     </div>
                 `;
             }).join('');
@@ -6759,15 +8565,12 @@
 
             const container = document.getElementById('student-day-classes-list');
             const allClasses = window._allStudentClasses || [];
-
             const dayClasses = allClasses.filter(c => c.date === dateStr);
-
-            // Also show assignments due on this day
             const allAssignments = window._allStudentAssignments || [];
             const dayAssignments = allAssignments.filter(a => a.dueDate === dateStr);
 
             if (dayClasses.length === 0 && dayAssignments.length === 0) {
-                container.innerHTML = '<div class="empty-state"><div class="empty-icon">📋</div><div>No classes or assignments on this day</div></div>';
+                container.innerHTML = '<div class="empty-state"><div class="empty-icon" style="font-size:1.5rem; opacity:0.4">—</div><div>No classes or assignments on this day</div></div>';
                 return;
             }
 
@@ -6777,8 +8580,8 @@
                 const displayStart = calculateDisplayStartTime(cls.startTime);
                 const displayEnd = calculateDisplayEndTime(cls.startTime, cls.endTime);
                 const statusBadge = cls.status === 'completed' ?
-                    '<span style="color: var(--accent-green); font-size: 0.75rem;">✅ Completed</span>' :
-                    '<span style="color: var(--accent-secondary); font-size: 0.75rem;">🔵 Scheduled</span>';
+                    '<span style="display:inline-flex;align-items:center;gap:3px;color: var(--accent-green); font-size: 0.72rem; font-weight:600;background:rgba(158,206,106,0.15);padding:2px 8px;border-radius:10px;">Completed</span>' :
+                    '<span style="display:inline-flex;align-items:center;gap:3px;color: var(--accent-secondary); font-size: 0.72rem; font-weight:600;background:rgba(78,205,196,0.15);padding:2px 8px;border-radius:10px;">Scheduled</span>';
 
                 html += `
                     <div class="class-event-card">
@@ -6787,18 +8590,31 @@
                             ${statusBadge}
                         </div>
                         <div class="event-topic">${cls.topic || 'Class Session'}</div>
-                        <div class="event-teacher">👨‍🏫 ${cls.teacherName || 'Teacher'}</div>
+                        <div class="event-teacher">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" viewBox="0 0 16 16"><path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4zm-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10c-2.29 0-3.516.68-4.168 1.332-.678.678-.83 1.418-.832 1.664h10z"/></svg>
+                            ${cls.teacherName || 'Teacher'}
+                        </div>
                     </div>
                 `;
             });
 
             dayAssignments.forEach(asn => {
+                const dueDate = new Date(asn.dueDate.replace(/-/g, '/'));
+                const daysUntilDue = Math.ceil((dueDate - new Date()) / (1000 * 60 * 60 * 24));
+                const pillClass = daysUntilDue <= 1 ? 'urgent' : daysUntilDue <= 3 ? 'soon' : 'safe';
+                const pillText = daysUntilDue <= 0 ? 'Today' : daysUntilDue === 1 ? '1 day left' : `${daysUntilDue}d left`;
                 html += `
                     <div class="assignment-card">
-                        <div class="assignment-title">📝 ${asn.title}</div>
+                        <div class="assignment-header">
+                            <div class="assignment-title">${asn.title}</div>
+                            <span class="assignment-due-pill ${pillClass}">${pillText}</span>
+                        </div>
                         <div class="assignment-due">Due: ${dateDisplay}</div>
                         ${asn.description ? `<div class="assignment-desc">${asn.description}</div>` : ''}
-                        <div class="assignment-teacher">By: ${asn.teacherName || 'Teacher'}</div>
+                        <div class="assignment-teacher">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" fill="currentColor" viewBox="0 0 16 16"><path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4zm-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10c-2.29 0-3.516.68-4.168 1.332-.678.678-.83 1.418-.832 1.664h10z"/></svg>
+                            ${asn.teacherName || 'Teacher'}
+                        </div>
                     </div>
                 `;
             });
@@ -6814,22 +8630,29 @@
             const active = allAssignments.filter(a => a.dueDate >= todayStr);
 
             if (active.length === 0) {
-                container.innerHTML = '<div class="empty-state"><div class="empty-icon">🎉</div><div>No pending assignments — you\'re all caught up!</div></div>';
+                container.innerHTML = '<div class="empty-state"><div class="empty-icon" style="font-size:1.5rem; opacity:0.4">—</div><div>No pending assignments — you\'re all caught up!</div></div>';
                 return;
             }
 
             container.innerHTML = active.map(asn => {
                 const dueDate = new Date(asn.dueDate.replace(/-/g, '/'));
                 const daysUntilDue = Math.ceil((dueDate - new Date()) / (1000 * 60 * 60 * 24));
-                const urgencyColor = daysUntilDue <= 1 ? 'var(--accent-red)' : daysUntilDue <= 3 ? 'var(--accent-orange)' : 'var(--accent-green)';
+                const pillClass = daysUntilDue <= 1 ? 'urgent' : daysUntilDue <= 3 ? 'soon' : 'safe';
+                const pillText = daysUntilDue <= 0 ? 'Due today' : daysUntilDue === 1 ? '1 day left' : `${daysUntilDue} days left`;
                 const dueText = dueDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', weekday: 'short' });
 
                 return `
                     <div class="assignment-card">
-                        <div class="assignment-title">${asn.title}</div>
-                        <div class="assignment-due" style="color: ${urgencyColor};">Due: ${dueText} ${daysUntilDue <= 1 ? '⚠️' : ''}</div>
+                        <div class="assignment-header">
+                            <div class="assignment-title">${asn.title}</div>
+                            <span class="assignment-due-pill ${pillClass}">${pillText}</span>
+                        </div>
+                        <div class="assignment-due">${dueText}</div>
                         ${asn.description ? `<div class="assignment-desc">${asn.description}</div>` : ''}
-                        <div class="assignment-teacher">By: ${asn.teacherName || 'Teacher'}</div>
+                        <div class="assignment-teacher">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" fill="currentColor" viewBox="0 0 16 16"><path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4zm-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10c-2.29 0-3.516.68-4.168 1.332-.678.678-.83 1.418-.832 1.664h10z"/></svg>
+                            ${asn.teacherName || 'Teacher'}
+                        </div>
                     </div>
                 `;
             }).join('');
@@ -6843,7 +8666,7 @@
                     collection(db, "attendance"),
                     where("studentId", "==", currentUser.uid),
                     orderBy("date", "desc"),
-                    limit(30)
+                    limit(60)
                 );
 
                 const snapshot = await getDocs(attendanceQuery);
@@ -6861,6 +8684,7 @@
                 const percentEl = document.getElementById('student-attendance-percent');
                 const barEl = document.getElementById('student-attendance-bar');
                 const logEl = document.getElementById('student-attendance-log');
+                const heatmapEl = document.getElementById('student-attendance-heatmap');
 
                 if (totalRecords > 0) {
                     percentEl.textContent = `${attendancePercentage}%`;
@@ -6868,7 +8692,10 @@
                     barEl.style.width = `${attendancePercentage}%`;
                     barEl.className = `attendance-bar${attendancePercentage < 75 ? ' low' : ''}`;
 
-                    logEl.innerHTML = records.slice(0, 15).map(r => {
+                    // Render heatmap for current month
+                    renderAttendanceHeatmap(heatmapEl, records);
+
+                    logEl.innerHTML = records.slice(0, 20).map(r => {
                         const dateObj = new Date(r.date.replace(/-/g, '/'));
                         const dateText = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
                         const isPresent = r.status === 'present';
@@ -6882,6 +8709,7 @@
                 } else {
                     percentEl.textContent = '—%';
                     barEl.style.width = '0%';
+                    if (heatmapEl) heatmapEl.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: var(--text-muted); font-size: 0.8rem; padding: 1rem;">No data yet</div>';
                     logEl.innerHTML = '<div class="empty-state" style="padding: 1rem;">No attendance records yet</div>';
                 }
 
@@ -6890,9 +8718,69 @@
             }
         }
 
+        function renderAttendanceHeatmap(container, records) {
+            if (!container) return;
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = now.getMonth();
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            const daysInMonth = lastDay.getDate();
+            const startDayOfWeek = firstDay.getDay(); // 0 = Sun
+
+            // Build a lookup: date string -> status
+            const lookup = {};
+            records.forEach(r => { lookup[r.date] = r.status; });
+
+            const dayLabels = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+            let html = dayLabels.map(d => `<div class="heatmap-day-label">${d}</div>`).join('');
+
+            // Empty cells before first
+            for (let i = 0; i < startDayOfWeek; i++) {
+                html += '<div class="heatmap-cell no-class"></div>';
+            }
+
+            const todayStr = getLocalDateString(now);
+
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dateObj = new Date(year, month, day);
+                const dateStr = getLocalDateString(dateObj);
+                const status = lookup[dateStr];
+                let cellClass = 'heatmap-cell';
+                let tooltip = '';
+
+                if (dateStr > todayStr) {
+                    cellClass += ' future';
+                    tooltip = `${day}: Upcoming`;
+                } else if (status === 'present') {
+                    cellClass += ' present';
+                    tooltip = `${day}: Present`;
+                } else if (status === 'absent') {
+                    cellClass += ' absent';
+                    tooltip = `${day}: Absent`;
+                } else {
+                    cellClass += ' no-class';
+                    tooltip = `${day}: No class`;
+                }
+
+                html += `<div class="${cellClass}"><span class="heatmap-tooltip">${tooltip}</span></div>`;
+            }
+
+            container.innerHTML = html;
+        }
+
         // =================================================================
         // END: STUDENT DASHBOARD LOGIC
         // =================================================================
+
+        // --- Global Accessibility ---
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.modal.active').forEach(modal => {
+                    modal.classList.remove('active');
+                });
+            }
+        });
 
         updateDateDisplay();
     </script>
