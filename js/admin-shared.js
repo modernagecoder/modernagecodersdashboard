@@ -4,7 +4,7 @@
 // =============================================================
 
 import {
-    auth, db, collection, query, where, getDocs, deleteDoc, doc, addDoc, serverTimestamp, updateDoc, orderBy
+    auth, db, collection, query, where, getDocs, deleteDoc, doc, addDoc, serverTimestamp, updateDoc, orderBy, limit
 } from './firebase-config.js';
 
 import {
