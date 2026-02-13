@@ -4,7 +4,7 @@
 // =============================================================
 
 import {
-    auth, db, collection, query, where, getDocs, deleteDoc, doc, addDoc, serverTimestamp, updateDoc
+    auth, db, collection, query, where, getDocs, deleteDoc, doc, addDoc, serverTimestamp, updateDoc, orderBy
 } from './firebase-config.js';
 
 import {
@@ -117,7 +117,9 @@ export function setupTeacherManagement() {
             teachersList.innerHTML = '';
             teachers.forEach(teacher => {
                 const card = document.createElement('div');
-                card.style.cssText = 'display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border:1px solid var(--border-color);border-radius:var(--border-radius);margin-bottom:8px;background:var(--bg-primary);';
+                card.style.cssText = 'display:flex;justify-content:space-between;align-items:center;padding:16px;border:1px solid var(--border-color);border-radius:var(--border-radius);margin-bottom:12px;background:var(--bg-primary);box-shadow:0 2px 4px rgba(0,0,0,0.05);transition:transform 0.2s ease;';
+                card.onmouseover = () => card.style.transform = 'translateY(-2px)';
+                card.onmouseout = () => card.style.transform = 'translateY(0)';
                 card.innerHTML = `
                     <div>
                         <div style="font-weight:600;color:var(--text-primary);">${escapeHTML(teacher.displayName || 'Unknown')}</div>
@@ -307,6 +309,10 @@ export function setupStudentManagement() {
             studentsListContainer.innerHTML = '';
             students.forEach(student => {
                 const card = document.createElement('div'); card.className = 'student-card';
+                card.style.cssText = 'margin-bottom:12px;box-shadow:0 2px 4px rgba(0,0,0,0.05);border:1px solid var(--border-color);border-radius:var(--border-radius);background:var(--bg-primary);padding:16px;transition:all 0.2s ease;';
+                card.onmouseover = () => card.style.transform = 'translateY(-2px)';
+                card.onmouseout = () => card.style.transform = 'translateY(0)';
+
                 const batchNames = (student.batches || []).filter(b => !b.startsWith('__')).join(', ') || 'None';
 
                 card.innerHTML = `
@@ -522,9 +528,21 @@ export function setupEditFormBatchDropdown() {
 }
 
 // ─── ANNOUNCEMENT MANAGEMENT ───────────────────────────────────
+// ─── ANNOUNCEMENT MANAGEMENT ───────────────────────────────────
+export function openAnnouncementModal() {
+    const modal = document.getElementById('admin-announcements-manager-modal');
+    if (modal) {
+        modal.classList.add('active');
+        loadAnnouncementsHistory();
+    }
+}
+
 export function setupAnnouncementManagement() {
     const publishBtn = document.getElementById('publish-new-announcement-button');
     const textarea = document.getElementById('new-announcement-textarea');
+
+    // Make available globally if needed for HTML onclicks, but prefer imports
+    window.openAnnouncementModal = openAnnouncementModal;
 
     if (publishBtn) {
         publishBtn.addEventListener('click', async () => {
@@ -537,7 +555,7 @@ export function setupAnnouncementManagement() {
             try {
                 await addDoc(collection(db, "announcements"), {
                     text,
-                    message: text,
+                    message: text, // legacy support
                     createdByName: _currentUser.displayName || _currentUser.email,
                     createdAt: serverTimestamp(),
                     isDeleted: false
@@ -545,7 +563,7 @@ export function setupAnnouncementManagement() {
 
                 if (textarea) textarea.value = '';
                 showNotification("Announcement published!", "success");
-                loadAnnouncementsHistory(); // Refresh history if visible
+                // Listener will auto-update
             } catch (error) {
                 showNotification(`Error: ${error.message}`, "error");
             } finally {
@@ -556,51 +574,63 @@ export function setupAnnouncementManagement() {
     }
 }
 
+let _announcementUnsub = null;
+
+export function listenForAnnouncements() {
+    if (_announcementUnsub) _announcementUnsub();
+
+    const q = query(collection(db, "announcements"), orderBy("createdAt", "desc"), limit(1));
+    _announcementUnsub = onSnapshot(q, (snapshot) => {
+        // This could update a "Latest Announcement" widget on the dashboard if we had one.
+        // For the history list inside the modal, we use loadAnnouncementsHistory.
+    }, (error) => {
+        console.error("Error listening to announcements:", error);
+    });
+}
+
 export function loadAnnouncementsHistory() {
     const historyList = document.getElementById('announcements-history-list');
     if (!historyList) return;
 
-    historyList.innerHTML = '<p style="color:var(--text-muted);">Loading...</p>';
+    historyList.innerHTML = '<p style="text-align:center;color:var(--text-muted);">Loading...</p>';
 
-    getDocs(query(collection(db, "announcements"), orderBy("createdAt", "desc"), limit(50)))
-        .then(snapshot => {
-            const items = [];
-            snapshot.forEach(d => items.push({ id: d.id, ...d.data() }));
+    // Realtime listener for the list
+    const q = query(collection(db, "announcements"), orderBy("createdAt", "desc"), limit(50));
+    onSnapshot(q, (snapshot) => {
+        const items = [];
+        snapshot.forEach(d => items.push({ id: d.id, ...d.data() }));
 
-            if (items.length === 0) {
-                historyList.innerHTML = '<p style="color:var(--text-muted);">No announcements.</p>';
-                return;
-            }
+        if (items.length === 0) {
+            historyList.innerHTML = '<p style="text-align:center;color:var(--text-muted);">No announcements.</p>';
+            return;
+        }
 
-            historyList.innerHTML = items.map(a => `
-                <div class="announcement-item" style="display:flex;justify-content:space-between;align-items:start;padding:8px;border-bottom:1px solid var(--border-color);">
-                    <div>
-                        <p style="margin:0;font-size:0.9rem;">${escapeHTML(a.text || a.message || '')}</p>
-                        <small style="color:var(--text-muted);">
-                            ${a.createdAt ? new Date(a.createdAt.seconds * 1000).toLocaleString() : ''}
-                        </small>
-                    </div>
-                    <button class="btn btn-danger btn-small delete-announcement-btn" data-id="${a.id}">Delete</button>
+        historyList.innerHTML = items.map(a => `
+            <div class="announcement-item" style="display:flex;justify-content:space-between;align-items:start;padding:12px;border:1px solid var(--border-color);border-radius:var(--border-radius);margin-bottom:8px;background:var(--bg-primary);">
+                <div>
+                    <p style="margin:0;font-size:0.95rem;color:var(--text-primary);">${escapeHTML(a.text || a.message || '')}</p>
+                    <small style="color:var(--text-muted);font-size:0.8rem;">
+                        ${a.createdAt ? new Date(a.createdAt.seconds * 1000).toLocaleString() : ''} · by ${escapeHTML(a.createdByName || 'Admin')}
+                    </small>
                 </div>
-            `).join('');
+                <button class="btn btn-danger btn-small delete-announcement-btn" data-id="${a.id}" style="margin-left:8px;">Delete</button>
+            </div>
+        `).join('');
 
-            // Add listeners for delete buttons
-            historyList.querySelectorAll('.delete-announcement-btn').forEach(btn => {
-                btn.addEventListener('click', async () => {
-                    if (!confirm("Delete this announcement?")) return;
-                    try {
-                        await deleteDoc(doc(db, "announcements", btn.dataset.id));
-                        showNotification("Announcement deleted.", "success");
-                        loadAnnouncementsHistory();
-                    } catch (e) {
-                        showNotification(`Error: ${e.message}`, "error");
-                    }
-                });
+        historyList.querySelectorAll('.delete-announcement-btn').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                if (!confirm("Delete this announcement?")) return;
+                try {
+                    await deleteDoc(doc(db, "announcements", btn.dataset.id));
+                    showNotification("Announcement deleted.", "success");
+                } catch (e) {
+                    showNotification(`Error: ${e.message}`, "error");
+                }
             });
-        })
-        .catch(err => {
-            historyList.innerHTML = '<p style="color:var(--accent-red);">Error loading history.</p>';
-            console.error(err);
         });
+    }, (error) => {
+        console.error("Error loading announcements history:", error);
+        historyList.innerHTML = '<p style="color:var(--accent-red);">Error loading history.</p>';
+    });
 }
 
