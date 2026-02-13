@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SkyCoders - Admin Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+
+<body>
+    <!-- Sidebar Overlay (mobile) -->
+    <div class="sidebar-overlay"></div>
+
+    <!-- Mobile Menu Toggle -->
+    <button class="mobile-menu-toggle">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
+            <path fill-rule="evenodd"
+                d="M2.5 12a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5z" />
+        </svg>
+    </button>
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-logo">
+            <h2>&lt;SkyCoders/&gt;</h2>
+            <span class="sidebar-subtitle">Admin Panel</span>
+        </div>
+
+        <div class="sidebar-profile">
+            <div class="profile-avatar">A</div>
+            <div class="profile-info">
+                <span class="profile-name">Admin</span>
+                <span class="profile-role admin">Admin</span>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <a href="#" class="nav-item active" data-section="dashboard">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16">
+                    <path
+                        d="M8.354 1.146a.5.5 0 0 0-.708 0l-6 6A.5.5 0 0 0 1.5 7.5v7a.5.5 0 0 0 .5.5h4.5a.5.5 0 0 0 .5-.5v-4h2v4a.5.5 0 0 0 .5.5H14a.5.5 0 0 0 .5-.5v-7a.5.5 0 0 0-.146-.354L13 5.793V2.5a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5v1.293L8.354 1.146z" />
+                </svg>
+                <span>Dashboard</span>
+            </a>
+            <a href="#" class="nav-item" data-section="teacher-overview">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16">
+                    <path
+                        d="M1 2.5A1.5 1.5 0 0 1 2.5 1h3A1.5 1.5 0 0 1 7 2.5v3A1.5 1.5 0 0 1 5.5 7h-3A1.5 1.5 0 0 1 1 5.5v-3zm8 0A1.5 1.5 0 0 1 10.5 1h3A1.5 1.5 0 0 1 15 2.5v3A1.5 1.5 0 0 1 13.5 7h-3A1.5 1.5 0 0 1 9 5.5v-3zm-8 8A1.5 1.5 0 0 1 2.5 9h3A1.5 1.5 0 0 1 7 10.5v3A1.5 1.5 0 0 1 5.5 15h-3A1.5 1.5 0 0 1 1 13.5v-3zm8 0A1.5 1.5 0 0 1 10.5 9h3a1.5 1.5 0 0 1 1.5 1.5v3a1.5 1.5 0 0 1-1.5 1.5h-3A1.5 1.5 0 0 1 9 13.5v-3z" />
+                </svg>
+                <span>Teacher Overview</span>
+            </a>
+            <a href="#" class="nav-item" data-section="manage-teachers">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M15 14s1 0 1-1-1-4-5-4-5 3-5 4 1 1 1 1h8zm-7.978-1A.261.261 0 0 1 7 12.996c.001-.264.167-1.03.76-1.72C8.312 10.629 9.282 10 11 10c1.717 0 2.687.63 3.24 1.276.593.69.758 1.457.76 1.72l-.008.002a.274.274 0 0 1-.014.002H7.022zM11 7a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm3-2a3 3 0 1 1-6 0 3 3 0 0 1 6 0zM6.936 9.28a5.88 5.88 0 0 0-1.23-.247A7.35 7.35 0 0 0 5 9c-4 0-5 3-5 4 0 .667.333 1 1 1h4.216A2.238 2.238 0 0 1 5 13c0-1.01.377-2.042 1.09-2.904.243-.294.526-.569.846-.816zM4.92 10A5.493 5.493 0 0 0 4 13H1c0-.26.164-1.03.76-1.724.545-.636 1.492-1.256 3.16-1.275zM1.5 5.5a3 3 0 1 1 6 0 3 3 0 0 1-6 0zm3-2a2 2 0 1 0 0 4 2 2 0 0 0 0-4z" />
+                </svg>
+                <span>Manage Teachers</span>
+            </a>
+            <a href="#" class="nav-item" data-section="manage-students">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16">
+                    <path
+                        d="M8.211 2.047a.5.5 0 0 0-.422 0l-7.5 3.5a.5.5 0 0 0 .025.917l7.5 3a.5.5 0 0 0 .372 0L14 7.14V13a1 1 0 0 0-1 1v2h3v-2a1 1 0 0 0-1-1V6.739l.686-.275a.5.5 0 0 0 .025-.917l-7.5-3.5z" />
+                    <path
+                        d="M4.176 9.032a.5.5 0 0 0-.656.327l-.5 1.7a.5.5 0 0 0 .294.605l4.5 1.8a.5.5 0 0 0 .372 0l4.5-1.8a.5.5 0 0 0 .294-.605l-.5-1.7a.5.5 0 0 0-.656-.327L8 10.466 4.176 9.032z" />
+                </svg>
+                <span>Manage Students</span>
+            </a>
+            <a href="#" class="nav-item" data-section="manage-batches">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16">
+                    <path
+                        d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5zM1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4H1zm1-1h12V3a1 1 0 0 0-1-1H2a1 1 0 0 0-1 1v1z" />
+                    <path
+                        d="M8 5.5a.5.5 0 0 1 .5.5v1.5H10a.5.5 0 0 1 0 1H8.5V10a.5.5 0 0 1-1 0V8.5H6a.5.5 0 0 1 0-1h1.5V6a.5.5 0 0 1 .5-.5z" />
+                </svg>
+                <span>Manage Batches</span>
+            </a>
+            <a href="#" class="nav-item" data-section="announcements">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16">
+                    <path
+                        d="M13 2.5a1.5 1.5 0 0 1 3 0v11a1.5 1.5 0 0 1-3 0v-.214c-2.162-1.241-4.49-1.843-6.912-2.083l.405 2.712A1 1 0 0 1 5.51 15.1h-.548a1 1 0 0 1-.916-.599l-1.85-3.49a68.14 68.14 0 0 0-.202-.003A2.014 2.014 0 0 1 0 9V7a2.02 2.02 0 0 1 1.992-2.013 74.663 74.663 0 0 0 2.483-.075c3.043-.154 6.148-.849 8.525-2.199V2.5zm1 0v11a.5.5 0 0 0 1 0v-11a.5.5 0 0 0-1 0zm-1 1.35c-2.344 1.205-5.209 1.842-8 2.033v4.233c2.791.192 5.656.829 8 2.033V3.85z" />
+                </svg>
+                <span>Announcements</span>
+            </a>
+            <a href="/teacher" class="nav-item" data-section="go-to-schedule">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16">
+                    <path fill-rule="evenodd"
+                        d="M1 8a.5.5 0 0 1 .5-.5h11.793l-3.147-3.146a.5.5 0 0 1 .708-.708l4 4a.5.5 0 0 1 0 .708l-4 4a.5.5 0 0 1-.708-.708L13.293 8.5H1.5A.5.5 0 0 1 1 8z" />
+                </svg>
+                <span>Go to Schedule</span>
+            </a>
+        </nav>
+
+        <div class="sidebar-footer">
+            <button class="nav-item logout-btn" id="logout-button">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16">
+                    <path fill-rule="evenodd"
+                        d="M10 12.5a.5.5 0 0 1-.5.5h-8a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h8a.5.5 0 0 1 .5.5v2a.5.5 0 0 0 1 0v-2A1.5 1.5 0 0 0 9.5 2h-8A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h8a1.5 1.5 0 0 0 1.5-1.5v-2a.5.5 0 0 0-1 0v2z" />
+                    <path fill-rule="evenodd"
+                        d="M15.854 8.354a.5.5 0 0 0 0-.708l-3-3a.5.5 0 0 0-.708.708L14.293 7.5H5.5a.5.5 0 0 0 0 1h8.793l-2.147 2.146a.5.5 0 0 0 .708.708l3-3z" />
+                </svg>
+                <span>Logout</span>
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content" style="opacity: 0;">
+        <!-- Page Loading Spinner -->
+        <div class="page-loading">
+            <div class="spinner"></div>
+            <div class="loading-text">Loading Admin Dashboard...</div>
+        </div>
+
+        <!-- ============================================ -->
+        <!-- SECTION: Admin Dashboard Stats & Revenue     -->
+        <!-- ============================================ -->
+        <div id="section-dashboard" class="admin-page-section">
+            <div id="admin-dashboard-container" class="admin-dashboard-container">
+                <!-- Stats Row -->
+                <div class="admin-stats-row">
+                    <div class="admin-stat-card">
+                        <svg class="admin-stat-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z">
+                            </path>
+                        </svg>
+                        <div class="admin-stat-value" id="admin-total-students">0</div>
+                        <div class="admin-stat-label">Total Students</div>
+                    </div>
+                    <div class="admin-stat-card">
+                        <svg class="admin-stat-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z">
+                            </path>
+                        </svg>
+                        <div class="admin-stat-value" id="admin-total-teachers">0</div>
+                        <div class="admin-stat-label">Total Teachers</div>
+                    </div>
+                    <div class="admin-stat-card">
+                        <svg class="admin-stat-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10">
+                            </path>
+                        </svg>
+                        <div class="admin-stat-value" id="admin-total-batches">0</div>
+                        <div class="admin-stat-label">Active Batches</div>
+                    </div>
+                    <div class="admin-stat-card revenue">
+                        <svg class="admin-stat-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z">
+                            </path>
+                        </svg>
+                        <div class="admin-stat-value" id="admin-total-revenue">$0</div>
+                        <div class="admin-stat-label">Total Revenue</div>
+                    </div>
+                </div>
+
+                <!-- Content Grid -->
+                <div class="admin-content-grid">
+                    <!-- Revenue Breakdown -->
+                    <div class="admin-card">
+                        <div class="admin-card-header">
+                            <h3 class="admin-card-title">
+                                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 002 2h2a2 2 0 002-2z">
+                                    </path>
+                                </svg>
+                                Teacher Earnings
+                            </h3>
+                        </div>
+                        <div id="revenue-breakdown-list">
+                            <p class="text-muted">Loading data...</p>
+                        </div>
+                    </div>
+
+                    <!-- Quick Actions -->
+                    <div class="admin-card">
+                        <div class="admin-card-header">
+                            <h3 class="admin-card-title">
+                                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                                </svg>
+                                Quick Actions
+                            </h3>
+                        </div>
+                        <div class="quick-actions-grid">
+                            <div class="action-card" id="quick-action-students">
+                                <div class="action-icon">
+                                    <i class="fas fa-user-graduate"></i>
+                                </div>
+                                <div class="action-info">
+                                    <h4>Manage Students</h4>
+                                    <p>Add, edit, or assign</p>
+                                </div>
+                            </div>
+                            <div class="action-card batches" id="quick-action-batches">
+                                <div class="action-icon">
+                                    <i class="fas fa-layer-group"></i>
+                                </div>
+                                <div class="action-info">
+                                    <h4>Manage Batches</h4>
+                                    <p>Create and organize</p>
+                                </div>
+                            </div>
+                            <div class="action-card teachers" id="quick-action-teachers">
+                                <div class="action-icon">
+                                    <i class="fas fa-chalkboard-teacher"></i>
+                                </div>
+                                <div class="action-info">
+                                    <h4>Manage Teachers</h4>
+                                    <p>Staff and permissions</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================ -->
+        <!-- SECTION: Teacher Weekly Overview              -->
+        <!-- ============================================ -->
+        <div id="section-teacher-overview" class="admin-page-section hidden">
+            <div id="teacher-overview-view">
+                <div id="overview-navigation">
+                    <button id="overview-prev-week-button" class="btn nav-arrow" title="Previous Week">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 16 16"
+                            fill="currentColor">
+                            <path fill-rule="evenodd"
+                                d="M12 8a.5.5 0 0 1-.5.5H5.707l2.147 2.146a.5.5 0 0 1-.708.708l-3-3a.5.5 0 0 1 0-.708l3-3a.5.5 0 1 1 .708.708L5.707 7.5H11.5a.5.5 0 0 1 .5.5z" />
+                        </svg>
+                    </button>
+                    <div id="overview-week-display">Loading...</div>
+                    <button id="overview-next-week-button" class="btn nav-arrow" title="Next Week">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 16 16"
+                            fill="currentColor">
+                            <path fill-rule="evenodd"
+                                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z" />
+                        </svg>
+                    </button>
+                </div>
+                <div id="overview-grid-container">
+                    <div id="overview-loader">Fetching schedule data...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================ -->
+        <!-- SECTION: Manage Teachers (inline, not modal) -->
+        <!-- ============================================ -->
+        <div id="section-manage-teachers" class="admin-page-section hidden">
+            <!-- Will be opened as modal -->
+        </div>
+
+        <!-- ============================================ -->
+        <!-- SECTION: Manage Students (inline, not modal) -->
+        <!-- ============================================ -->
+        <div id="section-manage-students" class="admin-page-section hidden">
+            <!-- Will be opened as modal -->
+        </div>
+
+        <!-- ============================================ -->
+        <!-- SECTION: Manage Batches (inline, not modal)  -->
+        <!-- ============================================ -->
+        <div id="section-manage-batches" class="admin-page-section hidden">
+            <!-- Will be opened as modal -->
+        </div>
+
+        <!-- ============================================ -->
+        <!-- SECTION: Announcements (inline, not modal)   -->
+        <!-- ============================================ -->
+        <div id="section-announcements" class="admin-page-section hidden">
+            <!-- Will be opened as modal -->
+        </div>
+    </main>
+
+    <!-- ============================================ -->
+    <!-- MODALS                                       -->
+    <!-- ============================================ -->
+
+    <!-- Notifications -->
+    <div id="notifications"></div>
+
+    <!-- Announcement Manager Modal -->
+    <div id="admin-announcements-manager-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Manage Announcements</h3>
+                <button class="close-button" id="close-admin-manager-modal-button">&times;</button>
+            </div>
+
+            <div id="create-announcement-section"
+                style="background-color: var(--bg-primary); padding: 20px; border-radius: var(--border-radius); border: 1px solid var(--border-color); margin-bottom: 2rem;">
+                <h4
+                    style="color: var(--accent-secondary); margin-top: 0; margin-bottom: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
+                    Create New Announcement</h4>
+                <p style="color: var(--text-muted); margin-top: -0.5rem; margin-bottom: 1.5rem; font-size: 0.9em;">This
+                    message will be pushed to all teachers and added to the history below.</p>
+                <label for="new-announcement-textarea">Announcement Message:</label>
+                <textarea id="new-announcement-textarea" placeholder="Type your message here..."></textarea>
+                <button id="publish-new-announcement-button" class="btn btn-success" style="width:100%;">Publish New
+                    Announcement</button>
+            </div>
+
+            <h4 style="color: var(--accent-secondary); margin-top: 0; margin-bottom: 1rem;">Announcement History</h4>
+            <div id="announcements-history-list" style="max-height: 40vh; overflow-y: auto; padding-right: 10px;">
+            </div>
+        </div>
+    </div>
+
+    <!-- Teacher Management Modal -->
+    <div id="teacher-management-modal" class="modal">
+        <div class="modal-content" style="max-width: 700px; max-height: 85vh; overflow-y: auto;">
+            <div class="modal-header">
+                <h3>Manage Teachers</h3>
+                <button class="close-button" id="close-teacher-modal-button">&times;</button>
+            </div>
+
+            <!-- Create New Teacher Section -->
+            <div id="create-teacher-section"
+                style="background-color: var(--bg-primary); padding: 20px; border-radius: var(--border-radius); border: 1px solid var(--border-color); margin-bottom: 2rem;">
+                <h4
+                    style="color: var(--accent-green); margin-top: 0; margin-bottom: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
+                    Add New Teacher
+                </h4>
+                <div style="display: grid; gap: 1rem;">
+                    <div>
+                        <label for="new-teacher-name">Teacher Name:</label>
+                        <input type="text" id="new-teacher-name" placeholder="Enter full name" required>
+                    </div>
+                    <div>
+                        <label for="new-teacher-email">Email Address:</label>
+                        <input type="email" id="new-teacher-email" placeholder="teacher@example.com" required>
+                    </div>
+                    <div>
+                        <label for="new-teacher-password">Password:</label>
+                        <input type="password" id="new-teacher-password" placeholder="Minimum 6 characters" required>
+                    </div>
+                    <button id="create-teacher-button" class="btn btn-success" style="width:100%;">
+                        Create Teacher Account
+                    </button>
+                </div>
+            </div>
+
+            <!-- Existing Teachers List -->
+            <h4 style="color: var(--accent-secondary); margin-top: 0; margin-bottom: 1rem;">
+                Existing Teachers
+            </h4>
+            <div style="margin-bottom: 1rem;">
+                <input type="text" id="teacher-search-input" placeholder="Search teachers by name or email..."
+                    style="width: 100%; padding: 0.6rem 1rem; border-radius: var(--border-radius); border: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-primary);">
+            </div>
+            <div id="teachers-list" style="max-height: 40vh; overflow-y: auto; padding-right: 10px;">
+                <div id="teachers-loader" style="text-align: center; padding: 2rem; color: var(--text-muted);">
+                    Loading teachers...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Student Management Modal -->
+    <div id="student-management-modal" class="modal">
+        <div class="modal-content" style="max-width: 700px; max-height: 85vh; overflow-y: auto;">
+            <div class="modal-header">
+                <h3>Manage Students</h3>
+                <button class="close-button" id="close-student-modal-button">&times;</button>
+            </div>
+
+            <!-- Create New Student Section -->
+            <div id="create-student-section"
+                style="background-color: var(--bg-primary); padding: 20px; border-radius: var(--border-radius); border: 1px solid var(--border-color); margin-bottom: 2rem;">
+                <h4
+                    style="color: var(--accent-green); margin-top: 0; margin-bottom: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
+                    Add New Student
+                </h4>
+                <div style="display: grid; gap: 1rem;">
+                    <div>
+                        <label for="new-student-name">Student Name:</label>
+                        <input type="text" id="new-student-name" placeholder="Enter full name" required>
+                    </div>
+                    <div>
+                        <label for="new-student-email">Email Address:</label>
+                        <input type="email" id="new-student-email" placeholder="student@example.com" required>
+                    </div>
+                    <div>
+                        <label for="new-student-password">Password:</label>
+                        <input type="password" id="new-student-password" placeholder="Minimum 6 characters" required>
+                    </div>
+                    <div>
+                        <label>Batch:</label>
+                        <div id="new-student-batch-container" style="position: relative;">
+                            <select id="new-student-batch-select" style="width: 100%;">
+                                <option value="">-- Select Batch --</option>
+                            </select>
+                            <div id="new-student-batch-chips"
+                                style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px;"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <label for="new-student-teacher">Assign to Teacher:</label>
+                        <select id="new-student-teacher" style="width: 100%;">
+                            <option value="">-- No Teacher Assigned --</option>
+                        </select>
+                    </div>
+                    <button id="create-student-button" class="btn btn-success" style="width:100%;">
+                        Create Student Account
+                    </button>
+                </div>
+            </div>
+
+            <!-- Existing Students List -->
+            <h4 style="color: var(--accent-secondary); margin-top: 0; margin-bottom: 1rem;">
+                Existing Students
+            </h4>
+            <div style="margin-bottom: 1rem;">
+                <input type="text" id="student-search-input" placeholder="Search students by name, email, or teacher..."
+                    style="width: 100%; padding: 0.6rem 1rem; border-radius: var(--border-radius); border: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-primary);">
+            </div>
+            <div id="students-list" style="max-height: 40vh; overflow-y: auto; padding-right: 10px;">
+                <div id="students-loader" style="text-align: center; padding: 2rem; color: var(--text-muted);">
+                    Loading students...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Batch Management Modal -->
+    <div id="batch-management-modal" class="modal">
+        <div class="modal-content" style="max-width: 550px; max-height: 85vh; overflow-y: auto;">
+            <div class="modal-header">
+                <h3>Manage Batches</h3>
+                <button class="close-button" id="close-batch-modal-button">&times;</button>
+            </div>
+
+            <!-- Add New Batch Section -->
+            <div
+                style="background-color: var(--bg-primary); padding: 20px; border-radius: var(--border-radius); border: 1px solid var(--border-color); margin-bottom: 2rem;">
+                <h4
+                    style="color: var(--accent-green); margin-top: 0; margin-bottom: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
+                    Add New Batch
+                </h4>
+                <div style="display: flex; gap: 10px; align-items: flex-end;">
+                    <div style="flex: 1;">
+                        <label for="new-batch-name">Batch Name:</label>
+                        <input type="text" id="new-batch-name" placeholder="e.g., Grade 8, Python Batch"
+                            style="margin-bottom: 0;">
+                    </div>
+                    <button id="add-batch-button" class="btn btn-success" style="height: 46px; white-space: nowrap;">Add
+                        Batch</button>
+                </div>
+            </div>
+
+            <!-- Existing Batches List -->
+            <h4 style="color: var(--accent-secondary); margin-top: 0; margin-bottom: 1rem;">
+                Existing Batches
+            </h4>
+            <div id="batches-list" style="max-height: 40vh; overflow-y: auto; padding-right: 10px;">
+                <div style="text-align: center; padding: 2rem; color: var(--text-muted);">
+                    No batches added yet.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- SCRIPTS                                      -->
+    <!-- ============================================ -->
+    <script type="module">
+        import { initAuthGuard, handleLogout } from './js/auth-guard.js';
+        import { initSidebar } from './js/utils.js';
+        import { initAdminPage } from './js/admin.js';
+
+        // Initialize sidebar toggle
+        initSidebar();
+
+        // Initialize auth guard - admin only
+        initAuthGuard('admin', (user, userData) => {
+            // Logout button
+            const logoutBtn = document.getElementById('logout-button');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', handleLogout);
+            }
+
+            // Initialize the admin page
+            initAdminPage(user, userData);
+        });
+    </script>
+</body>
+
+</html>
