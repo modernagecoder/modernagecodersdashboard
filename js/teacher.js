@@ -972,25 +972,8 @@ function setupAnnouncements() {
     });
 }
 
-function loadAnnouncementsHistory() {
-    if (!announcementsHistoryList) return;
-    announcementsHistoryList.innerHTML = '<p style="color:var(--text-muted);">Loading...</p>';
-    getDocs(query(collection(db, "announcements"), orderBy("createdAt", "desc"), limit(50))).then(snapshot => {
-        const items = []; snapshot.forEach(d => items.push({ id: d.id, ...d.data() }));
-        if (items.length === 0) { announcementsHistoryList.innerHTML = '<p style="color:var(--text-muted);">No announcements.</p>'; return; }
-        announcementsHistoryList.innerHTML = items.map(a => `<div class="announcement-item" style="display:flex;justify-content:space-between;align-items:start;"><div><p>${escapeHTML(a.text || a.message || '')}</p><small style="color:var(--text-muted);">${formatTimestampForDisplay(a.createdAt)}</small></div><button class="btn btn-danger btn-small delete-announcement-btn" data-id="${a.id}">Delete</button></div>`).join('');
-
-        // Add listeners for delete buttons
-        announcementsHistoryList.querySelectorAll('.delete-announcement-btn').forEach(btn => {
-            btn.addEventListener('click', () => deleteAnnouncement(btn.dataset.id));
-        });
-    }).catch(err => { announcementsHistoryList.innerHTML = '<p style="color:var(--accent-red);">Error loading.</p>'; });
-}
-
-async function deleteAnnouncement(id) {
-    if (!confirm("Delete this announcement?")) return;
-    try { await deleteDoc(doc(db, "announcements", id)); showNotification("Announcement deleted.", "success"); loadAnnouncementsHistory(); } catch (e) { showNotification(`Error: ${e.message}`, "error"); }
-}
+// ─── ADMIN TEACHER MANAGEMENT (Moved to admin-shared.js) ────────────────────────────────────────
+// Logic imported from admin-shared.js
 
 // ─── ADMIN TEACHER MANAGEMENT (Moved to admin-shared.js) ────────────────────────────────────────
 // Logic imported from admin-shared.js
