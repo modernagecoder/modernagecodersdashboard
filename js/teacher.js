@@ -1212,23 +1212,6 @@ async function initStudentDashboard() {
     console.log("Student dashboard initialization deferred to student.js");
 }
 
-// ─── MOTIVATIONAL QUOTES ─────────────────────────────────────────────
-function displayMotivationalQuote() {
-    const quoteEl = document.getElementById('motivational-quote');
-    if (!quoteEl) return;
-    const quotes = [
-        "Teaching is the greatest act of optimism. — Colleen Wilcox",
-        "Education is not the filling of a pail, but the lighting of a fire. — W.B. Yeats",
-        "The art of teaching is the art of assisting discovery. — Mark Van Doren",
-        "Every student can learn, just not on the same day, or the same way. — George Evans",
-        "A teacher affects eternity; they can never tell where their influence stops. — Henry Adams",
-        "The best teachers teach from the heart, not from the book.",
-        "What we learn with pleasure we never forget. — Alfred Mercier",
-        "In learning you will teach, and in teaching you will learn. — Phil Collins",
-    ];
-    quoteEl.textContent = quotes[Math.floor(Math.random() * quotes.length)];
-}
-
 // ─── EVENT LISTENER WIRING ──────────────────────────────────────────
 function wireEventListeners() {
     // Add slot button
