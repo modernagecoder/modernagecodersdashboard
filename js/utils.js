@@ -360,3 +360,37 @@ export function initSidebar() {
         });
     }
 }
+
+// --- Dashboard Section Navigation ---
+// Shared utility for sidebar section switching across all dashboards.
+// `onSectionChange(sectionName)` is called after the section is shown.
+export function setupDashboardNavigation(onSectionChange) {
+    const navItems = document.querySelectorAll('.sidebar-nav .nav-item[data-section]');
+    navItems.forEach(navItem => {
+        navItem.addEventListener('click', (e) => {
+            const section = navItem.dataset.section;
+            if (!section) return;
+            // Allow normal link navigation (e.g. "Go to Schedule" link)
+            if (navItem.getAttribute('href') && navItem.getAttribute('href') !== '#') return;
+            e.preventDefault();
+
+            // Update active state
+            document.querySelectorAll('.sidebar-nav .nav-item').forEach(n => n.classList.remove('active'));
+            navItem.classList.add('active');
+
+            // Show/hide sections
+            document.querySelectorAll('.dashboard-section').forEach(s => {
+                s.classList.add('hidden');
+                s.classList.remove('section-active');
+            });
+            const targetSection = document.getElementById(`section-${section}`);
+            if (targetSection) {
+                targetSection.classList.remove('hidden');
+                targetSection.classList.add('section-active');
+            }
+
+            // Callback for page-specific logic
+            if (onSectionChange) onSectionChange(section);
+        });
+    });
+}

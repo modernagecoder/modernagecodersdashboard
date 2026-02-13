@@ -3501,6 +3501,102 @@ body {
     }
 }
 
+/* ===== DASHBOARD SECTION NAVIGATION ===== */
+.dashboard-section {
+    animation: sectionFadeIn 0.3s ease-out;
+}
+
+.dashboard-section.hidden {
+    display: none !important;
+}
+
+@keyframes sectionFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.section-header h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.section-header .section-subtitle {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-top: 4px;
+}
+
+/* Nav separator for sidebar admin sections */
+.nav-separator {
+    padding: 12px 20px 6px;
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--text-muted);
+    font-weight: 600;
+    opacity: 0.7;
+}
+
+/* Management section inline cards */
+.management-section-content {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.25rem;
+    margin-top: 1rem;
+}
+
+.management-card {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding: 1.5rem;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.management-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+.management-card h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0 0 0.5rem 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.management-card p {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin: 0 0 1rem 0;
+    line-height: 1.5;
+}
+
+.management-card .btn {
+    width: 100%;
+}
+
 /* ===== SIDEBAR NAVIGATION ===== */
 .dashboard-layout {
     display: flex;
@@ -3973,4 +4069,488 @@ body {
     text-align: center;
     min-height: 20px;
     margin-top: 5px;
+}
+
+/* ===== DASHBOARD SECTION NAVIGATION ===== */
+.dashboard-section {
+    display: block;
+}
+
+.dashboard-section.hidden {
+    display: none !important;
+}
+
+.dashboard-section.section-active {
+    animation: sectionFadeIn 0.3s ease-out;
+}
+
+@keyframes sectionFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Section Header */
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.section-header h2 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.section-subtitle {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin: 4px 0 0 0;
+    font-weight: 400;
+}
+
+/* Nav Separator (Admin section divider in sidebar) */
+.nav-separator {
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--text-muted);
+    padding: 16px 20px 6px;
+    border-top: 1px solid var(--border-color);
+    margin-top: 8px;
+}
+
+/* Management Section Content */
+.management-section-content {
+    display: grid;
+    gap: 1rem;
+}
+
+.management-card {
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding: 1.5rem;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.management-card:hover {
+    border-color: var(--accent-main);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+}
+
+.management-card h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0 0 0.5rem 0;
+}
+
+.management-card p {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin: 0 0 1rem 0;
+    line-height: 1.5;
+}
+
+/* Empty State */
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 1.5rem;
+    text-align: center;
+    color: var(--text-muted);
+    border: 1px dashed var(--border-color);
+    border-radius: var(--border-radius);
+    background: var(--bg-primary);
+}
+
+.empty-state .empty-icon {
+    font-size: 2.5rem;
+    margin-bottom: 0.75rem;
+    opacity: 0.6;
+}
+
+.empty-state p {
+    font-size: 0.9rem;
+    margin: 0;
+    max-width: 400px;
+    line-height: 1.5;
+}
+
+/* ===== STUDENT DASHBOARD STYLES ===== */
+.student-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.student-header .welcome-text {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.student-header .header-actions button {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    position: relative;
+    transition: color 0.2s ease;
+}
+
+.student-header .header-actions button:hover {
+    color: var(--accent-main);
+}
+
+/* Profile Card */
+.student-profile-card {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.student-profile-avatar {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: var(--accent-main);
+    color: white;
+    font-size: 1.75rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.student-profile-info {
+    flex: 1;
+}
+
+.student-profile-name {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+}
+
+.student-profile-email {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    margin-bottom: 8px;
+}
+
+.student-profile-meta {
+    display: flex;
+    gap: 12px;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+.student-profile-meta span {
+    background: var(--bg-tertiary);
+    padding: 2px 8px;
+    border-radius: 4px;
+    border: 1px solid var(--border-color);
+}
+
+/* Stats Row */
+.student-stats-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.25rem;
+    margin-bottom: 2rem;
+}
+
+.student-stat-card {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.student-stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.student-stat-card .stat-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--bg-tertiary);
+    /* Fallback */
+    background: rgba(var(--accent-main-rgb), 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 0.75rem;
+    color: var(--accent-main);
+}
+
+.student-stat-card .stat-number {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+    font-family: var(--font-code);
+}
+
+.student-stat-card .stat-label {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+/* Main Content Grid */
+.student-main-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 1.5rem;
+}
+
+@media (max-width: 900px) {
+    .student-main-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Panels */
+.student-panel-card {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding: 1.5rem;
+    height: 100%;
+}
+
+.student-panel-card h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0 0 1.25rem 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 0.75rem;
+}
+
+/* Calendar Panel specific */
+.student-calendar-panel {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding: 1.5rem;
+}
+
+/* Class Event Cards */
+.class-event-card {
+    background: var(--bg-primary);
+    /* Slightly lighter/different from panel bg */
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding: 1rem;
+    margin-bottom: 0.75rem;
+    transition: transform 0.15s ease;
+    border-left: 3px solid var(--accent-main);
+}
+
+.class-event-card:hover {
+    transform: translateX(2px);
+    border-color: var(--accent-secondary);
+}
+
+.class-event-card .event-time {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+    font-family: var(--font-code);
+}
+
+.class-event-card .event-topic {
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    margin-bottom: 6px;
+}
+
+.class-event-card .event-teacher {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.class-event-card .event-batch-badge {
+    display: inline-block;
+    font-size: 0.7rem;
+    background: rgba(var(--accent-main-rgb), 0.1);
+    color: var(--accent-main);
+    padding: 2px 6px;
+    border-radius: 4px;
+    margin-top: 6px;
+}
+
+/* Assignment Cards */
+.assignment-card {
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding: 1rem;
+    margin-bottom: 1rem;
+    position: relative;
+    border-left: 3px solid var(--border-color);
+    /* Default border color */
+}
+
+.assignment-card:hover {
+    border-color: var(--accent-secondary);
+    /* Hover border color */
+    border-left-color: var(--accent-secondary);
+}
+
+.assignment-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 0.5rem;
+}
+
+.assignment-title {
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 1rem;
+}
+
+.assignment-due-pill {
+    font-size: 0.7rem;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.assignment-due-pill.urgent {
+    background: rgba(235, 51, 73, 0.15);
+    color: #eb3349;
+}
+
+.assignment-due-pill.soon {
+    background: rgba(247, 151, 30, 0.15);
+    color: #f7971e;
+}
+
+.assignment-due-pill.safe {
+    background: rgba(17, 153, 142, 0.15);
+    color: #11998e;
+}
+
+.assignment-due {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-bottom: 0.5rem;
+    font-family: var(--font-code);
+}
+
+.assignment-desc {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.75rem;
+    line-height: 1.4;
+}
+
+.assignment-teacher {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    padding-top: 0.5rem;
+    border-top: 1px solid var(--border-color);
+}
+
+/* Attendance Styling */
+#student-attendance-section {
+    color: var(--text-primary);
+}
+
+.attendance-bar-container {
+    height: 8px;
+    background: var(--bg-tertiary);
+    border-radius: 4px;
+    overflow: hidden;
+    margin: 0.5rem 0 1.5rem 0;
+}
+
+.attendance-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent-green), #11998e);
+    border-radius: 4px;
+    transition: width 1s ease-out;
+}
+
+.attendance-heatmap {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+    margin-bottom: 1.5rem;
+}
+
+.heatmap-day {
+    aspect-ratio: 1;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    background: var(--bg-tertiary);
+    color: var(--text-muted);
+    cursor: default;
+    border: 1px solid transparent;
+}
+
+.heatmap-day.present {
+    background: rgba(17, 153, 142, 0.2);
+    color: #11998e;
+    border-color: rgba(17, 153, 142, 0.3);
+}
+
+.heatmap-day.absent {
+    background: rgba(235, 51, 73, 0.2);
+    color: #eb3349;
+    border-color: rgba(235, 51, 73, 0.3);
+}
+
+.heatmap-day.today {
+    border: 1px solid var(--text-primary);
+    font-weight: 700;
 }

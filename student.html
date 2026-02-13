@@ -48,21 +48,21 @@
         </div>
 
         <nav class="sidebar-nav">
-            <a href="#schedule" class="nav-item active" data-tab="schedule" data-tooltip="Schedule">
+            <a href="#" class="nav-item active" data-section="schedule" data-tooltip="Schedule">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16">
                     <path
                         d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5zM1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4H1z" />
                 </svg>
                 <span>Schedule</span>
             </a>
-            <a href="#assignments" class="nav-item" data-tab="assignments" data-tooltip="Assignments">
+            <a href="#" class="nav-item" data-section="assignments" data-tooltip="Assignments">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16">
                     <path
                         d="M9.293 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V4.707A1 1 0 0 0 13.707 4L10 .293A1 1 0 0 0 9.293 0zM9.5 3.5v-2l3 3h-2a1 1 0 0 1-1-1zM4.5 9a.5.5 0 0 1 0-1h7a.5.5 0 0 1 0 1h-7zM4 10.5a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5zm.5 2.5a.5.5 0 0 1 0-1h4a.5.5 0 0 1 0 1h-4z" />
                 </svg>
                 <span>Assignments</span>
             </a>
-            <a href="#attendance" class="nav-item" data-tab="attendance" data-tooltip="Attendance">
+            <a href="#" class="nav-item" data-section="attendance" data-tooltip="Attendance">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16">
                     <path
                         d="M10.97 4.97a.75.75 0 0 1 1.07 1.05l-3.99 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425a.267.267 0 0 1 .02-.022z" />
@@ -173,32 +173,10 @@
             </div>
 
             <!-- Tab Navigation -->
-            <div class="student-tabs" id="student-tabs">
-                <button class="student-tab active" data-tab="schedule">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16">
-                        <path
-                            d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5zM1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4H1z" />
-                    </svg>
-                    Schedule
-                </button>
-                <button class="student-tab" data-tab="assignments">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16">
-                        <path
-                            d="M9.293 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V4.707A1 1 0 0 0 13.707 4L10 .293A1 1 0 0 0 9.293 0zM9.5 3.5v-2l3 3h-2a1 1 0 0 1-1-1zM4.5 9a.5.5 0 0 1 0-1h7a.5.5 0 0 1 0 1h-7zM4 10.5a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5zm.5 2.5a.5.5 0 0 1 0-1h4a.5.5 0 0 1 0 1h-4z" />
-                    </svg>
-                    Assignments
-                </button>
-                <button class="student-tab" data-tab="attendance">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16">
-                        <path
-                            d="M4 11H2v3h2v-3zm5-4H7v7h2V7zm5-5h-2v12h2V2zm-2-1a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1h-2zM6 7a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V7zm-5 4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1v-3z" />
-                    </svg>
-                    Attendance
-                </button>
-            </div>
+
 
             <!-- TAB 1: Schedule (Calendar + Upcoming) -->
-            <div class="student-tab-content active" id="student-tab-schedule">
+            <section class="dashboard-section section-active" id="section-schedule">
                 <div class="student-main-grid">
                     <div class="student-calendar-panel">
                         <h3
@@ -256,10 +234,10 @@
                         </div>
                     </div>
                 </div>
-            </div>
+            </section>
 
             <!-- TAB 2: Assignments -->
-            <div class="student-tab-content" id="student-tab-assignments">
+            <section class="dashboard-section hidden" id="section-assignments">
                 <div class="student-panel-card">
                     <h3>
                         <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16">
@@ -275,10 +253,10 @@
                         </div>
                     </div>
                 </div>
-            </div>
+            </section>
 
             <!-- TAB 3: Attendance -->
-            <div class="student-tab-content" id="student-tab-attendance">
+            <section class="dashboard-section hidden" id="section-attendance">
                 <div class="student-panel-card">
                     <h3>
                         <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16">
@@ -312,7 +290,7 @@
                         </div>
                     </div>
                 </div>
-            </div>
+            </section>
         </div>
     </main>
 
@@ -321,70 +299,17 @@
 
     <script type="module">
         import { initAuthGuard, handleLogout } from './js/auth-guard.js';
-        import { initSidebar, showNotification } from './js/utils.js';
+        import { initSidebar, showNotification, setupDashboardNavigation } from './js/utils.js';
         import { initStudentDashboard } from './js/student.js';
 
         // Initialize sidebar mobile toggle
         initSidebar();
 
+        // Initialize dashboard section navigation
+        setupDashboardNavigation();
+
         // Logout button
         document.getElementById('logout-button').addEventListener('click', handleLogout);
-
-        // Sidebar nav tab switching
-        document.querySelectorAll('.sidebar-nav .nav-item').forEach(navItem => {
-            navItem.addEventListener('click', (e) => {
-                e.preventDefault();
-                const tabName = navItem.dataset.tab;
-                if (!tabName) return;
-
-                // Update sidebar active state
-                document.querySelectorAll('.sidebar-nav .nav-item').forEach(n => n.classList.remove('active'));
-                navItem.classList.add('active');
-
-                // Update tab button active state
-                const tabsContainer = document.getElementById('student-tabs');
-                if (tabsContainer) {
-                    tabsContainer.querySelectorAll('.student-tab').forEach(t => t.classList.remove('active'));
-                    const matchingTab = tabsContainer.querySelector(`.student-tab[data-tab="${tabName}"]`);
-                    if (matchingTab) matchingTab.classList.add('active');
-                }
-
-                // Switch tab content
-                document.querySelectorAll('.student-tab-content').forEach(c => c.classList.remove('active'));
-                const targetPanel = document.getElementById(`student-tab-${tabName}`);
-                if (targetPanel) {
-                    targetPanel.classList.add('active');
-                }
-            });
-        });
-
-        // Tab button switching (in the main content area)
-        const tabsContainer = document.getElementById('student-tabs');
-        if (tabsContainer) {
-            tabsContainer.addEventListener('click', (e) => {
-                const tab = e.target.closest('.student-tab');
-                if (!tab) return;
-                const tabName = tab.dataset.tab;
-
-                // Update tab buttons
-                tabsContainer.querySelectorAll('.student-tab').forEach(t => t.classList.remove('active'));
-                tab.classList.add('active');
-
-                // Update sidebar nav active state
-                document.querySelectorAll('.sidebar-nav .nav-item').forEach(n => n.classList.remove('active'));
-                const matchingNav = document.querySelector(`.sidebar-nav .nav-item[data-tab="${tabName}"]`);
-                if (matchingNav) matchingNav.classList.add('active');
-
-                // Switch tab content
-                document.querySelectorAll('.student-tab-content').forEach(c => c.classList.remove('active'));
-                const targetPanel = document.getElementById(`student-tab-${tabName}`);
-                if (targetPanel) {
-                    targetPanel.classList.add('active');
-                    targetPanel.classList.add('fade-in');
-                    setTimeout(() => targetPanel.classList.remove('fade-in'), 300);
-                }
-            });
-        }
 
         // Auth guard: require student role, then initialize dashboard
         initAuthGuard('student', (user, userData) => {

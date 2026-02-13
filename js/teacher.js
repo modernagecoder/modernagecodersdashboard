@@ -849,10 +849,6 @@ function renderTeacherOverview() {
 
 // ─── ANNOUNCEMENTS ──────────────────────────────────────────────────
 function setupAnnouncements() {
-    if (manageAnnouncementsButton && currentUser.isAdmin) {
-        manageAnnouncementsButton.classList.remove('hidden');
-        manageAnnouncementsButton.addEventListener('click', () => { adminManagerModal.classList.add('active'); loadAnnouncementsHistory(); });
-    }
     if (closeAdminManagerModalButton) closeAdminManagerModalButton.addEventListener('click', () => adminManagerModal.classList.remove('active'));
     if (adminManagerModal) adminManagerModal.addEventListener('click', (e) => { if (e.target === adminManagerModal) adminManagerModal.classList.remove('active'); });
     if (publishNewAnnouncementButton) {
@@ -1210,10 +1206,6 @@ function renderTeacherAgenda() {
 
 async function initTeacherEnhancements() {
     if (!currentUser || currentUser.isAdmin) return;
-    const myStudentsPanel = document.getElementById('teacher-my-students-panel');
-    const agendaPanel = document.getElementById('teacher-agenda-panel');
-    if (myStudentsPanel) myStudentsPanel.classList.remove('hidden');
-    if (agendaPanel) agendaPanel.classList.remove('hidden');
     await loadTeacherMyStudents();
     renderTeacherAgenda();
 }
@@ -1223,6 +1215,11 @@ async function initAdminDashboard() {
     if (!currentUser || !currentUser.isAdmin) return;
     const adminPanel = document.getElementById('admin-controls-panel');
     if (adminPanel) adminPanel.classList.remove('hidden');
+
+    // Show admin-only navigation items in the sidebar
+    const adminNavItems = document.getElementById('admin-nav-items');
+    if (adminNavItems) adminNavItems.classList.remove('hidden');
+
     // Load teachers list for admin selects
     try {
         const token = await getIdToken();
@@ -1241,6 +1238,20 @@ async function initAdminDashboard() {
     if (overviewPrevWeekButton) overviewPrevWeekButton.addEventListener('click', () => { overviewCurrentWeekStartDate.setDate(overviewCurrentWeekStartDate.getDate() - 7); renderTeacherOverview(); });
     if (overviewNextWeekButton) overviewNextWeekButton.addEventListener('click', () => { overviewCurrentWeekStartDate.setDate(overviewCurrentWeekStartDate.getDate() + 7); renderTeacherOverview(); });
     renderTeacherOverview();
+
+    // Wire new section buttons to modal openers
+    const teacherMgmtBtn = document.getElementById('open-teacher-mgmt-btn');
+    if (teacherMgmtBtn) teacherMgmtBtn.addEventListener('click', () => { if (window.openTeacherManagementModal) window.openTeacherManagementModal(); });
+    const studentMgmtBtn = document.getElementById('open-student-mgmt-btn');
+    if (studentMgmtBtn) studentMgmtBtn.addEventListener('click', () => { if (window.openStudentManagementModal) window.openStudentManagementModal(); });
+    const batchMgmtBtn = document.getElementById('open-batch-mgmt-btn');
+    if (batchMgmtBtn) batchMgmtBtn.addEventListener('click', () => { if (window.openBatchManagementModal) window.openBatchManagementModal(); });
+    const announcementsMgmtBtn = document.getElementById('open-announcements-mgmt-btn');
+    if (announcementsMgmtBtn) announcementsMgmtBtn.addEventListener('click', () => { if (adminManagerModal) { adminManagerModal.classList.add('active'); loadAnnouncementsHistory(); } });
+
+    // Also load teacher enhancements for admin (my students + agenda)
+    await loadTeacherMyStudents();
+    renderTeacherAgenda();
 }
 
 // ─── STUDENT DASHBOARD ───────────────────────────────────────────────

@@ -133,6 +133,16 @@ export async function initAdminPage(user, userData) {
         }
     });
 
+    // Wire section Open Manager buttons to modals
+    const teacherMgmtBtn = document.getElementById('open-teacher-mgmt-btn');
+    if (teacherMgmtBtn) teacherMgmtBtn.addEventListener('click', () => openTeacherManagementModal());
+    const studentMgmtBtn = document.getElementById('open-student-mgmt-btn');
+    if (studentMgmtBtn) studentMgmtBtn.addEventListener('click', () => openStudentManagementModal());
+    const batchMgmtBtn = document.getElementById('open-batch-mgmt-btn');
+    if (batchMgmtBtn) batchMgmtBtn.addEventListener('click', () => openBatchManagementModal());
+    const announcementsMgmtBtn = document.getElementById('open-announcements-mgmt-btn');
+    if (announcementsMgmtBtn) announcementsMgmtBtn.addEventListener('click', () => openAnnouncementModal());
+
     showNotification(`Welcome, Admin ${user.originalDisplayName}! Dashboard loaded.`, 'success');
 }
 
@@ -151,7 +161,7 @@ function setupSectionNavigation() {
             navItem.classList.add('active');
 
             // Show/hide sections
-            document.querySelectorAll('.admin-page-section').forEach(s => s.classList.add('hidden'));
+            document.querySelectorAll('.dashboard-section').forEach(s => s.classList.add('hidden'));
             const targetSection = document.getElementById(`section-${section}`);
             if (targetSection) targetSection.classList.remove('hidden');
 

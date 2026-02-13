@@ -126,7 +126,7 @@
         <!-- ============================================ -->
         <!-- SECTION: Admin Dashboard Stats & Revenue     -->
         <!-- ============================================ -->
-        <div id="section-dashboard" class="admin-page-section">
+        <div id="section-dashboard" class="dashboard-section">
             <div id="admin-dashboard-container" class="admin-dashboard-container">
                 <!-- Stats Row -->
                 <div class="admin-stats-row">
@@ -235,7 +235,7 @@
         <!-- ============================================ -->
         <!-- SECTION: Teacher Weekly Overview              -->
         <!-- ============================================ -->
-        <div id="section-teacher-overview" class="admin-page-section hidden">
+        <div id="section-teacher-overview" class="dashboard-section hidden">
             <div id="teacher-overview-view">
                 <div id="overview-navigation">
                     <button id="overview-prev-week-button" class="btn nav-arrow" title="Previous Week">
@@ -263,29 +263,77 @@
         <!-- ============================================ -->
         <!-- SECTION: Manage Teachers (inline, not modal) -->
         <!-- ============================================ -->
-        <div id="section-manage-teachers" class="admin-page-section hidden">
-            <!-- Will be opened as modal -->
+        <div id="section-manage-teachers" class="dashboard-section hidden">
+            <div class="section-header">
+                <div>
+                    <h2>Manage Teachers</h2>
+                    <p class="section-subtitle">Add, view, and manage teacher accounts</p>
+                </div>
+                <button class="btn btn-primary" id="open-teacher-mgmt-btn">Open Manager</button>
+            </div>
+            <div class="management-section-content">
+                <div class="management-card">
+                    <h3>Teacher Accounts</h3>
+                    <p>Create new teacher accounts, view existing teachers, and manage permissions.</p>
+                </div>
+            </div>
         </div>
 
         <!-- ============================================ -->
         <!-- SECTION: Manage Students (inline, not modal) -->
         <!-- ============================================ -->
-        <div id="section-manage-students" class="admin-page-section hidden">
-            <!-- Will be opened as modal -->
+        <div id="section-manage-students" class="dashboard-section hidden">
+            <div class="section-header">
+                <div>
+                    <h2>Manage Students</h2>
+                    <p class="section-subtitle">Add, view, and manage student accounts</p>
+                </div>
+                <button class="btn btn-primary" id="open-student-mgmt-btn">Open Manager</button>
+            </div>
+            <div class="management-section-content">
+                <div class="management-card">
+                    <h3>Student Accounts</h3>
+                    <p>Create student accounts, assign them to teachers and batches, and manage their access.</p>
+                </div>
+            </div>
         </div>
 
         <!-- ============================================ -->
         <!-- SECTION: Manage Batches (inline, not modal)  -->
         <!-- ============================================ -->
-        <div id="section-manage-batches" class="admin-page-section hidden">
-            <!-- Will be opened as modal -->
+        <div id="section-manage-batches" class="dashboard-section hidden">
+            <div class="section-header">
+                <div>
+                    <h2>Manage Batches</h2>
+                    <p class="section-subtitle">Create and organize class batches</p>
+                </div>
+                <button class="btn btn-primary" id="open-batch-mgmt-btn">Open Manager</button>
+            </div>
+            <div class="management-section-content">
+                <div class="management-card">
+                    <h3>Batch Organization</h3>
+                    <p>Create new batches, organize students into groups, and manage batch settings.</p>
+                </div>
+            </div>
         </div>
 
         <!-- ============================================ -->
         <!-- SECTION: Announcements (inline, not modal)   -->
         <!-- ============================================ -->
-        <div id="section-announcements" class="admin-page-section hidden">
-            <!-- Will be opened as modal -->
+        <div id="section-announcements" class="dashboard-section hidden">
+            <div class="section-header">
+                <div>
+                    <h2>Announcements</h2>
+                    <p class="section-subtitle">Create and manage announcements for all users</p>
+                </div>
+                <button class="btn btn-primary" id="open-announcements-mgmt-btn">Open Manager</button>
+            </div>
+            <div class="management-section-content">
+                <div class="management-card">
+                    <h3>Announcement Manager</h3>
+                    <p>Publish new announcements, edit existing ones, and manage announcement history.</p>
+                </div>
+            </div>
         </div>
     </main>
 
