@@ -420,6 +420,29 @@ async function checkForLongSessions() {
     }
 }
 
+// ─── WEEK HELPERS ────────────────────────────────────────────────────
+function getStartOfWeek(date) {
+    const d = new Date(date);
+    const day = d.getDay(); // 0 = Sun
+    d.setDate(d.getDate() - day); // Go back to Sunday
+    d.setHours(0, 0, 0, 0);
+    return d;
+}
+
+function setCSSVariablesFromRoot() {
+    // This function reads CSS custom properties and ensures they're applied.
+    // Since we use CSS variables defined in styles.css, this is a no-op safety net.
+    const root = document.documentElement;
+    const styles = getComputedStyle(root);
+    // Ensure key variables are accessible (no-op if already defined in CSS)
+    if (!styles.getPropertyValue('--accent-green')) {
+        root.style.setProperty('--accent-green', '#9ece6a');
+    }
+    if (!styles.getPropertyValue('--accent-orange')) {
+        root.style.setProperty('--accent-orange', '#ff9e64');
+    }
+}
+
 // ─── WEEK / DAY VIEW ─────────────────────────────────────────────────
 function renderWeekSelector(startDate) {
     if (!weekSelector) return;
@@ -1217,7 +1240,7 @@ function wireEventListeners() {
     // Add slot button
     if (addSlotButton) addSlotButton.addEventListener('click', () => openSlotModal());
     // Close slot modal
-    if (closeSlotModalButton) closeSlotModalButton.addEventListener('click', () => slotModal.classList.remove('active'));
+    if (closeModalButton) closeModalButton.addEventListener('click', () => slotModal.classList.remove('active'));
     if (slotModal) slotModal.addEventListener('click', (e) => { if (e.target === slotModal) slotModal.classList.remove('active'); });
     // Save slot
     if (saveSlotButton) saveSlotButton.addEventListener('click', saveSlot);
@@ -1227,7 +1250,7 @@ function wireEventListeners() {
     // Salary history
     const salaryHistoryButton = document.getElementById('salary-history-button');
     if (salaryHistoryButton) salaryHistoryButton.addEventListener('click', renderSalaryHistory);
-    if (closeSalaryHistoryButton) closeSalaryHistoryButton.addEventListener('click', () => salaryHistoryModal.classList.remove('active'));
+    if (closeSalaryHistoryModalButton) closeSalaryHistoryModalButton.addEventListener('click', () => salaryHistoryModal.classList.remove('active'));
     if (salaryHistoryModal) salaryHistoryModal.addEventListener('click', (e) => { if (e.target === salaryHistoryModal) salaryHistoryModal.classList.remove('active'); });
     // Delete confirm modal
     if (deleteConfirmModal) {
@@ -1268,7 +1291,7 @@ export async function initTeacherDashboard(user, userData) {
     }
 
     // Initialize DOM references
-    initializeDOMReferences();
+    resolveDomRefs();
 
     // Set CSS variables for colors
     setCSSVariablesFromRoot();
@@ -1289,7 +1312,7 @@ export async function initTeacherDashboard(user, userData) {
     setupAssignmentPosting();
 
     // Load batches
-    loadBatchesRealtime();
+    initBatchesRealtime();
 
     // Admin-specific setup
     if (currentUser.isAdmin) {
