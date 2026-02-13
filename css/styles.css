@@ -4850,3 +4850,16 @@ body {
          b a c k g r o u n d - c o l o r :   t r a n s p a r e n t ;  
  }  
  
+/* Fix for logout button cropping in collapsed sidebar */
+.sidebar-footer .nav-item span {
+    opacity: 0;
+    width: 0;
+    display: none;
+    transition: opacity 0.3s ease;
+}
+
+.sidebar:hover .sidebar-footer .nav-item span {
+    opacity: 1;
+    width: auto;
+    display: inline-block;
+}

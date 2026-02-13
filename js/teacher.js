@@ -1128,18 +1128,6 @@ async function initTeacherEnhancements() {
 }
 
 // ─── ADMIN DASHBOARD ─────────────────────────────────────────────────
-import {
-    initAdminShared,
-    setupTeacherManagement,
-    setupStudentManagement,
-    setupBatchManagement,
-    setupEditFormBatchDropdown,
-    setupAnnouncementManagement,
-    loadAnnouncementsHistory,
-    loadSharedData,
-    allTeachersData as sharedTeachersData,
-    allBatchesData as sharedBatchesData
-} from './admin-shared.js';
 
 // ... (existing imports)
 
