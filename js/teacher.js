@@ -196,7 +196,7 @@ function calculateEndTime(startTimeStr, durationMinutes) {
 
 function populateSlotBatchDropdown(tagValue) {
     if (!modalBatchSelect) return;
-    populateBatchDropdown(modalBatchSelect, { includePersonalized: tagValue === 'personalized' });
+    populateBatchDropdown(modalBatchSelect, allBatchesData, { includePersonalized: tagValue === 'personalized' });
 }
 
 function displayMotivationalQuote() {
@@ -961,11 +961,11 @@ function setupStudentManagement() {
     const newStudentBatchSelect = document.getElementById('new-student-batch-select');
     const newStudentBatchChips = document.getElementById('new-student-batch-chips');
     if (newStudentBatchSelect) {
-        populateBatchDropdown(newStudentBatchSelect, { includePersonalized: true });
+        populateBatchDropdown(newStudentBatchSelect, allBatchesData, { includePersonalized: true });
         newStudentBatchSelect.addEventListener('change', () => {
             const val = newStudentBatchSelect.value; if (val && !_selectedNewStudentBatches.includes(val)) { _selectedNewStudentBatches.push(val); }
-            renderBatchChips(newStudentBatchChips, _selectedNewStudentBatches, newStudentBatchSelect, (updated) => { _selectedNewStudentBatches = updated; });
-            populateBatchDropdown(newStudentBatchSelect, { includePersonalized: true, selectedBatches: _selectedNewStudentBatches });
+            renderBatchChips(newStudentBatchChips, _selectedNewStudentBatches, newStudentBatchSelect, allBatchesData, (updated) => { _selectedNewStudentBatches = updated; });
+            populateBatchDropdown(newStudentBatchSelect, allBatchesData, { includePersonalized: true, selectedBatches: _selectedNewStudentBatches });
             newStudentBatchSelect.value = '';
         });
     }
@@ -1062,13 +1062,13 @@ function setupEditFormBatchDropdown() {
         form.classList.toggle('hidden');
         const selectEl = form.querySelector('.edit-batch-select'); const chipsEl = form.querySelector('.edit-batch-chips'); if (!selectEl || !chipsEl) return;
         let currentBatches = []; try { currentBatches = JSON.parse(chipsEl.dataset.selected || '[]'); } catch (e) { currentBatches = []; }
-        populateBatchDropdown(selectEl, { includePersonalized: true, selectedBatches: currentBatches });
-        renderBatchChips(chipsEl, currentBatches, selectEl, (updated) => { chipsEl.dataset.selected = JSON.stringify(updated); });
+        populateBatchDropdown(selectEl, allBatchesData, { includePersonalized: true, selectedBatches: currentBatches });
+        renderBatchChips(chipsEl, currentBatches, selectEl, allBatchesData, (updated) => { chipsEl.dataset.selected = JSON.stringify(updated); });
         // Teacher dropdown
         const teacherSelect = form.querySelector('.edit-teacher-select');
         if (teacherSelect) { teacherSelect.innerHTML = '<option value="">-- Assign Teacher --</option>'; allTeachersData.forEach(t => { const opt = document.createElement('option'); opt.value = t.id; opt.textContent = t.displayName || t.email; teacherSelect.appendChild(opt); }); }
         selectEl.addEventListener('change', function handler() {
-            const val = selectEl.value; if (val && !currentBatches.includes(val)) { currentBatches.push(val); chipsEl.dataset.selected = JSON.stringify(currentBatches); renderBatchChips(chipsEl, currentBatches, selectEl, (updated) => { chipsEl.dataset.selected = JSON.stringify(updated); currentBatches = updated; }); populateBatchDropdown(selectEl, { includePersonalized: true, selectedBatches: currentBatches }); } selectEl.value = '';
+            const val = selectEl.value; if (val && !currentBatches.includes(val)) { currentBatches.push(val); chipsEl.dataset.selected = JSON.stringify(currentBatches); renderBatchChips(chipsEl, currentBatches, selectEl, allBatchesData, (updated) => { chipsEl.dataset.selected = JSON.stringify(updated); currentBatches = updated; }); populateBatchDropdown(selectEl, allBatchesData, { includePersonalized: true, selectedBatches: currentBatches }); } selectEl.value = '';
         });
         const saveBtn = form.querySelector('.save-student-edit-btn');
         if (saveBtn) {
