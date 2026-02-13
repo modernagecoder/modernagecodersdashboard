@@ -96,8 +96,7 @@ function resolveDomRefs() {
     statsTodayEarnings = document.getElementById('stats-today-earnings');
     statsMonthlyEarnings = document.getElementById('stats-monthly-earnings');
     pendingClassesWarning = document.getElementById('pending-classes-warning');
-    teacherCancellationMetric = document.getElementById('teacher-cancellation-metric');
-    cancellationCountEl = document.getElementById('cancellation-count');
+    // teacherCancellationMetric and cancellationCountEl removed
     viewSalaryHistoryButton = document.getElementById('view-salary-history-button');
     salaryHistoryModal = document.getElementById('salary-history-modal');
     closeSalaryHistoryModalButton = document.getElementById('close-salary-history-modal-button');
@@ -337,27 +336,14 @@ async function getPreviousMonthEarnings(userId, currentDate) {
 }
 
 async function checkAndDisplaySalaryMessageForSelectedDate(selectedDate) {
-    if (!currentUser || currentUser.isAdmin) { if (salaryHighlightBox) salaryHighlightBox.classList.add('hidden'); return; }
-    const today = new Date(); today.setHours(0, 0, 0, 0);
-    if (selectedDate.getDate() === 1 && selectedDate <= today) {
-        try {
-            const earnings = await getPreviousMonthEarnings(currentUser.uid, selectedDate);
-            if (earnings > 0) {
-                const prevMonthDate = new Date(selectedDate); prevMonthDate.setDate(0);
-                const monthName = prevMonthDate.toLocaleString('en-US', { month: 'long', year: 'numeric' });
-                const titleEl = document.getElementById('salary-highlight-title');
-                const detailsEl = document.getElementById('salary-highlight-details');
-                if (titleEl) titleEl.textContent = `Salary Release for ${monthName}`;
-                if (detailsEl) detailsEl.innerHTML = `Total earnings for ${monthName}: <span id="salary-highlight-amount">₹${earnings}</span>`;
-                salaryHighlightBox.classList.remove('hidden');
-            } else { salaryHighlightBox.classList.add('hidden'); }
-        } catch (error) { console.error("Error fetching previous month's earnings:", error); salaryHighlightBox.classList.add('hidden'); }
-    } else { if (salaryHighlightBox) salaryHighlightBox.classList.add('hidden'); }
+    // Feature removed as per minimalist design
+    return;
 }
 
 async function renderSalaryHistory() {
     if (!currentUser || currentUser.isAdmin) return;
-    salaryHistoryModal.classList.add('active');
+    // Removed modal activation
+
     salaryHistoryList.innerHTML = '';
     salaryHistoryLoader.classList.remove('hidden');
     try {
@@ -388,20 +374,8 @@ async function renderSalaryHistory() {
 
 // ─── CANCELLATION METRICS ────────────────────────────────────────────
 async function updateTeacherPerformanceMetrics() {
-    if (!currentUser || currentUser.isAdmin) { if (teacherCancellationMetric) teacherCancellationMetric.classList.add('hidden'); return; }
-    if (teacherCancellationMetric) teacherCancellationMetric.classList.remove('hidden');
-    const now = new Date();
-    const startOfMonth = getLocalDateString(new Date(now.getFullYear(), now.getMonth(), 1));
-    const endOfMonth = getLocalDateString(new Date(now.getFullYear(), now.getMonth() + 1, 0));
-    const monthlyCancelledQuery = query(collection(db, "classSlots"), where("teacherId", "==", currentUser.uid), where("date", ">=", startOfMonth), where("date", "<=", endOfMonth), where("status", "==", "cancelled"));
-    try {
-        const monthlyCancelledSnapshot = await getCountFromServer(monthlyCancelledQuery);
-        const cancelledCount = monthlyCancelledSnapshot.data().count;
-        if (cancellationCountEl) {
-            cancellationCountEl.textContent = cancelledCount;
-            cancellationCountEl.style.color = cancelledCount > 0 ? 'var(--accent-red)' : 'var(--accent-green)';
-        }
-    } catch (error) { console.error("Error fetching cancellation count:", error); if (cancellationCountEl) cancellationCountEl.textContent = 'Error'; }
+    // Feature removed as per minimalist design
+    return;
 }
 
 async function checkForLongSessions() {
@@ -476,7 +450,7 @@ async function selectDay(dateObject) {
     });
     longSessionMessageShownToday = false;
     displayMotivationalQuote();
-    await Promise.all([fetchAndDisplaySlots(dayString), updateAllDashboardStats(), checkAndDisplaySalaryMessageForSelectedDate(dateObject), updateTeacherPerformanceMetrics()]);
+    await Promise.all([fetchAndDisplaySlots(dayString), updateAllDashboardStats()]);
     checkForLongSessions();
 }
 
@@ -1353,4 +1327,10 @@ export async function initTeacherDashboard(user, userData) {
     await selectDay(today);
 
     console.log(`Teacher dashboard initialized for ${currentUser.displayName} (${currentUser.isAdmin ? 'Admin' : 'Teacher'})`);
+}
+
+export function handleSectionChange(section) {
+    if (section === 'salary-history') {
+        renderSalaryHistory();
+    }
 }

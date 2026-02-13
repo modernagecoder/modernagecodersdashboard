@@ -35,12 +35,7 @@
     <!-- Sidebar -->
     <aside class="sidebar">
         <!-- Sidebar Collapse Toggle -->
-        <button class="sidebar-collapse-toggle" aria-label="Toggle sidebar">
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
-                <path fill-rule="evenodd"
-                    d="M12 8a.5.5 0 0 1-.5.5H5.707l2.147 2.146a.5.5 0 0 1-.708.708l-3-3a.5.5 0 0 1 0-.708l3-3a.5.5 0 1 1 .708.708L5.707 7.5H11.5a.5.5 0 0 1 .5.5z" />
-            </svg>
-        </button>
+        <!-- Sidebar Collapse Toggle removed -->
         <div class="sidebar-logo">
             <h2>&lt;Modern Age Coders/&gt;</h2>
         </div>
@@ -188,63 +183,11 @@
                     <div id="current-date-display-container">
                         <div id="current-date-display">Loading date...</div>
                     </div>
-                    <div id="teacher-cancellation-metric" class="hidden">
-                        <div class="metric-main">
-                            <span id="cancellation-count">0</span>
-                            <span class="metric-title">Classes Cancelled This Month</span>
-                        </div>
-                        <div class="metric-context">
-                            This is a key performance indicator. Strive to keep this number low.
-                        </div>
-                    </div>
+                    <!-- Cancellation metric removed -->
                 </div>
 
                 <div id="all-stats-wrapper">
-                    <div id="teacher-stats-container">
-                        <div class="stat-item teacher-stat-enhanced">
-                            <div class="stat-icon">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16">
-                                    <path
-                                        d="M11 6.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5v-1zm-3 0a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5v-1zm-5 3a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5v-1zm3 0a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5v-1z" />
-                                    <path
-                                        d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5zM1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4H1z" />
-                                </svg>
-                            </div>
-                            <span class="stat-value" id="stats-selected-day">0</span>
-                            <span class="stat-label">Classes Today</span>
-                        </div>
-                        <div class="stat-item teacher-stat-enhanced">
-                            <div class="stat-icon">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16">
-                                    <path
-                                        d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5zM2 2a1 1 0 0 0-1 1v1h14V3a1 1 0 0 0-1-1H2zm13 3H1v9a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V5z" />
-                                </svg>
-                            </div>
-                            <span class="stat-value" id="stats-current-month">0</span>
-                            <span class="stat-label">Classes This Month</span>
-                        </div>
-                        <div class="stat-item teacher-stat-enhanced">
-                            <div class="stat-icon">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16">
-                                    <path
-                                        d="M4 10.781c.148 1.667 1.513 2.85 3.591 3.003V15h1.043v-1.216c2.27-.179 3.678-1.438 3.678-3.3 0-1.59-.947-2.51-2.956-3.028l-.722-.187V3.467c1.122.11 1.879.714 2.07 1.616h1.47c-.166-1.6-1.54-2.748-3.54-2.875V1H7.591v1.233c-1.939.23-3.27 1.472-3.27 3.156 0 1.454.966 2.483 2.661 2.917l.61.162v4.031c-1.149-.17-1.94-.8-2.131-1.718H4zm3.391-3.836c-1.043-.263-1.6-.825-1.6-1.616 0-.944.704-1.641 1.8-1.828v3.495l-.2-.05zm1.591 1.872c1.287.323 1.852.859 1.852 1.769 0 1.097-.826 1.828-2.2 1.939V8.73l.348.086z" />
-                                </svg>
-                            </div>
-                            <span class="stat-value earnings" id="stats-today-earnings">&#8377;0</span>
-                            <span class="stat-label">Today's Earnings</span>
-                        </div>
-                        <div class="stat-item teacher-stat-enhanced">
-                            <div class="stat-icon">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16">
-                                    <path d="M1 3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1H1zm7 8a2 2 0 1 0 0-4 2 2 0 0 0 0 4z" />
-                                    <path
-                                        d="M0 5a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H1a1 1 0 0 1-1-1V5zm3 0a2 2 0 0 1-2 2v4a2 2 0 0 1 2 2h10a2 2 0 0 1 2-2V7a2 2 0 0 1-2-2H3z" />
-                                </svg>
-                            </div>
-                            <span class="stat-value earnings" id="stats-monthly-earnings">&#8377;0</span>
-                            <span class="stat-label">Monthly Earnings</span>
-                        </div>
-                    </div>
+                    <!-- Stats moved to Salary Section -->
                 </div>
             </div>
         </header>
@@ -252,15 +195,7 @@
         <!-- ===== SECTION: Schedule (Default) ===== -->
         <section id="section-schedule" class="dashboard-section">
             <div id="main-schedule-content">
-                <div id="salary-highlight-box" class="hidden">
-                    <div class="salary-icon">&#127881;</div>
-                    <div class="salary-text">
-                        <strong id="salary-highlight-title">Your salary is being released today!</strong>
-                        <span id="salary-highlight-details">Total earnings for last month: <span
-                                id="salary-highlight-amount">&#8377;0</span></span>
-                    </div>
-                    <button id="view-salary-history-button" class="btn btn-outline-primary">View History</button>
-                </div>
+                <!-- Salary highlight removed -->
 
                 <div id="pending-classes-warning" class="hidden">
                     <strong>Action Required:</strong> You have unmarked classes on the following date(s): <strong
@@ -415,8 +350,61 @@
                 </div>
             </div>
             <div id="salary-section-content">
+                <!-- Copied from header -->
+                <div id="teacher-stats-container">
+                    <div class="stat-item teacher-stat-enhanced">
+                        <div class="stat-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16">
+                                <path
+                                    d="M11 6.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5v-1zm-3 0a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5v-1zm-5 3a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5v-1zm3 0a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5v-1z" />
+                                <path
+                                    d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5zM1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4H1z" />
+                            </svg>
+                        </div>
+                        <span class="stat-value" id="stats-selected-day">0</span>
+                        <span class="stat-label">Classes Today</span>
+                    </div>
+                    <div class="stat-item teacher-stat-enhanced">
+                        <div class="stat-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16">
+                                <path
+                                    d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5zM2 2a1 1 0 0 0-1 1v1h14V3a1 1 0 0 0-1-1H2zm13 3H1v9a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V5z" />
+                            </svg>
+                        </div>
+                        <span class="stat-value" id="stats-current-month">0</span>
+                        <span class="stat-label">Classes This Month</span>
+                    </div>
+                    <div class="stat-item teacher-stat-enhanced">
+                        <div class="stat-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16">
+                                <path
+                                    d="M4 10.781c.148 1.667 1.513 2.85 3.591 3.003V15h1.043v-1.216c2.27-.179 3.678-1.438 3.678-3.3 0-1.59-.947-2.51-2.956-3.028l-.722-.187V3.467c1.122.11 1.879.714 2.07 1.616h1.47c-.166-1.6-1.54-2.748-3.54-2.875V1H7.591v1.233c-1.939.23-3.27 1.472-3.27 3.156 0 1.454.966 2.483 2.661 2.917l.61.162v4.031c-1.149-.17-1.94-.8-2.131-1.718H4zm3.391-3.836c-1.043-.263-1.6-.825-1.6-1.616 0-.944.704-1.641 1.8-1.828v3.495l-.2-.05zm1.591 1.872c1.287.323 1.852.859 1.852 1.769 0 1.097-.826 1.828-2.2 1.939V8.73l.348.086z" />
+                            </svg>
+                        </div>
+                        <span class="stat-value earnings" id="stats-today-earnings">&#8377;0</span>
+                        <span class="stat-label">Today's Earnings</span>
+                    </div>
+                    <div class="stat-item teacher-stat-enhanced">
+                        <div class="stat-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16">
+                                <path d="M1 3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1H1zm7 8a2 2 0 1 0 0-4 2 2 0 0 0 0 4z" />
+                                <path
+                                    d="M0 5a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H1a1 1 0 0 1-1-1V5zm3 0a2 2 0 0 1-2 2v4a2 2 0 0 1 2 2h10a2 2 0 0 1 2-2V7a2 2 0 0 1-2-2H3z" />
+                            </svg>
+                        </div>
+                        <span class="stat-value earnings" id="stats-monthly-earnings">&#8377;0</span>
+                        <span class="stat-label">Monthly Earnings</span>
+                    </div>
+                </div>
                 <!-- Salary highlight box will be cloned/referenced here -->
-            </div>
+
+                <div id="salary-history-container" style="margin-top: 2rem;">
+                    <div id="salary-history-loader" class="hidden"
+                        style="text-align: center; padding: 2rem; color: var(--text-muted);">
+                        Loading salary history...
+                    </div>
+                    <div id="salary-history-list"></div>
+                </div>
         </section>
 
         <!-- ===== SECTION: Announcements ===== -->
@@ -1020,7 +1008,7 @@
     <script type="module">
         import { initAuthGuard, handleLogout } from './js/auth-guard.js';
         import { initSidebar, setupDashboardNavigation } from './js/utils.js';
-        import { initTeacherDashboard } from './js/teacher.js';
+        import { initTeacherDashboard, handleSectionChange } from './js/teacher.js';
 
         // Initialize sidebar toggle for mobile
         initSidebar();
@@ -1045,10 +1033,12 @@
             if (titleEl && titles[section]) titleEl.textContent = titles[section];
 
             // Toggle header visibility — only show stats header on schedule page
-            const headerSecondary = document.getElementById('header-secondary-content');
             if (headerSecondary) {
                 headerSecondary.style.display = section === 'schedule' ? '' : 'none';
             }
+
+            // Trigger section-specific logic
+            handleSectionChange(section);
         });
 
         // Logout button
