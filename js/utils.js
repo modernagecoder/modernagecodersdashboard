@@ -316,7 +316,10 @@ export function initSidebar() {
     const sidebar = document.querySelector('.sidebar');
     const overlay = document.querySelector('.sidebar-overlay');
     const toggle = document.querySelector('.mobile-menu-toggle');
+    const mainContent = document.querySelector('.main-content');
+    const collapseToggle = document.querySelector('.sidebar-collapse-toggle');
 
+    // Mobile toggle
     if (toggle) {
         toggle.addEventListener('click', () => {
             sidebar.classList.toggle('open');
@@ -339,4 +342,21 @@ export function initSidebar() {
             }
         });
     });
+
+    // Desktop collapse toggle
+    if (collapseToggle && sidebar && mainContent) {
+        // Restore collapsed state from localStorage
+        const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+        if (isCollapsed && window.innerWidth > 768) {
+            sidebar.classList.add('collapsed');
+            mainContent.classList.add('sidebar-collapsed');
+        }
+
+        collapseToggle.addEventListener('click', () => {
+            if (window.innerWidth <= 768) return; // Don't collapse on mobile
+            sidebar.classList.toggle('collapsed');
+            mainContent.classList.toggle('sidebar-collapsed');
+            localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
+        });
+    }
 }

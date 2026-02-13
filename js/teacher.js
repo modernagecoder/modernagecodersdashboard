@@ -79,14 +79,14 @@ function resolveDomRefs() {
     slotIdInput = document.getElementById('slot-id');
     topicInput = document.getElementById('topic');
     startTimeInput = document.getElementById('start-time');
-    durationSelect = document.getElementById('duration');
+    durationSelect = document.getElementById('duration-select');
     saveSlotButton = document.getElementById('save-slot-button');
     modalTitle = document.getElementById('modal-title');
-    prevWeekButton = document.getElementById('prev-week');
-    nextWeekButton = document.getElementById('next-week');
-    currentDateDisplay = document.getElementById('current-date');
+    prevWeekButton = document.getElementById('prev-week-button');
+    nextWeekButton = document.getElementById('next-week-button');
+    currentDateDisplay = document.getElementById('current-date-display');
     dashboardView = document.getElementById('dashboard-view');
-    userNameDisplay = document.getElementById('user-name');
+    userNameDisplay = document.getElementById('user-display-name');
     logoutButton = document.getElementById('logout-button');
     notificationsDiv = document.getElementById('notifications');
     salaryHighlightBox = document.getElementById('salary-highlight-box');
@@ -100,23 +100,23 @@ function resolveDomRefs() {
     cancellationCountEl = document.getElementById('cancellation-count');
     viewSalaryHistoryButton = document.getElementById('view-salary-history-button');
     salaryHistoryModal = document.getElementById('salary-history-modal');
-    closeSalaryHistoryModalButton = document.getElementById('close-salary-history-modal');
+    closeSalaryHistoryModalButton = document.getElementById('close-salary-history-modal-button');
     salaryHistoryList = document.getElementById('salary-history-list');
     salaryHistoryLoader = document.getElementById('salary-history-loader');
     modalTagSelect = document.getElementById('modal-tag-select');
     modalTagContainer = document.getElementById('modal-tag-container');
     applyTagToFutureContainer = document.getElementById('apply-tag-to-future-container');
-    applyTagToFutureCheckbox = document.getElementById('apply-tag-to-future');
+    applyTagToFutureCheckbox = document.getElementById('apply-tag-to-future-checkbox');
     modalBatchSelect = document.getElementById('modal-batch-select');
     recurringCheckbox = document.getElementById('recurring-checkbox');
     recurringContainer = document.getElementById('recurring-container');
-    teacherSelectContainerAdmin = document.getElementById('teacher-select-container-admin');
+    teacherSelectContainerAdmin = document.getElementById('teacher-select-container-for-admin');
     modalTeacherSelect = document.getElementById('modal-teacher-select');
     deleteConfirmModal = document.getElementById('delete-confirm-modal');
     deleteModalMessage = document.getElementById('delete-modal-message');
     deleteOptionsContainer = document.getElementById('delete-options-container');
     confirmDeleteButton = document.getElementById('confirm-delete-button');
-    closeDeleteModalButton = document.getElementById('close-delete-modal');
+    closeDeleteModalButton = document.getElementById('close-delete-modal-button');
     cancelDeleteButton = document.getElementById('cancel-delete-button');
     teacherOverviewButton = document.getElementById('teacher-overview-button');
     mainTitle = document.getElementById('main-title');
@@ -127,15 +127,15 @@ function resolveDomRefs() {
     overviewPrevWeekButton = document.getElementById('overview-prev-week');
     overviewNextWeekButton = document.getElementById('overview-next-week');
     manageAnnouncementsButton = document.getElementById('manage-announcements-button');
-    adminManagerModal = document.getElementById('admin-manager-modal');
-    closeAdminManagerModalButton = document.getElementById('close-admin-manager-modal');
+    adminManagerModal = document.getElementById('admin-announcements-manager-modal');
+    closeAdminManagerModalButton = document.getElementById('close-admin-manager-modal-button');
     newAnnouncementTextarea = document.getElementById('new-announcement-textarea');
-    publishNewAnnouncementButton = document.getElementById('publish-new-announcement');
+    publishNewAnnouncementButton = document.getElementById('publish-new-announcement-button');
     announcementsHistoryList = document.getElementById('announcements-history-list');
     notificationBell = document.getElementById('notification-bell');
     notificationDot = document.getElementById('notification-dot');
     announcementModal = document.getElementById('announcement-modal');
-    closeAnnouncementModalButton = document.getElementById('close-announcement-modal');
+    closeAnnouncementModalButton = document.getElementById('close-announcement-modal-button');
     teacherAnnouncementsList = document.getElementById('teacher-announcements-list');
 }
 
@@ -1221,8 +1221,8 @@ async function initAdminDashboard() {
     setupBatchManagement();
     setupEditFormBatchDropdown();
     // Teacher overview buttons
-    const overviewPrevBtn = document.getElementById('overview-prev-week');
-    const overviewNextBtn = document.getElementById('overview-next-week');
+    const overviewPrevBtn = document.getElementById('overview-prev-week-button');
+    const overviewNextBtn = document.getElementById('overview-next-week-button');
     if (overviewPrevBtn) overviewPrevBtn.addEventListener('click', () => { overviewCurrentWeekStartDate.setDate(overviewCurrentWeekStartDate.getDate() - 7); renderTeacherOverview(); });
     if (overviewNextBtn) overviewNextBtn.addEventListener('click', () => { overviewCurrentWeekStartDate.setDate(overviewCurrentWeekStartDate.getDate() + 7); renderTeacherOverview(); });
     renderTeacherOverview();
