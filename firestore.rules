@@ -42,10 +42,9 @@ service cloud.firestore {
     // ============================================
     match /users/{userId} {
       // Users can read their own profile
-      // Admins can read all user profiles
-      // Teachers can read student profiles (for assignment student picker)
-      allow read: if isOwner(userId) || isAdmin() || 
-                     (isTeacherOrAdmin() && resource.data.role == 'student');
+      // Admins and teachers can read all user profiles
+      // (needed for admin stats, teacher dropdowns, batch assignment views)
+      allow read: if isOwner(userId) || isTeacherOrAdmin();
       
       // Users can update their own profile (except role field)
       allow update: if isOwner(userId) && 
@@ -89,8 +88,11 @@ service cloud.firestore {
       // All authenticated users can read announcements
       allow read: if isAuthenticated();
       
-      // Only admins can create, update, or delete announcements
-      allow create, update, delete: if isAdmin();
+      // Teachers and admins can create announcements
+      allow create: if isTeacherOrAdmin();
+      
+      // Only admins can update or delete announcements
+      allow update, delete: if isAdmin();
     }
     
     // ============================================
@@ -137,6 +139,24 @@ service cloud.firestore {
       
       // Only admins can create, update, or delete batches
       allow create, update, delete: if isAdmin();
+    }
+    
+    // ============================================
+    // ATTENDANCE COLLECTION
+    // ============================================
+    match /attendance/{attendanceId} {
+      // Students can read their own attendance records
+      // Teachers and admins can read all attendance
+      allow read: if isAuthenticated() && (
+        isTeacherOrAdmin() ||
+        resource.data.studentId == request.auth.uid
+      );
+      
+      // Teachers and admins can create/update attendance records
+      allow create, update: if isTeacherOrAdmin();
+      
+      // Only admins can delete attendance records
+      allow delete: if isAdmin();
     }
     
     // ============================================

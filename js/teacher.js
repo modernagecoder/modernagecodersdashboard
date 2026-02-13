@@ -821,7 +821,7 @@ function setupAnnouncements() {
             if (!text) { showNotification("Please enter an announcement.", "warning"); return; }
             publishNewAnnouncementButton.disabled = true;
             try {
-                await addDoc(collection(db, "announcements"), { text, createdAt: serverTimestamp(), createdBy: currentUser.uid, createdByName: currentUser.displayName || currentUser.email });
+                await addDoc(collection(db, "announcements"), { message: text, author: currentUser.displayName || currentUser.email, publishedAt: serverTimestamp(), isDeleted: false });
                 if (newAnnouncementTextarea) newAnnouncementTextarea.value = '';
                 showNotification("Announcement published!", "success");
             } catch (error) { showNotification(`Error: ${error.message}`, "error"); }
