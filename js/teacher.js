@@ -342,34 +342,155 @@ async function checkAndDisplaySalaryMessageForSelectedDate(selectedDate) {
 
 async function renderSalaryHistory() {
     if (!currentUser || currentUser.isAdmin) return;
-    // Removed modal activation
 
     salaryHistoryList.innerHTML = '';
     salaryHistoryLoader.classList.remove('hidden');
+
     try {
         const monthsToDisplay = [];
-        for (let i = 1; i <= 12; i++) { const date = new Date(); date.setDate(1); date.setMonth(date.getMonth() - i); monthsToDisplay.push(new Date(date)); }
+        // Generate last 12 months
+        for (let i = 0; i < 12; i++) {
+            const date = new Date();
+            date.setDate(1); // Set to first of month to avoid edge cases like 31st
+            date.setMonth(date.getMonth() - i);
+            monthsToDisplay.push(new Date(date));
+        }
+
         const calculateEarningsForMonth = async (monthDate) => {
-            const year = monthDate.getFullYear(); const month = monthDate.getMonth();
+            const year = monthDate.getFullYear();
+            const month = monthDate.getMonth();
             const startOfMonth = getLocalDateString(new Date(year, month, 1));
             const endOfMonth = getLocalDateString(new Date(year, month + 1, 0));
-            const q = query(collection(db, "classSlots"), where("teacherId", "==", currentUser.uid), where("status", "==", "completed"), where("date", ">=", startOfMonth), where("date", "<=", endOfMonth));
+
+            const q = query(
+                collection(db, "classSlots"),
+                where("teacherId", "==", currentUser.uid),
+                where("status", "==", "completed"),
+                where("date", ">=", startOfMonth),
+                where("date", "<=", endOfMonth)
+            );
+
             const querySnapshot = await getDocs(q);
-            let totalEarnings = 0; querySnapshot.forEach(d => { totalEarnings += d.data().earnings || 0; });
-            return { date: monthDate, earnings: totalEarnings };
+
+            let totalEarnings = 0;
+            let groupCount = 0;
+            let groupEarnings = 0;
+            let personalizedCount = 0;
+            let personalizedEarnings = 0;
+            let otherEarnings = 0;
+
+            querySnapshot.forEach(d => {
+                const data = d.data();
+                const earning = data.earnings || 0;
+                totalEarnings += earning;
+
+                if (data.tag === 'group') {
+                    groupCount++;
+                    groupEarnings += earning;
+                } else if (data.tag === 'personalized') {
+                    personalizedCount++;
+                    personalizedEarnings += earning;
+                } else {
+                    otherEarnings += earning;
+                }
+            });
+
+            return {
+                date: monthDate,
+                totalEarnings,
+                groupCount,
+                groupEarnings,
+                personalizedCount,
+                personalizedEarnings,
+                otherEarnings
+            };
         };
+
         const results = await Promise.all(monthsToDisplay.map(d => calculateEarningsForMonth(d)));
         salaryHistoryLoader.classList.add('hidden');
+
+        // Create Container for Summary and List
+        const container = document.createElement('div');
+        container.className = 'salary-history-wrapper';
+
+        // 1. Year Summary Card
+        const totalYearEarnings = results.reduce((sum, r) => sum + r.totalEarnings, 0);
+        const avgMonthly = results.length > 0 ? Math.round(totalYearEarnings / results.length) : 0;
+
+        const summaryCard = document.createElement('div');
+        summaryCard.className = 'salary-summary-card';
+        summaryCard.innerHTML = `
+            <div class="summary-item">
+                <span class="summary-label">Total Earnings (Last 12 Months)</span>
+                <span class="summary-value">₹${totalYearEarnings.toLocaleString()}</span>
+            </div>
+            <div class="summary-divider"></div>
+            <div class="summary-item">
+                <span class="summary-label">Average Monthly</span>
+                <span class="summary-value">₹${avgMonthly.toLocaleString()}</span>
+            </div>
+        `;
+        container.appendChild(summaryCard);
+
+        // 2. Monthly Detailed List (Table-like structure)
+        const tableContainer = document.createElement('div');
+        tableContainer.className = 'salary-table-container';
+
+        let tableHTML = `
+            <table class="salary-table">
+                <thead>
+                    <tr>
+                        <th>Month</th>
+                        <th class="text-right">Group Classes</th>
+                        <th class="text-right">Personalized</th>
+                        <th class="text-right">Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+        `;
+
         results.forEach(result => {
-            if (result.earnings > 0) {
-                const item = document.createElement('div'); item.className = 'salary-history-item';
+            const hasEarnings = result.totalEarnings > 0;
+            if (hasEarnings || result === results[0]) { // Always show current month even if 0
                 const monthName = result.date.toLocaleString('en-US', { month: 'long', year: 'numeric' });
-                item.innerHTML = `<span class="salary-history-month">${monthName}</span><span class="salary-history-amount">₹${result.earnings}</span>`;
-                salaryHistoryList.appendChild(item);
+                const rowClass = hasEarnings ? '' : 'text-muted';
+
+                tableHTML += `
+                    <tr class="${rowClass}">
+                        <td class="font-medium">${monthName}</td>
+                        <td class="text-right">
+                            <div class="earnings-cell">
+                                <span class="earning-amount">₹${result.groupEarnings}</span>
+                                <span class="earning-count text-muted">(${result.groupCount})</span>
+                            </div>
+                        </td>
+                        <td class="text-right">
+                            <div class="earnings-cell">
+                                <span class="earning-amount">₹${result.personalizedEarnings}</span>
+                                <span class="earning-count text-muted">(${result.personalizedCount})</span>
+                            </div>
+                        </td>
+                        <td class="text-right font-bold earning-total">₹${result.totalEarnings}</td>
+                    </tr>
+                `;
             }
         });
-        if (!salaryHistoryList.hasChildNodes()) salaryHistoryList.innerHTML = '<p class="text-muted">No earnings recorded in the past 12 months.</p>';
-    } catch (error) { console.error("Error rendering salary history:", error); salaryHistoryLoader.classList.add('hidden'); salaryHistoryList.innerHTML = '<p style="color: var(--accent-red);">Could not load history.</p>'; }
+
+        tableHTML += `</tbody></table>`;
+        tableContainer.innerHTML = tableHTML;
+        container.appendChild(tableContainer);
+
+        salaryHistoryList.appendChild(container);
+
+        if (totalYearEarnings === 0) {
+            salaryHistoryList.innerHTML += '<p class="text-muted text-center mt-4">No earnings recorded in the past 12 months.</p>';
+        }
+
+    } catch (error) {
+        console.error("Error rendering salary history:", error);
+        salaryHistoryLoader.classList.add('hidden');
+        salaryHistoryList.innerHTML = '<p style="color: var(--accent-red);">Could not load history. Please try again later.</p>';
+    }
 }
 
 // ─── CANCELLATION METRICS ────────────────────────────────────────────
@@ -1324,6 +1445,7 @@ export async function initTeacherDashboard(user, userData) {
     }
 
     // Select today
+    updateDateDisplay();
     await selectDay(today);
 
     console.log(`Teacher dashboard initialized for ${currentUser.displayName} (${currentUser.isAdmin ? 'Admin' : 'Teacher'})`);

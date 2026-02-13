@@ -445,7 +445,23 @@
         <div class="login-branding">
             <div class="grid-decoration" id="grid-dots"></div>
             <div class="branding-content">
-                <div class="branding-logo">&lt;Modern Age Coders/&gt;</div>
+                <img src="logo.jpeg" alt="Modern Age Coders" class="branding-logo-img">
+                <style>
+                    .branding-logo-img {
+                        width: 150px;
+                        height: 150px;
+                        object-fit: cover;
+                        border-radius: 50%;
+                        border: 4px solid var(--accent-main);
+                        box-shadow: 0 0 30px rgba(78, 205, 196, 0.3);
+                        margin-bottom: 1.5rem;
+                        transition: transform 0.3s ease;
+                    }
+
+                    .branding-logo-img:hover {
+                        transform: scale(1.05) rotate(5deg);
+                    }
+                </style>
                 <div class="branding-tagline">Class Scheduling & Management Platform</div>
 
                 <div class="branding-features">
@@ -485,7 +501,7 @@
                         </div>
                         <div class="feature-text">
                             <h4>Attendance Tracking</h4>
-                            <p>Automatic  monthly history, and student attendance reports</p>
+                            <p>Automatic monthly history, and student attendance reports</p>
                         </div>
                     </div>
                 </div>

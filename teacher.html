@@ -37,7 +37,7 @@
         <!-- Sidebar Collapse Toggle -->
         <!-- Sidebar Collapse Toggle removed -->
         <div class="sidebar-logo">
-            <h2>&lt;Modern Age Coders/&gt;</h2>
+            <img src="logo.jpeg" alt="Modern Age Coders" class="logo-img">
         </div>
 
         <div class="sidebar-profile">
@@ -154,7 +154,7 @@
                     <path fill-rule="evenodd"
                         d="M15.854 8.354a.5.5 0 0 0 0-.708l-3-3a.5.5 0 0 0-.708.708L14.293 7.5H5.5a.5.5 0 0 0 0 1h8.793l-2.147 2.146a.5.5 0 0 0 .708.708l3-3z" />
                 </svg>
-                Logout
+                <span>Logout</span>
             </button>
         </div>
     </aside>
@@ -1033,6 +1033,7 @@
             if (titleEl && titles[section]) titleEl.textContent = titles[section];
 
             // Toggle header visibility — only show stats header on schedule page
+            const headerSecondary = document.getElementById('header-secondary-content');
             if (headerSecondary) {
                 headerSecondary.style.display = section === 'schedule' ? '' : 'none';
             }
