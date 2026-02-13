@@ -31,6 +31,14 @@ export function debounce(func, wait) {
     };
 }
 
+// --- Security Helper ---
+export function escapeHTML(str) {
+    if (!str) return '';
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+}
+
 // --- Date/Time Helpers ---
 export function getLocalDateString(dateObject) {
     if (!dateObject) return null;
@@ -153,16 +161,21 @@ export async function checkZoomLicenseAvailability(licenseId) {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), ZOOM_API_TIMEOUT);
     try {
-        const response = await fetch('/api/check-license', {
+        const idToken = await getIdToken();
+        const response = await fetch(`${API_BASE_URL}/check-license`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${idToken}`
+            },
             body: JSON.stringify({ licenseId }),
             signal: controller.signal
         });
         clearTimeout(timeoutId);
         if (!response.ok) {
-            console.warn(`Zoom API error for license ${licenseId}:`, response.status);
-            return { available: null, status: 'api_error', licenseId };
+            const errorData = await response.json().catch(() => ({ message: 'Unknown API error' }));
+            console.warn(`Zoom API error for license ${licenseId}:`, response.status, errorData.message);
+            return { available: null, status: 'api_error', licenseId, error: errorData.message };
         }
         return await response.json();
     } catch (error) {
@@ -183,20 +196,29 @@ export async function checkAllZoomLicenses() {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), ZOOM_API_TIMEOUT);
     try {
-        const response = await fetch('/api/check-all-licenses', {
+        const idToken = await getIdToken();
+        const response = await fetch(`${API_BASE_URL}/check-all-licenses`, {
             method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${idToken}`
+            },
             signal: controller.signal
         });
         clearTimeout(timeoutId);
         if (!response.ok) {
-            console.warn('Zoom API error:', response.status);
-            return { licenses: [], firstAvailable: null, allBusy: false, apiError: true };
+            const errorData = await response.json().catch(() => ({ message: 'Unknown API error' }));
+            console.warn('Zoom API error:', response.status, errorData.message);
+            return { licenses: [], firstAvailable: null, allBusy: false, apiError: true, error: errorData.message };
         }
         return await response.json();
     } catch (error) {
         clearTimeout(timeoutId);
+        if (error.name === 'AbortError') {
+            console.warn('Zoom API timeout for all licenses check');
+            return { licenses: [], firstAvailable: null, allBusy: false, apiError: true, error: 'timeout' };
+        }
         console.error('Error checking all Zoom licenses:', error);
-        return { licenses: [], firstAvailable: null, allBusy: false, apiError: true };
+        return { licenses: [], firstAvailable: null, allBusy: false, apiError: true, error: error.message };
     }
 }
 

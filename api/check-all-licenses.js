@@ -2,68 +2,31 @@
  * API Endpoint: Check All Licenses Availability
  * 
  * GET /api/check-all-licenses
- * 
- * Returns: {
- *   licenses: Array<{
- *     licenseId: number,
- *     available: boolean | null,
- *     status: string
- *   }>,
- *   firstAvailable: number | null,
- *   allBusy: boolean,
- *   timestamp: string
- * }
+ * Headers: { Authorization: Bearer <id-token> }
  */
 
+const { handleCors, verifyToken, handleError } = require('./_utils/firebase-admin');
 const { isUserAvailable } = require('./_utils/zoom');
 const { getAllLicenses, validateLicenseConfig } = require('./_utils/licenses');
 
-// CORS headers for browser requests
-const corsHeaders = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'GET, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type',
-    'Content-Type': 'application/json'
-};
-
-// Helper to set multiple headers
-function setHeaders(res, headers) {
-    Object.entries(headers).forEach(([key, value]) => {
-        res.setHeader(key, value);
-    });
-}
-
 module.exports = async (req, res) => {
-    // Set CORS headers for all responses
-    setHeaders(res, corsHeaders);
+    if (handleCors(req, res)) return;
 
-    // Handle CORS preflight
-    if (req.method === 'OPTIONS') {
-        res.status(200).end();
-        return;
-    }
-
-    // Only allow GET
     if (req.method !== 'GET') {
-        res.status(405).json({
-            error: 'Method not allowed',
-            message: 'Use GET request'
-        });
+        res.status(405).json({ error: 'Method not allowed' });
         return;
     }
 
     try {
-        // Validate configuration
+        // Verify user is authenticated
+        await verifyToken(req);
+
         const configStatus = validateLicenseConfig();
         if (!configStatus.valid) {
             console.warn(`Missing license configuration for: ${configStatus.missing.join(', ')}`);
         }
 
         const allLicenses = getAllLicenses();
-        const results = [];
-        let firstAvailable = null;
-
-        // Check each license in parallel for speed
         const checks = allLicenses.map(async (license) => {
             if (!license.userId) {
                 return {
@@ -73,7 +36,6 @@ module.exports = async (req, res) => {
                     error: 'License not configured'
                 };
             }
-
             const availability = await isUserAvailable(license.userId);
             return {
                 licenseId: license.id,
@@ -83,11 +45,10 @@ module.exports = async (req, res) => {
             };
         });
 
-        const checkResults = await Promise.all(checks);
+        const results = await Promise.all(checks);
+        let firstAvailable = null;
 
-        // Process results and find first available
-        for (const result of checkResults) {
-            results.push(result);
+        for (const result of results) {
             if (result.available === true && firstAvailable === null) {
                 firstAvailable = result.licenseId;
             }
@@ -104,14 +65,6 @@ module.exports = async (req, res) => {
         });
 
     } catch (error) {
-        console.error('Error in check-all-licenses endpoint:', error);
-        res.status(500).json({
-            error: 'Internal server error',
-            message: error.message,
-            licenses: [],
-            firstAvailable: null,
-            allBusy: false,
-            timestamp: new Date().toISOString()
-        });
+        handleError(res, error);
     }
 };

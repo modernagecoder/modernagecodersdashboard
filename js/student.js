@@ -7,7 +7,7 @@ import {
 } from './firebase-config.js';
 
 import {
-    getLocalDateString, calculateDisplayStartTime, calculateDisplayEndTime, showNotification
+    getLocalDateString, calculateDisplayStartTime, calculateDisplayEndTime, showNotification, escapeHTML, initSidebar
 } from './utils.js';
 
 export async function initStudentDashboard(user, userData) {
@@ -15,6 +15,9 @@ export async function initStudentDashboard(user, userData) {
 
     // Populate profile
     populateStudentProfile(user);
+
+    // Init Sidebar
+    initSidebar();
 
     const batches = user.studentBatches || [];
     const todayStr = getLocalDateString(new Date());
@@ -35,8 +38,13 @@ export async function initStudentDashboard(user, userData) {
     // --- Real-time listener for classes ---
     if (window._unsubStudentClasses) window._unsubStudentClasses();
 
+    // Optimized Query (Bug #38): Filter by date > Jan 1st of current year (or recent)
+    const currentYear = new Date().getFullYear();
+    const startDate = `${currentYear}-01-01`;
+
     const classesQuery = query(collection(db, "classSlots"),
         where("status", "in", ["scheduled", "completed"]),
+        where("date", ">=", startDate),
         orderBy("date"),
         orderBy("startTime")
     );
@@ -48,7 +56,9 @@ export async function initStudentDashboard(user, userData) {
             const slotData = { id: docSnap.id, ...docSnap.data() };
             const matchesTeacher = user.assignedTeacherId && slotData.teacherId === user.assignedTeacherId;
             const matchesBatch = batches.length > 0 && (slotData.batches || []).some(b => batches.includes(b));
-            if (matchesTeacher || matchesBatch || (!user.assignedTeacherId && batches.length === 0)) {
+
+            // Bug #16 Fix: Only show if explicitly matched
+            if (matchesTeacher || matchesBatch) {
                 window._allStudentClasses.push(slotData);
             }
         });
@@ -81,6 +91,49 @@ export async function initStudentDashboard(user, userData) {
         });
         renderStudentAssignments();
         updateStudentStats();
+    });
+
+    // --- Real-time listener for announcements (Bug #33) ---
+    const studentNotificationBell = document.getElementById('student-notification-bell');
+    const studentNotificationDot = document.getElementById('student-notification-dot');
+    const announcementModal = document.getElementById('announcement-modal');
+    const closeAnnouncementBtn = document.getElementById('close-announcement-modal-button');
+    const announcementList = document.getElementById('teacher-announcements-list'); // Reusing ID from teacher HTML if shared, or check student HTML
+
+    // Unhide bell
+    if (studentNotificationBell) studentNotificationBell.classList.remove('hidden');
+
+    if (studentNotificationBell && announcementModal) {
+        studentNotificationBell.addEventListener('click', () => {
+            announcementModal.classList.add('active');
+            if (studentNotificationDot) studentNotificationDot.classList.add('hidden');
+            localStorage.setItem('studentLastSeenAnnouncement', Date.now().toString());
+        });
+    }
+    if (closeAnnouncementBtn && announcementModal) {
+        closeAnnouncementBtn.addEventListener('click', () => announcementModal.classList.remove('active'));
+    }
+    if (announcementModal) {
+        announcementModal.addEventListener('click', (e) => {
+            if (e.target === announcementModal) announcementModal.classList.remove('active');
+        });
+    }
+
+    onSnapshot(query(collection(db, "announcements"), orderBy("createdAt", "desc"), limit(10)), (snapshot) => {
+        const announcements = [];
+        snapshot.forEach(d => announcements.push({ id: d.id, ...d.data() }));
+
+        if (announcementList) {
+            announcementList.innerHTML = announcements.length === 0 ? '<p style="color:var(--text-muted);padding:1rem;">No announcements.</p>' :
+                announcements.map(a => `<div class="announcement-item"><p>${escapeHTML(a.message || a.text || '')}</p><small style="color:var(--text-muted);">${getLocalDateString(a.createdAt ? a.createdAt.toDate() : new Date())}</small></div>`).join('');
+        }
+
+        const lastSeen = parseInt(localStorage.getItem('studentLastSeenAnnouncement') || '0');
+        const hasNew = announcements.some(a => a.createdAt && (a.createdAt.seconds * 1000) > lastSeen);
+        if (studentNotificationDot) {
+            if (hasNew) studentNotificationDot.classList.remove('hidden');
+            else studentNotificationDot.classList.add('hidden');
+        }
     });
 
     // --- Load attendance ---
@@ -191,10 +244,10 @@ function renderStudentUpcomingClasses() {
         return `
             <div class="class-event-card">
                 <div class="event-time">${dateDisplay} \u00B7 ${displayStart} \u2013 ${displayEnd}</div>
-                <div class="event-topic">${cls.topic || 'Class Session'}</div>
+                <div class="event-topic">${escapeHTML(cls.topic || 'Class Session')}</div>
                 <div class="event-teacher">
                     <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" viewBox="0 0 16 16"><path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4zm-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10c-2.29 0-3.516.68-4.168 1.332-.678.678-.83 1.418-.832 1.664h10z"/></svg>
-                    ${cls.teacherName || 'Teacher'}
+                    ${escapeHTML(cls.teacherName || 'Teacher')}
                 </div>
                 ${batchLabel ? `<div class="event-batch-badge">${batchLabel}</div>` : ''}
             </div>
@@ -237,10 +290,10 @@ function renderStudentDayClasses(date) {
                     <div class="event-time">${displayStart} \u2013 ${displayEnd}</div>
                     ${statusBadge}
                 </div>
-                <div class="event-topic">${cls.topic || 'Class Session'}</div>
+                <div class="event-topic">${escapeHTML(cls.topic || 'Class Session')}</div>
                 <div class="event-teacher">
                     <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" viewBox="0 0 16 16"><path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4zm-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10c-2.29 0-3.516.68-4.168 1.332-.678.678-.83 1.418-.832 1.664h10z"/></svg>
-                    ${cls.teacherName || 'Teacher'}
+                    ${escapeHTML(cls.teacherName || 'Teacher')}
                 </div>
             </div>
         `;
@@ -254,14 +307,14 @@ function renderStudentDayClasses(date) {
         html += `
             <div class="assignment-card">
                 <div class="assignment-header">
-                    <div class="assignment-title">${asn.title}</div>
+                    <div class="assignment-title">${escapeHTML(asn.title)}</div>
                     <span class="assignment-due-pill ${pillClass}">${pillText}</span>
                 </div>
                 <div class="assignment-due">Due: ${dateDisplay}</div>
-                ${asn.description ? `<div class="assignment-desc">${asn.description}</div>` : ''}
+                ${asn.description ? `<div class="assignment-desc">${escapeHTML(asn.description)}</div>` : ''}
                 <div class="assignment-teacher">
                     <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" fill="currentColor" viewBox="0 0 16 16"><path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4zm-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10c-2.29 0-3.516.68-4.168 1.332-.678.678-.83 1.418-.832 1.664h10z"/></svg>
-                    ${asn.teacherName || 'Teacher'}
+                    ${escapeHTML(asn.teacherName || 'Teacher')}
                 </div>
             </div>
         `;
@@ -294,14 +347,14 @@ function renderStudentAssignments() {
         return `
             <div class="assignment-card">
                 <div class="assignment-header">
-                    <div class="assignment-title">${asn.title}</div>
+                    <div class="assignment-title">${escapeHTML(asn.title)}</div>
                     <span class="assignment-due-pill ${pillClass}">${pillText}</span>
                 </div>
                 <div class="assignment-due">${dueText}</div>
-                ${asn.description ? `<div class="assignment-desc">${asn.description}</div>` : ''}
+                ${asn.description ? `<div class="assignment-desc">${escapeHTML(asn.description)}</div>` : ''}
                 <div class="assignment-teacher">
                     <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" fill="currentColor" viewBox="0 0 16 16"><path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4zm-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10c-2.29 0-3.516.68-4.168 1.332-.678.678-.83 1.418-.832 1.664h10z"/></svg>
-                    ${asn.teacherName || 'Teacher'}
+                    ${escapeHTML(asn.teacherName || 'Teacher')}
                 </div>
             </div>
         `;

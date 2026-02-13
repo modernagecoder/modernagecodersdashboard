@@ -14,8 +14,22 @@ import {
     populateBatchDropdown, renderBatchChips, initSidebar, debounce,
     checkZoomLicenseAvailability, findAvailableLicenseHybrid,
     TOTAL_LICENSES, BUFFER_BEFORE_MIN, BUFFER_AFTER_MIN,
-    GROUP_CLASS_EARNING, PERSONALIZED_CLASS_EARNING
+    GROUP_CLASS_EARNING, PERSONALIZED_CLASS_EARNING, escapeHTML,
+    timeToMinutes, minutesToTime, calculateDisplayStartTime, calculateDisplayEndTime, calculateEndTime
 } from './utils.js';
+
+import {
+    initAdminShared,
+    setupTeacherManagement,
+    setupStudentManagement,
+    setupBatchManagement,
+    setupEditFormBatchDropdown,
+    setupAnnouncementManagement,
+    loadAnnouncementsHistory,
+    loadSharedData,
+    allTeachersData as sharedTeachersData,
+    allBatchesData as sharedBatchesData
+} from './admin-shared.js';
 
 // ─── STATE ───────────────────────────────────────────────────────────
 let currentUser = null;
@@ -139,33 +153,6 @@ function resolveDomRefs() {
 }
 
 // ─── HELPER FUNCTIONS ────────────────────────────────────────────────
-function timeToMinutes(timeStr) {
-    if (!timeStr || !timeStr.includes(':')) return 0;
-    const [hours, minutes] = timeStr.split(':').map(Number);
-    return hours * 60 + minutes;
-}
-
-function minutesToTime(totalMinutes) {
-    if (isNaN(totalMinutes) || totalMinutes < 0) return '00:00';
-    const hours = Math.floor(totalMinutes / 60);
-    const minutes = totalMinutes % 60;
-    return `${String(hours % 24).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
-}
-
-function calculateDisplayStartTime(startTimeStr) {
-    if (!startTimeStr) return 'N/A';
-    return minutesToTime(timeToMinutes(startTimeStr) - 10);
-}
-
-function calculateDisplayEndTime(startTimeStr, endTimeStr) {
-    if (!startTimeStr || !endTimeStr) return 'N/A';
-    const startMinutes = timeToMinutes(startTimeStr);
-    const endMinutes = timeToMinutes(endTimeStr);
-    const duration = endMinutes - startMinutes;
-    if (duration < 0) return endTimeStr;
-    return minutesToTime(startMinutes + duration + 15);
-}
-
 function updateDateDisplay() {
     if (!currentDateDisplay) return;
     const now = new Date();
@@ -173,25 +160,7 @@ function updateDateDisplay() {
     currentDateDisplay.textContent = now.toLocaleDateString('en-US', options);
 }
 
-function initializeTimePickers() {
-    const commonOptions = { enableTime: true, noCalendar: true, dateFormat: "H:i", time_24hr: true, minuteIncrement: 15, theme: "dark" };
-    if (startTimePicker) startTimePicker.destroy();
-    startTimePicker = flatpickr(startTimeInput, commonOptions);
-}
 
-function calculateEndTime(startTimeStr, durationMinutes) {
-    if (!startTimeStr || !startTimeStr.includes(':')) {
-        showNotification("Invalid start time format selected.", "error");
-        return null;
-    }
-    const [startHours, startMinutes] = startTimeStr.split(':').map(Number);
-    if (isNaN(startHours) || isNaN(startMinutes) || isNaN(durationMinutes)) {
-        showNotification("Error in time calculation values.", "error");
-        return null;
-    }
-    let totalMinutes = startHours * 60 + startMinutes + parseInt(durationMinutes);
-    return `${String(Math.floor(totalMinutes / 60) % 24).padStart(2, '0')}:${String(totalMinutes % 60).padStart(2, '0')}`;
-}
 
 function populateSlotBatchDropdown(tagValue) {
     if (!modalBatchSelect) return;
@@ -674,7 +643,7 @@ function createSlotElement(id, slotData) {
         const updated = slotData.updatedAt && slotData.updatedAt !== slotData.createdAt ? ` • Edited: ${formatTimestampForDisplay(slotData.updatedAt)}` : '';
         if (created || updated) timestampHTML = `<div class="slot-timestamp-info">${created}${updated}</div>`;
     }
-    detailsDiv.innerHTML = `<div class="topic">${slotData.topic}</div><strong>${displayStartTime} - ${displayEndTime} ${tagDisplay}</strong><br>${batchDisplay ? `<div style="margin-top:4px;">${batchDisplay}</div>` : ''}<span class="teacher">Teacher: ${teacherNameDisplay} ${originalTimeText}</span>${licenseDisplay}${statusHTML}${timestampHTML}${(slotData.status === 'completed' && (isOwner || isAdmin)) ? `<div class="class-notes-section"><label style="font-size:0.75rem; color:var(--text-muted); margin-bottom:4px; display:block;">Class Notes (Private):</label><textarea id="notes-${id}" class="class-notes-textarea" placeholder="Add private notes about this class...">${slotData.classNotes || ''}</textarea><div style="text-align:right;"><button id="save-notes-btn-${id}" class="btn btn-sm btn-primary save-notes-btn" onclick="saveClassNotes('${id}')">Save Notes</button></div></div>` : ''}`;
+    detailsDiv.innerHTML = `<div class="topic">${escapeHTML(slotData.topic)}</div><strong>${displayStartTime} - ${displayEndTime} ${tagDisplay}</strong><br>${batchDisplay ? `<div style="margin-top:4px;">${batchDisplay}</div>` : ''}<span class="teacher">Teacher: ${teacherNameDisplay} ${originalTimeText}</span>${licenseDisplay}${statusHTML}${timestampHTML}${(slotData.status === 'completed' && (isOwner || isAdmin)) ? `<div class="class-notes-section"><label style="font-size:0.75rem; color:var(--text-muted); margin-bottom:4px; display:block;">Class Notes (Private):</label><textarea id="notes-${id}" class="class-notes-textarea" placeholder="Add private notes about this class...">${escapeHTML(slotData.classNotes || '')}</textarea><div style="text-align:right;"><button class="btn btn-sm btn-primary save-notes-btn" data-id="${id}">Save Notes</button></div></div>` : ''}`;
     const actionsDiv = document.createElement('div'); actionsDiv.classList.add('slot-actions');
     const now = new Date();
     const slotDateParts = slotData.date.split('-');
@@ -703,6 +672,22 @@ function createSlotElement(id, slotData) {
     if (actionsDiv.hasChildNodes()) listItem.appendChild(actionsDiv);
     return listItem;
 }
+
+// Event delegation for save notes
+document.addEventListener('click', async (e) => {
+    if (e.target.classList.contains('save-notes-btn')) {
+        const slotId = e.target.dataset.id;
+        const textarea = document.getElementById(`notes-${slotId}`);
+        const btn = e.target;
+        if (!textarea || !btn) return;
+        btn.disabled = true; btn.textContent = 'Saving...';
+        try {
+            await updateDoc(doc(db, "classSlots", slotId), { classNotes: textarea.value, updatedAt: serverTimestamp() });
+            showNotification("Notes saved!", "success");
+        } catch (error) { console.error("Error:", error); showNotification(`Error: ${error.message}`, "error"); }
+        finally { btn.disabled = false; btn.textContent = 'Save Notes'; }
+    }
+});
 
 // ─── SLOT MODAL ─────────────────────────────────────────────────────
 function openSlotModal(id = null, existingData = null) {
@@ -735,8 +720,8 @@ function openSlotModal(id = null, existingData = null) {
     } else {
         modalTitle.textContent = 'Add New Class Slot';
         if (startTimePicker) { const now = new Date(); const nextQuarterHour = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours(), Math.ceil(now.getMinutes() / 15) * 15); startTimePicker.setDate(nextQuarterHour, true); }
-        durationSelect.value = "60"; topicInput.value = ''; modalTagSelect.value = 'personalized';
-        populateSlotBatchDropdown('personalized');
+        durationSelect.value = "60"; topicInput.value = ''; modalTagSelect.value = ''; // Bug #36: Default to empty/none
+        populateSlotBatchDropdown('');
         if (recurringCheckbox) recurringCheckbox.checked = true;
         if (recurringContainer) recurringContainer.classList.remove('hidden');
         saveSlotButton.textContent = 'Save Slot'; saveSlotButton.className = 'btn btn-success';
@@ -878,17 +863,7 @@ async function reinstateClass(slotId) {
     } catch (error) { console.error("Error:", error); showNotification(`Error: ${error.message}`, "error"); }
 }
 
-window.saveClassNotes = async function (slotId) {
-    const textarea = document.getElementById(`notes-${slotId}`);
-    const btn = document.getElementById(`save-notes-btn-${slotId}`);
-    if (!textarea || !btn) return;
-    btn.disabled = true; btn.textContent = 'Saving...';
-    try {
-        await updateDoc(doc(db, "classSlots", slotId), { classNotes: textarea.value, updatedAt: serverTimestamp() });
-        showNotification("Notes saved!", "success");
-    } catch (error) { console.error("Error:", error); showNotification(`Error: ${error.message}`, "error"); }
-    finally { btn.disabled = false; btn.textContent = 'Save Notes'; }
-};
+
 
 async function deleteSlot(slotId) {
     const slotDoc = await getDoc(doc(db, "classSlots", slotId));
@@ -931,12 +906,12 @@ function renderTeacherOverview() {
                 const dayStr = getLocalDateString(dayDate);
                 const daySlots = slots.filter(s => s.date === dayStr && s.status !== 'cancelled');
                 weekGrid += `<div class="overview-day-cell"><div class="overview-day-label">${daysOfWeekDisplay[dayDate.getDay()]} ${dayDate.getDate()}</div>`;
-                daySlots.forEach(s => { weekGrid += `<div class="overview-slot-chip ${s.status === 'completed' ? 'completed' : ''}">${s.startTime} ${s.topic || ''}</div>`; });
-                if (daySlots.length === 0) weekGrid += '<div class="overview-no-class">—</div>';
+                daySlots.forEach(s => { weekGrid += `<div class="overview-slot-chip ${s.status === 'completed' ? 'completed' : ''}">${s.startTime} ${escapeHTML(s.topic || '')}</div>`; });
+                if (daySlots.length === 0) weekGrid += '<div class="overview-no-class">\u2014</div>';
                 weekGrid += '</div>';
             }
             weekGrid += '</div>';
-            card.innerHTML = `<div class="overview-teacher-name">${teacherName} <span style="font-size:0.75rem;color:var(--text-muted);">(${slots.filter(s => s.status !== 'cancelled').length} classes)</span></div>${weekGrid}`;
+            card.innerHTML = `<div class="overview-teacher-name">${escapeHTML(teacherName)} <span style="font-size:0.75rem;color:var(--text-muted);">(${slots.filter(s => s.status !== 'cancelled').length} classes)</span></div>${weekGrid}`;
             overviewGridContainer.appendChild(card);
         });
     }).catch(err => { console.error("Error loading overview:", err); overviewGridContainer.innerHTML = '<p style="color:var(--accent-red);">Error loading overview.</p>'; });
@@ -968,12 +943,31 @@ function setupAnnouncements() {
     if (unsubscribeAnnouncementListener) unsubscribeAnnouncementListener();
     unsubscribeAnnouncementListener = onSnapshot(query(collection(db, "announcements"), orderBy("createdAt", "desc"), limit(20)), (snapshot) => {
         const announcements = []; snapshot.forEach(d => announcements.push({ id: d.id, ...d.data() }));
+
+        // Update Modal List
         if (teacherAnnouncementsList) {
             teacherAnnouncementsList.innerHTML = announcements.length === 0 ? '<p style="color:var(--text-muted);">No announcements yet.</p>' :
-                announcements.map(a => `<div class="announcement-item"><p>${a.text || a.message || ''}</p><small style="color:var(--text-muted);">${formatTimestampForDisplay(a.createdAt)} — ${a.createdByName || 'Admin'}</small></div>`).join('');
+                announcements.map(a => `<div class="announcement-item"><p>${escapeHTML(a.message || a.text || '')}</p><small style="color:var(--text-muted);">${formatTimestampForDisplay(a.createdAt)} — ${escapeHTML(a.createdByName || a.author || 'Admin')}</small></div>`).join('');
         }
+
+        // Update Inline List (Bug #23)
+        const inlineList = document.getElementById('teacher-announcements-inline-list');
+        if (inlineList) {
+            inlineList.innerHTML = announcements.length === 0 ?
+                '<div class="empty-state"><p class="text-muted">No details available.</p></div>' :
+                announcements.slice(0, 3).map(a => `
+                    <div class="announcement-card" style="margin-bottom:10px; padding:10px; border:1px solid var(--border-color); border-radius:var(--border-radius); background:var(--bg-secondary);">
+                        <p style="margin:0; font-size:0.9rem;">${escapeHTML(a.message || a.text || '')}</p>
+                        <div style="margin-top:5px; font-size:0.75rem; color:var(--text-muted);">
+                            ${formatTimestampForDisplay(a.createdAt)} • ${escapeHTML(a.createdByName || a.author || 'Admin')}
+                        </div>
+                    </div>
+                `).join('');
+        }
+
         const lastSeen = parseInt(localStorage.getItem('lastSeenAnnouncement') || '0');
         const hasNew = announcements.some(a => a.createdAt && (a.createdAt.seconds * 1000) > lastSeen);
+        if (notificationBell) notificationBell.classList.remove('hidden'); // Bug #32
         if (notificationDot) { if (hasNew) notificationDot.classList.remove('hidden'); else notificationDot.classList.add('hidden'); }
     });
 }
@@ -984,226 +978,63 @@ function loadAnnouncementsHistory() {
     getDocs(query(collection(db, "announcements"), orderBy("createdAt", "desc"), limit(50))).then(snapshot => {
         const items = []; snapshot.forEach(d => items.push({ id: d.id, ...d.data() }));
         if (items.length === 0) { announcementsHistoryList.innerHTML = '<p style="color:var(--text-muted);">No announcements.</p>'; return; }
-        announcementsHistoryList.innerHTML = items.map(a => `<div class="announcement-item" style="display:flex;justify-content:space-between;align-items:start;"><div><p>${a.text || a.message || ''}</p><small style="color:var(--text-muted);">${formatTimestampForDisplay(a.createdAt)}</small></div><button class="btn btn-danger btn-small" onclick="deleteAnnouncement('${a.id}')">Delete</button></div>`).join('');
+        announcementsHistoryList.innerHTML = items.map(a => `<div class="announcement-item" style="display:flex;justify-content:space-between;align-items:start;"><div><p>${escapeHTML(a.text || a.message || '')}</p><small style="color:var(--text-muted);">${formatTimestampForDisplay(a.createdAt)}</small></div><button class="btn btn-danger btn-small delete-announcement-btn" data-id="${a.id}">Delete</button></div>`).join('');
+
+        // Add listeners for delete buttons
+        announcementsHistoryList.querySelectorAll('.delete-announcement-btn').forEach(btn => {
+            btn.addEventListener('click', () => deleteAnnouncement(btn.dataset.id));
+        });
     }).catch(err => { announcementsHistoryList.innerHTML = '<p style="color:var(--accent-red);">Error loading.</p>'; });
 }
 
-window.deleteAnnouncement = async function (id) {
+async function deleteAnnouncement(id) {
     if (!confirm("Delete this announcement?")) return;
     try { await deleteDoc(doc(db, "announcements", id)); showNotification("Announcement deleted.", "success"); loadAnnouncementsHistory(); } catch (e) { showNotification(`Error: ${e.message}`, "error"); }
-};
-
-// ─── ADMIN TEACHER MANAGEMENT ────────────────────────────────────────
-function setupTeacherManagement() {
-    const teacherModal = document.getElementById('teacher-management-modal');
-    const closeBtn = document.getElementById('close-teacher-modal-button');
-    const teachersList = document.getElementById('teachers-list');
-    const createBtn = document.getElementById('create-teacher-button');
-    if (!teacherModal) return;
-    window.openTeacherManagementModal = function () { teacherModal.classList.add('active'); loadTeachersList(); };
-    if (closeBtn) closeBtn.addEventListener('click', () => teacherModal.classList.remove('active'));
-    if (teacherModal) teacherModal.addEventListener('click', (e) => { if (e.target === teacherModal) teacherModal.classList.remove('active'); });
-    if (createBtn) {
-        createBtn.addEventListener('click', async () => {
-            const nameInput = document.getElementById('new-teacher-name');
-            const emailInput = document.getElementById('new-teacher-email');
-            const passInput = document.getElementById('new-teacher-password');
-            const name = nameInput ? nameInput.value.trim() : '';
-            const email = emailInput ? emailInput.value.trim() : '';
-            const password = passInput ? passInput.value : '';
-            if (!name || !email || !password) { showNotification("All fields are required.", "warning"); return; }
-            if (password.length < 6) { showNotification("Password must be at least 6 characters.", "warning"); return; }
-            createBtn.disabled = true; createBtn.textContent = 'Creating...';
-            try {
-                const token = await getIdToken();
-                const response = await fetch('/api/create-teacher', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ name, email, password }) });
-                const data = await response.json(); if (!response.ok) throw new Error(data.message || 'Failed');
-                showNotification(`Teacher "${name}" created!`, 'success');
-                if (nameInput) nameInput.value = ''; if (emailInput) emailInput.value = ''; if (passInput) passInput.value = '';
-                loadTeachersList();
-            } catch (error) { showNotification(`Error: ${error.message}`, "error"); }
-            finally { createBtn.disabled = false; createBtn.textContent = 'Create Teacher'; }
-        });
-    }
-    async function loadTeachersList() {
-        if (!teachersList) return;
-        teachersList.innerHTML = '<p style="text-align:center;color:var(--text-muted);">Loading...</p>';
-        try {
-            const token = await getIdToken();
-            const response = await fetch('/api/list-teachers', { headers: { 'Authorization': `Bearer ${token}` } });
-            const data = await response.json(); if (!response.ok) throw new Error(data.message || 'Failed');
-            const teachers = data.teachers || [];
-            if (teachers.length === 0) { teachersList.innerHTML = '<p style="color:var(--text-muted);">No teachers.</p>'; return; }
-            teachersList.innerHTML = '';
-            teachers.forEach(teacher => {
-                const card = document.createElement('div'); card.style.cssText = 'display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border:1px solid var(--border-color);border-radius:var(--border-radius);margin-bottom:8px;background:var(--bg-primary);';
-                card.innerHTML = `<div><div style="font-weight:600;color:var(--text-primary);">${teacher.displayName || 'Unknown'}</div><div style="font-size:0.8rem;color:var(--text-muted);">${teacher.email}</div></div><button class="btn btn-danger btn-small delete-teacher-btn" data-uid="${teacher.uid}" data-name="${teacher.displayName}">Delete</button>`;
-                card.querySelector('.delete-teacher-btn').addEventListener('click', async () => {
-                    if (!confirm(`Delete teacher "${teacher.displayName}"?`)) return;
-                    try { const t = await getIdToken(); const r = await fetch('/api/delete-teacher', { method: 'DELETE', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${t}` }, body: JSON.stringify({ uid: teacher.uid }) }); const d = await r.json(); if (!r.ok) throw new Error(d.message); showNotification(`Teacher deleted.`, 'success'); loadTeachersList(); } catch (e) { showNotification(`Error: ${e.message}`, "error"); }
-                });
-                teachersList.appendChild(card);
-            });
-        } catch (error) { teachersList.innerHTML = `<p style="color:var(--accent-red);">Error: ${error.message}</p>`; }
-    }
 }
 
-// ─── ADMIN STUDENT MANAGEMENT ────────────────────────────────────────
-function setupStudentManagement() {
-    const studentModal = document.getElementById('student-management-modal');
-    const closeBtn = document.getElementById('close-student-modal-button');
-    const studentsListContainer = document.getElementById('students-list');
-    const createBtn = document.getElementById('create-student-button');
-    const searchInput = document.getElementById('student-search-input');
-    if (!studentModal) return;
-    window.openStudentManagementModal = function () { studentModal.classList.add('active'); populateStudentTeacherDropdown(); loadStudentsList(); };
-    if (closeBtn) closeBtn.addEventListener('click', () => studentModal.classList.remove('active'));
-    if (studentModal) studentModal.addEventListener('click', (e) => { if (e.target === studentModal) studentModal.classList.remove('active'); });
-    if (searchInput) searchInput.addEventListener('input', debounce(() => loadStudentsList(searchInput.value.trim().toLowerCase()), 300));
-    function populateStudentTeacherDropdown() {
-        const teacherSelect = document.getElementById('new-student-teacher');
-        if (!teacherSelect) return; teacherSelect.innerHTML = '<option value="">-- Assign Teacher --</option>';
-        allTeachersData.forEach(t => { const opt = document.createElement('option'); opt.value = t.id; opt.textContent = t.displayName || t.email; teacherSelect.appendChild(opt); });
-    }
-    // New student batch select
-    const newStudentBatchSelect = document.getElementById('new-student-batch-select');
-    const newStudentBatchChips = document.getElementById('new-student-batch-chips');
-    if (newStudentBatchSelect) {
-        populateBatchDropdown(newStudentBatchSelect, allBatchesData, { includePersonalized: true });
-        newStudentBatchSelect.addEventListener('change', () => {
-            const val = newStudentBatchSelect.value; if (val && !_selectedNewStudentBatches.includes(val)) { _selectedNewStudentBatches.push(val); }
-            renderBatchChips(newStudentBatchChips, _selectedNewStudentBatches, newStudentBatchSelect, allBatchesData, (updated) => { _selectedNewStudentBatches = updated; });
-            populateBatchDropdown(newStudentBatchSelect, allBatchesData, { includePersonalized: true, selectedBatches: _selectedNewStudentBatches });
-            newStudentBatchSelect.value = '';
-        });
-    }
-    if (createBtn) {
-        createBtn.addEventListener('click', async () => {
-            const nameInput = document.getElementById('new-student-name');
-            const emailInput = document.getElementById('new-student-email');
-            const passInput = document.getElementById('new-student-password');
-            const teacherSelect = document.getElementById('new-student-teacher');
-            const name = nameInput ? nameInput.value.trim() : '';
-            const email = emailInput ? emailInput.value.trim() : '';
-            const password = passInput ? passInput.value : '';
-            const assignedTeacherId = teacherSelect ? teacherSelect.value : '';
-            if (!name || !email || !password) { showNotification("Name, email and password are required.", "warning"); return; }
-            createBtn.disabled = true; createBtn.textContent = 'Creating...';
-            try {
-                const token = await getIdToken();
-                const response = await fetch('/api/create-student', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ name, email, password, assignedTeacherId, batches: _selectedNewStudentBatches }) });
-                const data = await response.json(); if (!response.ok) throw new Error(data.message || 'Failed');
-                showNotification(`Student "${name}" created!`, 'success');
-                if (nameInput) nameInput.value = ''; if (emailInput) emailInput.value = ''; if (passInput) passInput.value = '';
-                _selectedNewStudentBatches = []; if (newStudentBatchChips) newStudentBatchChips.innerHTML = '';
-                loadStudentsList();
-            } catch (error) { showNotification(`Error: ${error.message}`, "error"); }
-            finally { createBtn.disabled = false; createBtn.textContent = 'Create Student'; }
-        });
-    }
-    async function loadStudentsList(searchQuery = '') {
-        if (!studentsListContainer) return;
-        studentsListContainer.innerHTML = '<p style="text-align:center;color:var(--text-muted);">Loading...</p>';
-        try {
-            const token = await getIdToken();
-            const response = await fetch('/api/list-students', { headers: { 'Authorization': `Bearer ${token}` } });
-            const data = await response.json(); if (!response.ok) throw new Error(data.message || 'Failed');
-            let students = data.students || [];
-            if (searchQuery) students = students.filter(s => (s.displayName || '').toLowerCase().includes(searchQuery) || (s.email || '').toLowerCase().includes(searchQuery));
-            if (students.length === 0) { studentsListContainer.innerHTML = '<p style="color:var(--text-muted);">No students found.</p>'; return; }
-            studentsListContainer.innerHTML = '';
-            students.forEach(student => {
-                const card = document.createElement('div'); card.className = 'student-card';
-                const batchNames = (student.batches || []).filter(b => !b.startsWith('__')).join(', ') || 'None';
-                card.innerHTML = `<div class="student-card-info"><div style="font-weight:600;color:var(--text-primary);">${student.displayName || 'Unknown'}</div><div style="font-size:0.8rem;color:var(--text-muted);">${student.email} · Batches: ${batchNames}</div><div class="student-edit-form hidden" data-uid="${student.uid}"><select class="edit-batch-select form-select" style="margin-top:8px;"><option value="">Add batch...</option></select><div class="edit-batch-chips" data-selected='${JSON.stringify(student.batches || [])}'></div><select class="edit-teacher-select form-select" style="margin-top:8px;"><option value="">-- Assign Teacher --</option></select><button class="btn btn-primary btn-small save-student-edit-btn" style="margin-top:8px;">Save</button></div></div><div class="student-card-actions"><button class="btn btn-secondary btn-small edit-student-btn" data-uid="${student.uid}">Edit</button><button class="btn btn-danger btn-small delete-student-btn" data-uid="${student.uid}" data-name="${student.displayName}">Delete</button></div>`;
-                card.querySelector('.delete-student-btn').addEventListener('click', async () => {
-                    if (!confirm(`Delete student "${student.displayName}"?`)) return;
-                    try { const t = await getIdToken(); const r = await fetch('/api/delete-student', { method: 'DELETE', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${t}` }, body: JSON.stringify({ uid: student.uid }) }); const d = await r.json(); if (!r.ok) throw new Error(d.message); showNotification('Student deleted.', 'success'); loadStudentsList(); } catch (e) { showNotification(`Error: ${e.message}`, 'error'); }
-                });
-                studentsListContainer.appendChild(card);
-            });
-        } catch (error) { studentsListContainer.innerHTML = `<p style="color:var(--accent-red);">Error: ${error.message}</p>`; }
-    }
-}
+// ─── ADMIN TEACHER MANAGEMENT (Moved to admin-shared.js) ────────────────────────────────────────
+// Logic imported from admin-shared.js
 
-// ─── BATCH MANAGEMENT ────────────────────────────────────────────────
-function setupBatchManagement() {
-    const batchModal = document.getElementById('batch-management-modal');
-    const closeBtn = document.getElementById('close-batch-modal-button');
-    const addBtn = document.getElementById('add-batch-button');
-    const nameInput = document.getElementById('new-batch-name');
-    const batchesList = document.getElementById('batches-list');
-    if (!batchModal) return;
-    window.openBatchManagementModal = function () { batchModal.classList.add('active'); renderBatchesList(); };
-    if (closeBtn) closeBtn.addEventListener('click', () => { batchModal.classList.remove('active'); if (nameInput) nameInput.value = ''; });
-    if (batchModal) batchModal.addEventListener('click', (e) => { if (e.target === batchModal) batchModal.classList.remove('active'); });
-    function renderBatchesList() {
-        if (!batchesList) return;
-        if (allBatchesData.length === 0) { batchesList.innerHTML = '<div style="text-align:center;padding:2rem;color:var(--text-muted);">No batches yet.</div>'; return; }
-        batchesList.innerHTML = allBatchesData.map(b => `<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border:1px solid var(--border-color);border-radius:var(--border-radius);margin-bottom:8px;background:var(--bg-primary);"><div><span style="font-weight:600;color:var(--text-primary);">${b.name}</span></div><button class="btn btn-danger btn-small delete-batch-btn" data-id="${b.id}" data-name="${b.name}">Delete</button></div>`).join('');
-        batchesList.querySelectorAll('.delete-batch-btn').forEach(btn => {
-            btn.addEventListener('click', async () => {
-                if (!confirm(`Delete batch "${btn.dataset.name}"?`)) return;
-                try { await deleteDoc(doc(db, "batches", btn.dataset.id)); showNotification('Batch deleted.', 'success'); renderBatchesList(); } catch (e) { showNotification(`Error: ${e.message}`, 'error'); }
-            });
-        });
-    }
-    if (addBtn) {
-        addBtn.addEventListener('click', async () => {
-            const name = nameInput ? nameInput.value.trim() : '';
-            if (!name) { showNotification('Enter a batch name.', 'warning'); return; }
-            if (allBatchesData.some(b => b.name.toLowerCase() === name.toLowerCase())) { showNotification(`Batch "${name}" exists.`, 'warning'); return; }
-            addBtn.disabled = true; addBtn.textContent = 'Adding...';
-            try { await addDoc(collection(db, "batches"), { name, createdAt: serverTimestamp() }); showNotification(`Batch "${name}" added!`, 'success'); if (nameInput) nameInput.value = ''; renderBatchesList(); }
-            catch (error) { showNotification(`Error: ${error.message}`, 'error'); }
-            finally { addBtn.disabled = false; addBtn.textContent = 'Add Batch'; }
-        });
-    }
-}
+// ─── ADMIN STUDENT MANAGEMENT (Moved to admin-shared.js) ────────────────────────────────────────
+// Logic imported from admin-shared.js
 
-// Edit form batch dropdown init (delegated)
-function setupEditFormBatchDropdown() {
-    document.addEventListener('click', (e) => {
-        const editBtn = e.target.closest('.edit-student-btn');
-        if (!editBtn) return;
-        const uid = editBtn.dataset.uid; const form = document.querySelector(`.student-edit-form[data-uid="${uid}"]`); if (!form) return;
-        form.classList.toggle('hidden');
-        const selectEl = form.querySelector('.edit-batch-select'); const chipsEl = form.querySelector('.edit-batch-chips'); if (!selectEl || !chipsEl) return;
-        let currentBatches = []; try { currentBatches = JSON.parse(chipsEl.dataset.selected || '[]'); } catch (e) { currentBatches = []; }
-        populateBatchDropdown(selectEl, allBatchesData, { includePersonalized: true, selectedBatches: currentBatches });
-        renderBatchChips(chipsEl, currentBatches, selectEl, allBatchesData, (updated) => { chipsEl.dataset.selected = JSON.stringify(updated); });
-        // Teacher dropdown
-        const teacherSelect = form.querySelector('.edit-teacher-select');
-        if (teacherSelect) { teacherSelect.innerHTML = '<option value="">-- Assign Teacher --</option>'; allTeachersData.forEach(t => { const opt = document.createElement('option'); opt.value = t.id; opt.textContent = t.displayName || t.email; teacherSelect.appendChild(opt); }); }
-        selectEl.addEventListener('change', function handler() {
-            const val = selectEl.value; if (val && !currentBatches.includes(val)) { currentBatches.push(val); chipsEl.dataset.selected = JSON.stringify(currentBatches); renderBatchChips(chipsEl, currentBatches, selectEl, allBatchesData, (updated) => { chipsEl.dataset.selected = JSON.stringify(updated); currentBatches = updated; }); populateBatchDropdown(selectEl, allBatchesData, { includePersonalized: true, selectedBatches: currentBatches }); } selectEl.value = '';
-        });
-        const saveBtn = form.querySelector('.save-student-edit-btn');
-        if (saveBtn) {
-            saveBtn.addEventListener('click', async () => {
-                const batches = JSON.parse(chipsEl.dataset.selected || '[]');
-                const assignedTeacherId = teacherSelect ? teacherSelect.value : '';
-                saveBtn.disabled = true; saveBtn.textContent = 'Saving...';
-                try { const token = await getIdToken(); const r = await fetch('/api/update-student', { method: 'PUT', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ uid, batches, assignedTeacherId }) }); const d = await r.json(); if (!r.ok) throw new Error(d.message); showNotification('Student updated!', 'success'); form.classList.add('hidden'); }
-                catch (e) { showNotification(`Error: ${e.message}`, 'error'); }
-                finally { saveBtn.disabled = false; saveBtn.textContent = 'Save'; }
-            });
-        }
-    });
-}
+// ─── BATCH MANAGEMENT (Moved to admin-shared.js) ────────────────────────────────────────────────
+// Logic imported from admin-shared.js
+
+// Edit form batch dropdown init (delegated) (Moved to admin-shared.js)
+
 
 // ─── ASSIGNMENT POSTING ──────────────────────────────────────────────
 function setupAssignmentPosting() {
-    const postBtn = document.getElementById('post-assignment-button');
+    const postBtn = document.getElementById('save-assignment-button');
     const titleInput = document.getElementById('assignment-title');
     const descInput = document.getElementById('assignment-description');
     const dueDateInput = document.getElementById('assignment-due-date');
-    const studentSearchInput = document.getElementById('assignment-student-search');
-    const studentResults = document.getElementById('assignment-student-results');
+    const studentSearchInput = document.getElementById('assignment-students-search');
+    const studentResults = document.getElementById('assignment-students-dropdown');
     const selectedStudentsContainer = document.getElementById('assignment-selected-students');
     let selectedStudentIds = [];
 
     if (!postBtn) return;
+
+    // Bug #26, #27: Wire Assignment Modal Open/Close
+    const openAssignmentBtn = document.getElementById('open-assignment-modal-btn');
+    const closeAssignmentBtn = document.getElementById('close-assignment-modal-button');
+    const assignmentModal = document.getElementById('assignment-modal');
+
+    if (openAssignmentBtn && assignmentModal) {
+        openAssignmentBtn.addEventListener('click', () => {
+            assignmentModal.classList.add('active');
+        });
+    }
+    if (closeAssignmentBtn && assignmentModal) {
+        closeAssignmentBtn.addEventListener('click', () => assignmentModal.classList.remove('active'));
+    }
+    if (assignmentModal) {
+        assignmentModal.addEventListener('click', (e) => {
+            if (e.target === assignmentModal) assignmentModal.classList.remove('active');
+        });
+    }
 
     if (dueDateInput && typeof flatpickr !== 'undefined') {
         flatpickr(dueDateInput, { dateFormat: 'Y-m-d', minDate: 'today' });
@@ -1212,7 +1043,13 @@ function setupAssignmentPosting() {
     if (studentSearchInput) {
         studentSearchInput.addEventListener('input', debounce(async () => {
             const searchVal = studentSearchInput.value.trim().toLowerCase();
-            if (searchVal.length < 2) { if (studentResults) studentResults.innerHTML = ''; return; }
+            if (searchVal.length < 2) {
+                if (studentResults) {
+                    studentResults.innerHTML = '';
+                    studentResults.style.display = 'none';
+                }
+                return;
+            }
             try {
                 const token = await getIdToken();
                 const response = await fetch('/api/list-students', { headers: { 'Authorization': `Bearer ${token}` } });
@@ -1222,13 +1059,15 @@ function setupAssignmentPosting() {
                 );
                 if (studentResults) {
                     studentResults.innerHTML = students.length === 0 ? '<div style="padding:8px;color:var(--text-muted);">No students found.</div>' :
-                        students.map(s => `<div class="student-result-item" data-uid="${s.uid}" data-name="${s.displayName || s.email}" style="padding:8px;cursor:pointer;border-bottom:1px solid var(--border-color);">${s.displayName || 'Unknown'} <small>(${s.email})</small></div>`).join('');
+                        students.map(s => `<div class="student-result-item" data-uid="${s.uid}" data-name="${escapeHTML(s.displayName || s.email)}" style="padding:8px;cursor:pointer;border-bottom:1px solid var(--border-color);">${escapeHTML(s.displayName || 'Unknown')} <small>(${escapeHTML(s.email)})</small></div>`).join('');
+                    studentResults.style.display = 'block';
                     studentResults.querySelectorAll('.student-result-item').forEach(item => {
                         item.addEventListener('click', () => {
                             selectedStudentIds.push(item.dataset.uid);
                             renderSelectedStudents();
                             studentSearchInput.value = '';
                             studentResults.innerHTML = '';
+                            studentResults.style.display = 'none';
                         });
                     });
                 }
@@ -1278,7 +1117,7 @@ async function loadTeacherMyStudents() {
             const student = d.data();
             const item = document.createElement('div');
             item.style.cssText = 'padding:8px 12px;border:1px solid var(--border-color);border-radius:var(--border-radius);margin-bottom:6px;background:var(--bg-primary);';
-            item.innerHTML = `<div style="font-weight:600;color:var(--text-primary);">${student.displayName || 'Unknown'}</div><div style="font-size:0.8rem;color:var(--text-muted);">${student.email || ''}</div>`;
+            item.innerHTML = `<div style="font-weight:600;color:var(--text-primary);">${escapeHTML(student.displayName || 'Unknown')}</div><div style="font-size:0.8rem;color:var(--text-muted);">${escapeHTML(student.email || '')}</div>`;
             list.appendChild(item);
         });
     } catch (error) { console.error("Error loading my students:", error); list.innerHTML = '<p style="color:var(--accent-red);">Error loading students.</p>'; }
@@ -1294,7 +1133,7 @@ function renderTeacherAgenda() {
         const item = document.createElement('div');
         item.style.cssText = 'padding:8px 12px;border-left:3px solid var(--accent-main);margin-bottom:6px;background:var(--bg-primary);border-radius:0 var(--border-radius) var(--border-radius) 0;';
         const statusIcon = slot.status === 'completed' ? '✓' : '○';
-        item.innerHTML = `<div style="font-weight:600;color:var(--text-primary);">${statusIcon} ${slot.topic}</div><div style="font-size:0.8rem;color:var(--text-muted);">${slot.startTime} - ${slot.endTime}</div>`;
+        item.innerHTML = `<div style="font-weight:600;color:var(--text-primary);">${statusIcon} ${escapeHTML(slot.topic)}</div><div style="font-size:0.8rem;color:var(--text-muted);">${slot.startTime} - ${slot.endTime}</div>`;
         agendaList.appendChild(item);
     });
 }
@@ -1306,6 +1145,27 @@ async function initTeacherEnhancements() {
 }
 
 // ─── ADMIN DASHBOARD ─────────────────────────────────────────────────
+import {
+    initAdminShared,
+    setupTeacherManagement,
+    setupStudentManagement,
+    setupBatchManagement,
+    setupEditFormBatchDropdown,
+    setupAnnouncementManagement,
+    loadAnnouncementsHistory,
+    loadSharedData,
+    allTeachersData as sharedTeachersData,
+    allBatchesData as sharedBatchesData
+} from './admin-shared.js';
+
+// ... (existing imports)
+
+// Map shared data to local variables if needed, or use directly
+// accessing imported bindings directly is live.
+
+// ...
+
+// ─── ADMIN DASHBOARD ─────────────────────────────────────────────────
 async function initAdminDashboard() {
     if (!currentUser || !currentUser.isAdmin) return;
     const adminPanel = document.getElementById('admin-controls-panel');
@@ -1315,20 +1175,30 @@ async function initAdminDashboard() {
     const adminNavItems = document.getElementById('admin-nav-items');
     if (adminNavItems) adminNavItems.classList.remove('hidden');
 
-    // Load teachers list for admin selects
-    try {
-        const token = await getIdToken();
-        const response = await fetch('/api/list-teachers', { headers: { 'Authorization': `Bearer ${token}` } });
-        const data = await response.json();
-        if (response.ok && data.teachers) {
-            allTeachersData = data.teachers.map(t => ({ id: t.uid, ...t }));
-        }
-    } catch (error) { console.error("Error loading teachers for admin:", error); }
-    // Setup admin features
+    // Initialize Shared Module
+    initAdminShared(currentUser, getIdToken);
+
+    // Load Shared Data (Teachers, Batches)
+    await loadSharedData();
+    allTeachersData = sharedTeachersData; // Sync local var if used elsewhere
+    // Note: allBatchesData is also used in teacher.js, we should sync it or use sharedBatchesData
+
+    // Setup admin features using Shared Module
     setupTeacherManagement();
     setupStudentManagement();
     setupBatchManagement();
     setupEditFormBatchDropdown();
+
+    // Announcements
+    setupAnnouncementManagement();
+    const announcementsMgmtBtn = document.getElementById('open-announcements-mgmt-btn');
+    if (announcementsMgmtBtn) announcementsMgmtBtn.addEventListener('click', () => {
+        if (adminManagerModal) {
+            adminManagerModal.classList.add('active');
+            loadAnnouncementsHistory();
+        }
+    });
+
     // Teacher overview buttons
     if (overviewPrevWeekButton) overviewPrevWeekButton.addEventListener('click', () => { overviewCurrentWeekStartDate.setDate(overviewCurrentWeekStartDate.getDate() - 7); renderTeacherOverview(); });
     if (overviewNextWeekButton) overviewNextWeekButton.addEventListener('click', () => { overviewCurrentWeekStartDate.setDate(overviewCurrentWeekStartDate.getDate() + 7); renderTeacherOverview(); });
@@ -1341,13 +1211,12 @@ async function initAdminDashboard() {
     if (studentMgmtBtn) studentMgmtBtn.addEventListener('click', () => { if (window.openStudentManagementModal) window.openStudentManagementModal(); });
     const batchMgmtBtn = document.getElementById('open-batch-mgmt-btn');
     if (batchMgmtBtn) batchMgmtBtn.addEventListener('click', () => { if (window.openBatchManagementModal) window.openBatchManagementModal(); });
-    const announcementsMgmtBtn = document.getElementById('open-announcements-mgmt-btn');
-    if (announcementsMgmtBtn) announcementsMgmtBtn.addEventListener('click', () => { if (adminManagerModal) { adminManagerModal.classList.add('active'); loadAnnouncementsHistory(); } });
 
     // Also load teacher enhancements for admin (my students + agenda)
     await loadTeacherMyStudents();
     renderTeacherAgenda();
 }
+
 
 // ─── STUDENT DASHBOARD ───────────────────────────────────────────────
 async function initStudentDashboard() {
@@ -1375,8 +1244,10 @@ function wireEventListeners() {
     if (salaryHistoryModal) salaryHistoryModal.addEventListener('click', (e) => { if (e.target === salaryHistoryModal) salaryHistoryModal.classList.remove('active'); });
     // Delete confirm modal
     if (deleteConfirmModal) {
-        const closeDeleteBtn = document.getElementById('close-delete-confirm-modal');
+        const closeDeleteBtn = document.getElementById('close-delete-modal-button'); // Bug #24
+        const cancelDeleteBtn = document.getElementById('cancel-delete-button'); // Bug #24
         if (closeDeleteBtn) closeDeleteBtn.addEventListener('click', () => deleteConfirmModal.classList.remove('active'));
+        if (cancelDeleteBtn) cancelDeleteBtn.addEventListener('click', () => deleteConfirmModal.classList.remove('active'));
         deleteConfirmModal.addEventListener('click', (e) => { if (e.target === deleteConfirmModal) deleteConfirmModal.classList.remove('active'); });
     }
     // Tag change => batch dropdown update
@@ -1407,7 +1278,10 @@ export async function initTeacherDashboard(user, userData) {
 
     // Student role check
     if (currentUser.isStudent) {
-        initStudentDashboard();
+        // Dynamic import to avoid circular dependencies if possible, or just assume it's loaded
+        // But here we just return to let index.html handle it or if mixed usage
+        // Actually, removing this or ensuring it works. 
+        // For now, let's just make sure we don't double init if called from index
         return;
     }
 
@@ -1416,6 +1290,9 @@ export async function initTeacherDashboard(user, userData) {
 
     // Set CSS variables for colors
     setCSSVariablesFromRoot();
+
+    // Init Sidebar (Bug #37)
+    initSidebar();
 
     // Wire event listeners
     wireEventListeners();
@@ -1454,5 +1331,10 @@ export async function initTeacherDashboard(user, userData) {
 export function handleSectionChange(section) {
     if (section === 'salary-history') {
         renderSalaryHistory();
+    } else if (section === 'teacher-overview') { // Bug #20
+        renderTeacherOverview();
+    } else if (section === 'schedule') {
+        // Maybe refresh schedule or verify stats?
+        // updateAllDashboardStats(); // optional
     }
 }

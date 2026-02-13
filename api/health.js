@@ -2,31 +2,13 @@
  * API Endpoint: Health Check & Configuration Status
  * 
  * GET /api/health
- * 
- * Returns system health and configuration status
- * Useful for debugging and monitoring
  */
 
+const { handleCors } = require('./_utils/firebase-admin');
 const { validateLicenseConfig } = require('./_utils/licenses');
 
-// CORS headers
-const corsHeaders = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'GET, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type',
-    'Content-Type': 'application/json'
-};
-
-// Helper to set multiple headers
-function setHeaders(res, headers) {
-    Object.entries(headers).forEach(([key, value]) => {
-        res.setHeader(key, value);
-    });
-}
-
 module.exports = async (req, res) => {
-    // Set CORS headers for all responses
-    setHeaders(res, corsHeaders);
+    if (handleCors(req, res)) return;
 
     if (req.method === 'OPTIONS') {
         res.status(200).end();
@@ -64,17 +46,11 @@ module.exports = async (req, res) => {
         environment: process.env.VERCEL_ENV || 'development'
     };
 
-    // Warn if not fully configured
     if (!zoomConfigured || !licenseConfig.valid) {
         health.status = 'warning';
         health.warnings = [];
-
-        if (!zoomConfigured) {
-            health.warnings.push('Zoom API credentials not fully configured');
-        }
-        if (!licenseConfig.valid) {
-            health.warnings.push(`Missing license configurations: ${licenseConfig.missing.join(', ')}`);
-        }
+        if (!zoomConfigured) health.warnings.push('Zoom API credentials not fully configured');
+        if (!licenseConfig.valid) health.warnings.push(`Missing license configurations: ${licenseConfig.missing.join(', ')}`);
     }
 
     res.status(200).json(health);

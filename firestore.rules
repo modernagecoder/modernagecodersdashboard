@@ -89,7 +89,7 @@ service cloud.firestore {
       allow read: if isAuthenticated();
       
       // Teachers and admins can create announcements
-      allow create: if isTeacherOrAdmin();
+      allow create: if isAdmin();
       
       // Only admins can update or delete announcements
       allow update, delete: if isAdmin();
