@@ -124,8 +124,8 @@ function resolveDomRefs() {
     teacherOverviewView = document.getElementById('teacher-overview-view');
     overviewGridContainer = document.getElementById('overview-grid-container');
     overviewWeekDisplay = document.getElementById('overview-week-display');
-    overviewPrevWeekButton = document.getElementById('overview-prev-week');
-    overviewNextWeekButton = document.getElementById('overview-next-week');
+    overviewPrevWeekButton = document.getElementById('overview-prev-week-button');
+    overviewNextWeekButton = document.getElementById('overview-next-week-button');
     manageAnnouncementsButton = document.getElementById('manage-announcements-button');
     adminManagerModal = document.getElementById('admin-announcements-manager-modal');
     closeAdminManagerModalButton = document.getElementById('close-admin-manager-modal-button');
@@ -678,7 +678,16 @@ async function saveSlot() {
             return newStartMinutes < sEnd && newEndMinutes > sStart;
         });
         if (hasTeacherOverlap) { showNotification("This teacher already has a class scheduled during this time.", "error"); saveSlotButton.disabled = false; saveSlotButton.textContent = slotId ? 'Update Slot' : 'Save Slot'; return; }
-        const licenseResult = findAvailableLicenseHybrid(activeSlots, startTime, endTime);
+        // Build Set of license IDs used by overlapping slots
+        const usedLicenseIds = new Set();
+        activeSlots.forEach(s => {
+            const sStart = timeToMinutes(s.startTime) - BUFFER_BEFORE_MIN;
+            const sEnd = timeToMinutes(s.endTime) + BUFFER_AFTER_MIN;
+            if (newStartMinutes < sEnd && newEndMinutes > sStart && s.licenseId) {
+                usedLicenseIds.add(s.licenseId);
+            }
+        });
+        const licenseResult = await findAvailableLicenseHybrid(usedLicenseIds);
         const licenseId = licenseResult.licenseId;
         let earnings = 0;
         if (tag === 'group') earnings = GROUP_CLASS_EARNING;
@@ -714,7 +723,15 @@ async function saveSlot() {
                     const dateStr = getLocalDateString(slotDate);
                     const weekSlots = await getDocs(query(collection(db, "classSlots"), where("date", "==", dateStr)));
                     const weekActiveSlots = []; weekSlots.forEach(d => { const s = { id: d.id, ...d.data() }; if (s.status !== 'cancelled') weekActiveSlots.push(s); });
-                    const weekLicense = findAvailableLicenseHybrid(weekActiveSlots, startTime, endTime);
+                    const weekUsedLicenseIds = new Set();
+                    weekActiveSlots.forEach(s => {
+                        const sStart = timeToMinutes(s.startTime) - BUFFER_BEFORE_MIN;
+                        const sEnd = timeToMinutes(s.endTime) + BUFFER_AFTER_MIN;
+                        if (newStartMinutes < sEnd && newEndMinutes > sStart && s.licenseId) {
+                            weekUsedLicenseIds.add(s.licenseId);
+                        }
+                    });
+                    const weekLicense = await findAvailableLicenseHybrid(weekUsedLicenseIds);
                     const newSlotRef = doc(collection(db, "classSlots"));
                     batch.set(newSlotRef, { ...slotData, date: dateStr, licenseId: weekLicense.licenseId, recurringId, createdAt: serverTimestamp() });
                 }
@@ -844,7 +861,7 @@ function setupAnnouncements() {
             if (!text) { showNotification("Please enter an announcement.", "warning"); return; }
             publishNewAnnouncementButton.disabled = true;
             try {
-                await addDoc(collection(db, "announcements"), { message: text, author: currentUser.displayName || currentUser.email, publishedAt: serverTimestamp(), isDeleted: false });
+                await addDoc(collection(db, "announcements"), { text, message: text, createdByName: currentUser.displayName || currentUser.email, createdAt: serverTimestamp(), isDeleted: false });
                 if (newAnnouncementTextarea) newAnnouncementTextarea.value = '';
                 showNotification("Announcement published!", "success");
             } catch (error) { showNotification(`Error: ${error.message}`, "error"); }
@@ -862,7 +879,7 @@ function setupAnnouncements() {
         const announcements = []; snapshot.forEach(d => announcements.push({ id: d.id, ...d.data() }));
         if (teacherAnnouncementsList) {
             teacherAnnouncementsList.innerHTML = announcements.length === 0 ? '<p style="color:var(--text-muted);">No announcements yet.</p>' :
-                announcements.map(a => `<div class="announcement-item"><p>${a.text}</p><small style="color:var(--text-muted);">${formatTimestampForDisplay(a.createdAt)} — ${a.createdByName || 'Admin'}</small></div>`).join('');
+                announcements.map(a => `<div class="announcement-item"><p>${a.text || a.message || ''}</p><small style="color:var(--text-muted);">${formatTimestampForDisplay(a.createdAt)} — ${a.createdByName || 'Admin'}</small></div>`).join('');
         }
         const lastSeen = parseInt(localStorage.getItem('lastSeenAnnouncement') || '0');
         const hasNew = announcements.some(a => a.createdAt && (a.createdAt.seconds * 1000) > lastSeen);
@@ -876,7 +893,7 @@ function loadAnnouncementsHistory() {
     getDocs(query(collection(db, "announcements"), orderBy("createdAt", "desc"), limit(50))).then(snapshot => {
         const items = []; snapshot.forEach(d => items.push({ id: d.id, ...d.data() }));
         if (items.length === 0) { announcementsHistoryList.innerHTML = '<p style="color:var(--text-muted);">No announcements.</p>'; return; }
-        announcementsHistoryList.innerHTML = items.map(a => `<div class="announcement-item" style="display:flex;justify-content:space-between;align-items:start;"><div><p>${a.text}</p><small style="color:var(--text-muted);">${formatTimestampForDisplay(a.createdAt)}</small></div><button class="btn btn-danger btn-small" onclick="deleteAnnouncement('${a.id}')">Delete</button></div>`).join('');
+        announcementsHistoryList.innerHTML = items.map(a => `<div class="announcement-item" style="display:flex;justify-content:space-between;align-items:start;"><div><p>${a.text || a.message || ''}</p><small style="color:var(--text-muted);">${formatTimestampForDisplay(a.createdAt)}</small></div><button class="btn btn-danger btn-small" onclick="deleteAnnouncement('${a.id}')">Delete</button></div>`).join('');
     }).catch(err => { announcementsHistoryList.innerHTML = '<p style="color:var(--accent-red);">Error loading.</p>'; });
 }
 
@@ -1221,10 +1238,8 @@ async function initAdminDashboard() {
     setupBatchManagement();
     setupEditFormBatchDropdown();
     // Teacher overview buttons
-    const overviewPrevBtn = document.getElementById('overview-prev-week-button');
-    const overviewNextBtn = document.getElementById('overview-next-week-button');
-    if (overviewPrevBtn) overviewPrevBtn.addEventListener('click', () => { overviewCurrentWeekStartDate.setDate(overviewCurrentWeekStartDate.getDate() - 7); renderTeacherOverview(); });
-    if (overviewNextBtn) overviewNextBtn.addEventListener('click', () => { overviewCurrentWeekStartDate.setDate(overviewCurrentWeekStartDate.getDate() + 7); renderTeacherOverview(); });
+    if (overviewPrevWeekButton) overviewPrevWeekButton.addEventListener('click', () => { overviewCurrentWeekStartDate.setDate(overviewCurrentWeekStartDate.getDate() - 7); renderTeacherOverview(); });
+    if (overviewNextWeekButton) overviewNextWeekButton.addEventListener('click', () => { overviewCurrentWeekStartDate.setDate(overviewCurrentWeekStartDate.getDate() + 7); renderTeacherOverview(); });
     renderTeacherOverview();
 }
 
