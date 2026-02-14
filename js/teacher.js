@@ -15,7 +15,8 @@ import {
     checkZoomLicenseAvailability, findAvailableLicenseHybrid,
     TOTAL_LICENSES, BUFFER_BEFORE_MIN, BUFFER_AFTER_MIN,
     GROUP_CLASS_EARNING, PERSONALIZED_CLASS_EARNING, escapeHTML,
-    timeToMinutes, minutesToTime, calculateDisplayStartTime, calculateDisplayEndTime, calculateEndTime
+    timeToMinutes, minutesToTime, calculateDisplayStartTime, calculateDisplayEndTime, calculateEndTime,
+    initializeTimePickers
 } from './utils.js';
 
 import {
@@ -262,13 +263,14 @@ async function renderTeacherStats() {
     const [daySnapshot, monthSnapshot] = await Promise.all([getCountFromServer(dayCountQuery), getCountFromServer(monthCountQuery)]);
     if (statsSelectedDay) statsSelectedDay.textContent = daySnapshot.data().count;
     if (statsCurrentMonth) statsCurrentMonth.textContent = monthSnapshot.data().count;
-    const statLabels = document.querySelectorAll('#teacher-stats-container .stat-label');
+    const statLabels = document.querySelectorAll('#teacher-stats-container .salary-card-label, #teacher-stats-container .stat-label');
     statLabels.forEach(label => {
         const existingAdminNote = label.querySelector('.stat-label-admin-note');
         if (existingAdminNote) existingAdminNote.remove();
         if (currentUser.isAdmin) {
             const adminNote = document.createElement('span');
             adminNote.className = 'stat-label-admin-note';
+            adminNote.style.cssText = 'display:block;font-size:0.6rem;color:var(--accent-orange);';
             adminNote.textContent = '(All Teachers)';
             label.appendChild(adminNote);
         }
@@ -317,10 +319,9 @@ async function renderSalaryHistory() {
 
     try {
         const monthsToDisplay = [];
-        // Generate last 12 months
         for (let i = 0; i < 12; i++) {
             const date = new Date();
-            date.setDate(1); // Set to first of month to avoid edge cases like 31st
+            date.setDate(1);
             date.setMonth(date.getMonth() - i);
             monthsToDisplay.push(new Date(date));
         }
@@ -340,125 +341,97 @@ async function renderSalaryHistory() {
             );
 
             const querySnapshot = await getDocs(q);
-
-            let totalEarnings = 0;
-            let groupCount = 0;
-            let groupEarnings = 0;
-            let personalizedCount = 0;
-            let personalizedEarnings = 0;
-            let otherEarnings = 0;
+            let totalEarnings = 0, groupCount = 0, groupEarnings = 0, personalizedCount = 0, personalizedEarnings = 0;
 
             querySnapshot.forEach(d => {
                 const data = d.data();
                 const earning = data.earnings || 0;
                 totalEarnings += earning;
-
-                if (data.tag === 'group') {
-                    groupCount++;
-                    groupEarnings += earning;
-                } else if (data.tag === 'personalized') {
-                    personalizedCount++;
-                    personalizedEarnings += earning;
-                } else {
-                    otherEarnings += earning;
-                }
+                if (data.tag === 'group') { groupCount++; groupEarnings += earning; }
+                else if (data.tag === 'personalized') { personalizedCount++; personalizedEarnings += earning; }
             });
 
-            return {
-                date: monthDate,
-                totalEarnings,
-                groupCount,
-                groupEarnings,
-                personalizedCount,
-                personalizedEarnings,
-                otherEarnings
-            };
+            return { date: monthDate, totalEarnings, groupCount, groupEarnings, personalizedCount, personalizedEarnings };
         };
 
         const results = await Promise.all(monthsToDisplay.map(d => calculateEarningsForMonth(d)));
         salaryHistoryLoader.classList.add('hidden');
 
-        // Create Container for Summary and List
-        const container = document.createElement('div');
-        container.className = 'salary-history-wrapper';
-
-        // 1. Year Summary Card
         const totalYearEarnings = results.reduce((sum, r) => sum + r.totalEarnings, 0);
+        const totalGroupEarnings = results.reduce((sum, r) => sum + r.groupEarnings, 0);
+        const totalPersonalizedEarnings = results.reduce((sum, r) => sum + r.personalizedEarnings, 0);
+        const totalGroupClasses = results.reduce((sum, r) => sum + r.groupCount, 0);
+        const totalPersonalizedClasses = results.reduce((sum, r) => sum + r.personalizedCount, 0);
         const avgMonthly = results.length > 0 ? Math.round(totalYearEarnings / results.length) : 0;
 
-        const summaryCard = document.createElement('div');
-        summaryCard.className = 'salary-summary-card';
-        summaryCard.innerHTML = `
-            <div class="summary-item">
-                <span class="summary-label">Total Earnings (Last 12 Months)</span>
-                <span class="summary-value">₹${totalYearEarnings.toLocaleString()}</span>
-            </div>
-            <div class="summary-divider"></div>
-            <div class="summary-item">
-                <span class="summary-label">Average Monthly</span>
-                <span class="summary-value">₹${avgMonthly.toLocaleString()}</span>
+        // Overview summary cards
+        let html = `
+            <div class="salary-overview-grid" style="margin-bottom: 1.5rem;">
+                <div class="salary-overview-card card-total">
+                    <div class="salary-card-label">Total (12 Months)</div>
+                    <div class="salary-card-value" style="color: var(--accent-green);">₹${totalYearEarnings.toLocaleString()}</div>
+                    <div class="salary-card-sub">${totalGroupClasses + totalPersonalizedClasses} classes completed</div>
+                </div>
+                <div class="salary-overview-card card-avg">
+                    <div class="salary-card-label">Average / Month</div>
+                    <div class="salary-card-value">₹${avgMonthly.toLocaleString()}</div>
+                    <div class="salary-card-sub">Based on last 12 months</div>
+                </div>
+                <div class="salary-overview-card card-group">
+                    <div class="salary-card-label">Group Classes</div>
+                    <div class="salary-card-value">₹${totalGroupEarnings.toLocaleString()}</div>
+                    <div class="salary-card-sub">${totalGroupClasses} classes @ ₹${GROUP_CLASS_EARNING}/class</div>
+                </div>
+                <div class="salary-overview-card card-personal">
+                    <div class="salary-card-label">Personalized Classes</div>
+                    <div class="salary-card-value">₹${totalPersonalizedEarnings.toLocaleString()}</div>
+                    <div class="salary-card-sub">${totalPersonalizedClasses} classes @ ₹${PERSONALIZED_CLASS_EARNING}/class</div>
+                </div>
             </div>
         `;
-        container.appendChild(summaryCard);
 
-        // 2. Monthly Detailed List (Table-like structure)
-        const tableContainer = document.createElement('div');
-        tableContainer.className = 'salary-table-container';
-
-        let tableHTML = `
-            <table class="salary-table">
-                <thead>
-                    <tr>
-                        <th>Month</th>
-                        <th class="text-right">Group Classes</th>
-                        <th class="text-right">Personalized</th>
-                        <th class="text-right">Total</th>
-                    </tr>
-                </thead>
-                <tbody>
-        `;
+        // Monthly breakdown rows
+        html += `<div class="salary-month-list">`;
+        html += `
+            <div class="salary-month-row salary-header-row">
+                <div>Month</div>
+                <div style="text-align:right;">Group</div>
+                <div style="text-align:right;">Personalized</div>
+                <div style="text-align:right;">Total</div>
+            </div>`;
 
         results.forEach(result => {
             const hasEarnings = result.totalEarnings > 0;
-            if (hasEarnings || result === results[0]) { // Always show current month even if 0
-                const monthName = result.date.toLocaleString('en-US', { month: 'long', year: 'numeric' });
-                const rowClass = hasEarnings ? '' : 'text-muted';
-
-                tableHTML += `
-                    <tr class="${rowClass}">
-                        <td class="font-medium">${monthName}</td>
-                        <td class="text-right">
-                            <div class="earnings-cell">
-                                <span class="earning-amount">₹${result.groupEarnings}</span>
-                                <span class="earning-count text-muted">(${result.groupCount})</span>
-                            </div>
-                        </td>
-                        <td class="text-right">
-                            <div class="earnings-cell">
-                                <span class="earning-amount">₹${result.personalizedEarnings}</span>
-                                <span class="earning-count text-muted">(${result.personalizedCount})</span>
-                            </div>
-                        </td>
-                        <td class="text-right font-bold earning-total">₹${result.totalEarnings}</td>
-                    </tr>
-                `;
+            if (hasEarnings || result === results[0]) {
+                const monthName = result.date.toLocaleString('en-US', { month: 'long' });
+                const yearStr = result.date.getFullYear();
+                html += `
+                    <div class="salary-month-row ${hasEarnings ? '' : 'no-earnings'}">
+                        <div class="salary-month-name">${monthName}<span class="month-year">${yearStr}</span></div>
+                        <div class="salary-cell" data-label="Group">
+                            <span class="cell-amount">₹${result.groupEarnings.toLocaleString()}</span>
+                            <span class="cell-count">${result.groupCount} class${result.groupCount !== 1 ? 'es' : ''}</span>
+                        </div>
+                        <div class="salary-cell" data-label="Personalized">
+                            <span class="cell-amount">₹${result.personalizedEarnings.toLocaleString()}</span>
+                            <span class="cell-count">${result.personalizedCount} class${result.personalizedCount !== 1 ? 'es' : ''}</span>
+                        </div>
+                        <div class="salary-cell-total" data-label="Total">₹${result.totalEarnings.toLocaleString()}</div>
+                    </div>`;
             }
         });
-
-        tableHTML += `</tbody></table>`;
-        tableContainer.innerHTML = tableHTML;
-        container.appendChild(tableContainer);
-
-        salaryHistoryList.appendChild(container);
+        html += `</div>`;
 
         if (totalYearEarnings === 0) {
-            salaryHistoryList.innerHTML += '<p class="text-muted text-center mt-4">No earnings recorded in the past 12 months.</p>';
+            html += '<p style="color:var(--text-muted); text-align:center; padding:2rem;">No earnings recorded in the past 12 months.</p>';
         }
+
+        salaryHistoryList.innerHTML = html;
 
     } catch (error) {
         console.error("Error rendering salary history:", error);
         salaryHistoryLoader.classList.add('hidden');
-        salaryHistoryList.innerHTML = '<p style="color: var(--accent-red);">Could not load history. Please try again later.</p>';
+        salaryHistoryList.innerHTML = '<p style="color: var(--accent-red); text-align:center; padding:2rem;">Could not load history. Please try again later.</p>';
     }
 }
 
@@ -691,7 +664,7 @@ document.addEventListener('click', async (e) => {
 
 // ─── SLOT MODAL ─────────────────────────────────────────────────────
 function openSlotModal(id = null, existingData = null) {
-    slotModal.classList.add('active'); slotIdInput.value = id || ''; initializeTimePickers();
+    slotModal.classList.add('active'); slotIdInput.value = id || ''; if (startTimeInput) startTimePicker = initializeTimePickers(startTimeInput);
     if (applyTagToFutureContainer) applyTagToFutureContainer.classList.add('hidden');
     if (applyTagToFutureCheckbox) applyTagToFutureCheckbox.checked = false;
     if (teacherSelectContainerAdmin) teacherSelectContainerAdmin.classList.add('hidden');
@@ -942,33 +915,63 @@ function setupAnnouncements() {
     // Real-time listener for announcements
     if (unsubscribeAnnouncementListener) unsubscribeAnnouncementListener();
     unsubscribeAnnouncementListener = onSnapshot(query(collection(db, "announcements"), orderBy("createdAt", "desc"), limit(20)), (snapshot) => {
-        const announcements = []; snapshot.forEach(d => announcements.push({ id: d.id, ...d.data() }));
+        const announcements = []; snapshot.forEach(d => {
+            const data = d.data();
+            if (!data.isDeleted) announcements.push({ id: d.id, ...data });
+        });
+
+        // Helper to build announcement card HTML
+        function buildAnnouncementCard(a) {
+            const authorName = a.createdByName || a.author || 'Admin';
+            const initials = authorName.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+            const messageText = a.message || a.text || '';
+            const timeStr = formatTimestampForDisplay(a.createdAt);
+            return `
+                <div class="announcement-feed-card">
+                    <div class="announcement-feed-header">
+                        <div class="announcement-feed-avatar">${escapeHTML(initials)}</div>
+                        <div>
+                            <div class="announcement-feed-author">${escapeHTML(authorName)}</div>
+                            <div class="announcement-feed-time">${timeStr}</div>
+                        </div>
+                        <span class="announcement-feed-badge">Announcement</span>
+                    </div>
+                    <div class="announcement-feed-body">${escapeHTML(messageText)}</div>
+                </div>`;
+        }
 
         // Update Modal List
         if (teacherAnnouncementsList) {
-            teacherAnnouncementsList.innerHTML = announcements.length === 0 ? '<p style="color:var(--text-muted);">No announcements yet.</p>' :
-                announcements.map(a => `<div class="announcement-item"><p>${escapeHTML(a.message || a.text || '')}</p><small style="color:var(--text-muted);">${formatTimestampForDisplay(a.createdAt)} — ${escapeHTML(a.createdByName || a.author || 'Admin')}</small></div>`).join('');
+            teacherAnnouncementsList.innerHTML = announcements.length === 0 ?
+                '<p style="color:var(--text-muted); text-align:center; padding:2rem;">No announcements yet.</p>' :
+                '<div class="announcements-feed">' + announcements.map(a => buildAnnouncementCard(a)).join('') + '</div>';
         }
 
-        // Update Inline List (Bug #23)
+        // Update Inline List (main announcements section)
         const inlineList = document.getElementById('teacher-announcements-inline-list');
         if (inlineList) {
-            inlineList.innerHTML = announcements.length === 0 ?
-                '<div class="empty-state"><p class="text-muted">No details available.</p></div>' :
-                announcements.slice(0, 3).map(a => `
-                    <div class="announcement-card" style="margin-bottom:10px; padding:10px; border:1px solid var(--border-color); border-radius:var(--border-radius); background:var(--bg-secondary);">
-                        <p style="margin:0; font-size:0.9rem;">${escapeHTML(a.message || a.text || '')}</p>
-                        <div style="margin-top:5px; font-size:0.75rem; color:var(--text-muted);">
-                            ${formatTimestampForDisplay(a.createdAt)} • ${escapeHTML(a.createdByName || a.author || 'Admin')}
+            if (announcements.length === 0) {
+                inlineList.innerHTML = `
+                    <div class="announcements-empty-state">
+                        <div class="empty-icon-large">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="currentColor" viewBox="0 0 16 16">
+                                <path d="M8 16a2 2 0 0 0 2-2H6a2 2 0 0 0 2 2zM8 1.918l-.797.161A4.002 4.002 0 0 0 4 6c0 .628-.134 2.197-.459 3.742-.16.767-.376 1.566-.663 2.258h10.244c-.287-.692-.502-1.49-.663-2.258C12.134 8.197 12 6.628 12 6a4.002 4.002 0 0 0-3.203-3.92L8 1.917zM14.22 12c.223.447.481.801.78 1H1c.299-.199.557-.553.78-1C2.68 10.2 3 6.88 3 6c0-2.42 1.72-4.44 4.005-4.901a1 1 0 1 1 1.99 0A5.002 5.002 0 0 1 13 6c0 .88.32 4.2 1.22 6z"/>
+                            </svg>
                         </div>
-                    </div>
-                `).join('');
+                        <p>No announcements at this time. Check back later!</p>
+                    </div>`;
+            } else {
+                inlineList.innerHTML = '<div class="announcements-feed">' + announcements.map(a => buildAnnouncementCard(a)).join('') + '</div>';
+            }
         }
 
         const lastSeen = parseInt(localStorage.getItem('lastSeenAnnouncement') || '0');
         const hasNew = announcements.some(a => a.createdAt && (a.createdAt.seconds * 1000) > lastSeen);
-        if (notificationBell) notificationBell.classList.remove('hidden'); // Bug #32
+        if (notificationBell) notificationBell.classList.remove('hidden');
         if (notificationDot) { if (hasNew) notificationDot.classList.remove('hidden'); else notificationDot.classList.add('hidden'); }
+        // Update sidebar badge
+        const sidebarBadge = document.getElementById('sidebar-notification-dot');
+        if (sidebarBadge) { if (hasNew) { sidebarBadge.classList.remove('hidden'); sidebarBadge.textContent = announcements.filter(a => a.createdAt && (a.createdAt.seconds * 1000) > lastSeen).length; } else { sidebarBadge.classList.add('hidden'); } }
     });
 }
 
@@ -987,7 +990,61 @@ function setupAnnouncements() {
 // Edit form batch dropdown init (delegated) (Moved to admin-shared.js)
 
 
+// ─── MESSAGE MODAL ──────────────────────────────────────────────────
+function setupMessageModal() {
+    const modal = document.getElementById('message-student-modal');
+    const closeBtn = document.getElementById('close-message-modal-button');
+    const sendBtn = document.getElementById('send-message-button');
+
+    if (closeBtn && modal) closeBtn.addEventListener('click', () => modal.classList.remove('active'));
+    if (modal) modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.remove('active'); });
+
+    if (sendBtn) {
+        sendBtn.addEventListener('click', async () => {
+            const studentUid = sendBtn.dataset.studentUid;
+            const subject = document.getElementById('message-subject').value.trim();
+            const body = document.getElementById('message-body').value.trim();
+            if (!subject || !body) { showNotification("Please fill in subject and message.", "warning"); return; }
+            sendBtn.disabled = true; sendBtn.textContent = 'Sending...';
+            try {
+                await addDoc(collection(db, "messages"), {
+                    fromId: currentUser.uid,
+                    fromName: currentTeacherName,
+                    toId: studentUid,
+                    subject,
+                    body,
+                    read: false,
+                    createdAt: serverTimestamp()
+                });
+                showNotification("Message sent!", "success");
+                modal.classList.remove('active');
+                document.getElementById('message-subject').value = '';
+                document.getElementById('message-body').value = '';
+            } catch (error) { showNotification(`Error: ${error.message}`, "error"); }
+            finally { sendBtn.disabled = false; sendBtn.textContent = 'Send Message'; }
+        });
+    }
+}
+
+function openMessageModal(studentUid, studentName, studentEmail) {
+    const modal = document.getElementById('message-student-modal');
+    const nameInput = document.getElementById('message-student-name');
+    const sendBtn = document.getElementById('send-message-button');
+    const titleEl = document.getElementById('message-modal-title');
+    if (!modal) return;
+    if (titleEl) titleEl.textContent = `Send Message to ${studentName}`;
+    if (nameInput) nameInput.value = `${studentName} (${studentEmail})`;
+    if (sendBtn) sendBtn.dataset.studentUid = studentUid;
+    document.getElementById('message-subject').value = '';
+    document.getElementById('message-body').value = '';
+    modal.classList.add('active');
+}
+
 // ─── ASSIGNMENT POSTING ──────────────────────────────────────────────
+let _assignmentSelectedStudents = [];
+let _currentAssignmentTab = 'active';
+let _unsubAssignmentsListener = null;
+
 function setupAssignmentPosting() {
     const postBtn = document.getElementById('save-assignment-button');
     const titleInput = document.getElementById('assignment-title');
@@ -995,18 +1052,18 @@ function setupAssignmentPosting() {
     const dueDateInput = document.getElementById('assignment-due-date');
     const studentSearchInput = document.getElementById('assignment-students-search');
     const studentResults = document.getElementById('assignment-students-dropdown');
-    const selectedStudentsContainer = document.getElementById('assignment-selected-students');
-    let selectedStudentIds = [];
 
     if (!postBtn) return;
 
-    // Bug #26, #27: Wire Assignment Modal Open/Close
+    // Wire Assignment Modal Open/Close
     const openAssignmentBtn = document.getElementById('open-assignment-modal-btn');
     const closeAssignmentBtn = document.getElementById('close-assignment-modal-button');
     const assignmentModal = document.getElementById('assignment-modal');
 
     if (openAssignmentBtn && assignmentModal) {
         openAssignmentBtn.addEventListener('click', () => {
+            _assignmentSelectedStudents = [];
+            renderAssignmentSelectedStudents();
             assignmentModal.classList.add('active');
         });
     }
@@ -1023,31 +1080,41 @@ function setupAssignmentPosting() {
         flatpickr(dueDateInput, { dateFormat: 'Y-m-d', minDate: 'today' });
     }
 
+    // Student search - use local student data first, fallback to API
     if (studentSearchInput) {
         studentSearchInput.addEventListener('input', debounce(async () => {
             const searchVal = studentSearchInput.value.trim().toLowerCase();
-            if (searchVal.length < 2) {
-                if (studentResults) {
-                    studentResults.innerHTML = '';
-                    studentResults.style.display = 'none';
-                }
+            if (searchVal.length < 1) {
+                if (studentResults) { studentResults.innerHTML = ''; studentResults.style.display = 'none'; }
                 return;
             }
             try {
-                const token = await getIdToken();
-                const response = await fetch('/api/list-students', { headers: { 'Authorization': `Bearer ${token}` } });
-                const data = await response.json();
-                const students = (data.students || []).filter(s =>
-                    ((s.displayName || '').toLowerCase().includes(searchVal) || (s.email || '').toLowerCase().includes(searchVal)) && !selectedStudentIds.includes(s.uid)
-                );
+                let students = [];
+                // Use locally cached students if available
+                if (_myStudentsData && _myStudentsData.length > 0) {
+                    students = _myStudentsData.filter(s =>
+                        ((s.displayName || '').toLowerCase().includes(searchVal) || (s.email || '').toLowerCase().includes(searchVal)) &&
+                        !_assignmentSelectedStudents.find(sel => sel.uid === s.uid)
+                    );
+                } else {
+                    const token = await getIdToken();
+                    const response = await fetch('/api/list-students', { headers: { 'Authorization': `Bearer ${token}` } });
+                    const data = await response.json();
+                    students = (data.students || []).filter(s =>
+                        ((s.displayName || '').toLowerCase().includes(searchVal) || (s.email || '').toLowerCase().includes(searchVal)) &&
+                        !_assignmentSelectedStudents.find(sel => sel.uid === s.uid)
+                    );
+                }
                 if (studentResults) {
-                    studentResults.innerHTML = students.length === 0 ? '<div style="padding:8px;color:var(--text-muted);">No students found.</div>' :
-                        students.map(s => `<div class="student-result-item" data-uid="${s.uid}" data-name="${escapeHTML(s.displayName || s.email)}" style="padding:8px;cursor:pointer;border-bottom:1px solid var(--border-color);">${escapeHTML(s.displayName || 'Unknown')} <small>(${escapeHTML(s.email)})</small></div>`).join('');
+                    studentResults.innerHTML = students.length === 0 ? '<div style="padding:10px;color:var(--text-muted);font-size:0.85rem;">No students found.</div>' :
+                        students.map(s => `<div class="student-result-item" data-uid="${s.uid}" data-name="${escapeHTML(s.displayName || s.email)}" style="padding:10px 12px;cursor:pointer;border-bottom:1px solid var(--border-color);font-size:0.88rem;transition:background 0.1s;">${escapeHTML(s.displayName || 'Unknown')} <small style="color:var(--text-muted);">(${escapeHTML(s.email || '')})</small></div>`).join('');
                     studentResults.style.display = 'block';
                     studentResults.querySelectorAll('.student-result-item').forEach(item => {
+                        item.addEventListener('mouseenter', () => { item.style.background = 'var(--bg-tertiary)'; });
+                        item.addEventListener('mouseleave', () => { item.style.background = ''; });
                         item.addEventListener('click', () => {
-                            selectedStudentIds.push(item.dataset.uid);
-                            renderSelectedStudents();
+                            _assignmentSelectedStudents.push({ uid: item.dataset.uid, name: item.dataset.name });
+                            renderAssignmentSelectedStudents();
                             studentSearchInput.value = '';
                             studentResults.innerHTML = '';
                             studentResults.style.display = 'none';
@@ -1055,55 +1122,281 @@ function setupAssignmentPosting() {
                     });
                 }
             } catch (e) { console.error("Error searching students:", e); }
-        }, 300));
+        }, 200));
     }
 
-    function renderSelectedStudents() {
-        if (!selectedStudentsContainer) return;
-        selectedStudentsContainer.innerHTML = selectedStudentIds.length === 0 ? '' :
-            selectedStudentIds.map(id => `<span class="selected-student-chip">${id} <button onclick="this.parentElement.remove();" class="chip-remove" data-uid="${id}">×</button></span>`).join('');
-        selectedStudentsContainer.querySelectorAll('.chip-remove').forEach(btn => {
-            btn.addEventListener('click', () => { selectedStudentIds = selectedStudentIds.filter(id => id !== btn.dataset.uid); renderSelectedStudents(); });
-        });
-    }
-
+    // Post assignment
     postBtn.addEventListener('click', async () => {
         const title = titleInput ? titleInput.value.trim() : '';
         const description = descInput ? descInput.value.trim() : '';
         const dueDate = dueDateInput ? dueDateInput.value : '';
         if (!title) { showNotification("Assignment title is required.", "warning"); return; }
+        if (_assignmentSelectedStudents.length === 0) { showNotification("Please select at least one student.", "warning"); return; }
         postBtn.disabled = true; postBtn.textContent = 'Posting...';
         try {
+            const studentIds = _assignmentSelectedStudents.map(s => s.uid);
+            const studentNames = _assignmentSelectedStudents.map(s => s.name);
             await addDoc(collection(db, "assignments"), {
                 title, description, dueDate, teacherId: currentUser.uid, teacherName: currentTeacherName,
-                studentIds: selectedStudentIds, createdAt: serverTimestamp(), status: 'active'
+                studentIds, studentNames, createdAt: serverTimestamp(), status: 'active'
             });
-            showNotification("Assignment posted!", "success");
-            if (titleInput) titleInput.value = ''; if (descInput) descInput.value = ''; if (dueDateInput) dueDateInput.value = '';
-            selectedStudentIds = []; renderSelectedStudents();
+            showNotification("Assignment posted successfully!", "success");
+            if (titleInput) titleInput.value = '';
+            if (descInput) descInput.value = '';
+            if (dueDateInput) dueDateInput.value = '';
+            _assignmentSelectedStudents = [];
+            renderAssignmentSelectedStudents();
+            if (assignmentModal) assignmentModal.classList.remove('active');
         } catch (error) { showNotification(`Error: ${error.message}`, "error"); }
         finally { postBtn.disabled = false; postBtn.textContent = 'Post Assignment'; }
     });
+
+    // Tab buttons
+    document.querySelectorAll('.assignments-tabs .tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.assignments-tabs .tab-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            _currentAssignmentTab = btn.dataset.tab;
+            loadAssignmentHistory();
+        });
+    });
+
+    // Start real-time listener for assignments
+    loadAssignmentHistory();
+}
+
+function renderAssignmentSelectedStudents() {
+    const container = document.getElementById('assignment-selected-students');
+    if (!container) return;
+    container.innerHTML = _assignmentSelectedStudents.length === 0 ? '' :
+        _assignmentSelectedStudents.map(s => `<span class="selected-student-chip">${escapeHTML(s.name)} <button class="chip-remove" data-uid="${s.uid}">&times;</button></span>`).join('');
+    container.querySelectorAll('.chip-remove').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            _assignmentSelectedStudents = _assignmentSelectedStudents.filter(s => s.uid !== btn.dataset.uid);
+            renderAssignmentSelectedStudents();
+        });
+    });
+}
+
+function loadAssignmentHistory() {
+    if (!currentUser) return;
+    if (_unsubAssignmentsListener) _unsubAssignmentsListener();
+
+    const assignmentsList = document.getElementById('teacher-assignments-list');
+    if (!assignmentsList) return;
+
+    _unsubAssignmentsListener = onSnapshot(
+        query(collection(db, "assignments"), where("teacherId", "==", currentUser.uid), orderBy("createdAt", "desc")),
+        (snapshot) => {
+            const allAssignments = [];
+            snapshot.forEach(d => allAssignments.push({ id: d.id, ...d.data() }));
+
+            // Filter by tab
+            let filtered = allAssignments;
+            const now = new Date();
+            if (_currentAssignmentTab === 'active') {
+                filtered = allAssignments.filter(a => a.status === 'active');
+            } else if (_currentAssignmentTab === 'completed') {
+                filtered = allAssignments.filter(a => a.status === 'completed');
+            }
+
+            if (filtered.length === 0) {
+                const tabName = _currentAssignmentTab === 'all' ? '' : _currentAssignmentTab;
+                assignmentsList.innerHTML = `
+                    <div class="announcements-empty-state">
+                        <div class="empty-icon-large">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="currentColor" viewBox="0 0 16 16">
+                                <path d="M9.293 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V4.707A1 1 0 0 0 13.707 4L10 .293A1 1 0 0 0 9.293 0zM9.5 3.5v-2l3 3h-2a1 1 0 0 1-1-1z"/>
+                            </svg>
+                        </div>
+                        <p>No ${tabName} assignments found. ${_currentAssignmentTab === 'active' ? 'Click "Post Assignment" to create one.' : ''}</p>
+                    </div>`;
+                return;
+            }
+
+            assignmentsList.innerHTML = filtered.map(a => {
+                const dueDate = a.dueDate ? new Date(a.dueDate + 'T23:59:59') : null;
+                let statusBadge = '';
+                if (a.status === 'completed') {
+                    statusBadge = '<span class="assignment-status-badge completed">Completed</span>';
+                } else if (dueDate && dueDate < now) {
+                    statusBadge = '<span class="assignment-status-badge overdue">Overdue</span>';
+                } else {
+                    statusBadge = '<span class="assignment-status-badge active">Active</span>';
+                }
+
+                const studentChips = (a.studentNames || a.studentIds || []).map(name =>
+                    `<span class="assignment-student-chip">${escapeHTML(name)}</span>`
+                ).join('');
+
+                const dueDateStr = a.dueDate ? new Date(a.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'No due date';
+                const createdStr = formatTimestampForDisplay(a.createdAt);
+
+                return `
+                    <div class="assignment-detail-card">
+                        <div class="assignment-detail-header">
+                            <h4 class="assignment-detail-title">${escapeHTML(a.title)}</h4>
+                            ${statusBadge}
+                        </div>
+                        ${a.description ? `<div class="assignment-detail-desc">${escapeHTML(a.description)}</div>` : ''}
+                        ${studentChips ? `<div class="assignment-students-list">${studentChips}</div>` : ''}
+                        <div class="assignment-detail-meta">
+                            <div class="meta-item">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16">
+                                    <path d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5zM1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4H1z"/>
+                                </svg>
+                                Due: ${dueDateStr}
+                            </div>
+                            <div class="meta-item">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16">
+                                    <path d="M8 3.5a.5.5 0 0 0-1 0V9a.5.5 0 0 0 .252.434l3.5 2a.5.5 0 0 0 .496-.868L8 8.71V3.5z"/>
+                                    <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm7-8A7 7 0 1 1 1 8a7 7 0 0 1 14 0z"/>
+                                </svg>
+                                Posted: ${createdStr}
+                            </div>
+                            <div class="meta-item">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16">
+                                    <path d="M7 14s-1 0-1-1 1-4 5-4 5 3 5 4-1 1-1 1H7zm4-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/>
+                                </svg>
+                                ${(a.studentIds || []).length} student${(a.studentIds || []).length !== 1 ? 's' : ''}
+                            </div>
+                            ${a.status === 'active' ? `
+                                <button class="btn-action mark-assignment-complete" data-id="${a.id}" style="margin-left:auto; padding:4px 12px; font-size:0.75rem;">
+                                    Mark Complete
+                                </button>` : ''}
+                        </div>
+                    </div>`;
+            }).join('');
+
+            // Wire complete buttons
+            assignmentsList.querySelectorAll('.mark-assignment-complete').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    try {
+                        await updateDoc(doc(db, "assignments", btn.dataset.id), { status: 'completed' });
+                        showNotification("Assignment marked as completed!", "success");
+                    } catch (e) { showNotification(`Error: ${e.message}`, "error"); }
+                });
+            });
+        },
+        (error) => {
+            console.error("Error loading assignments:", error);
+            assignmentsList.innerHTML = '<div class="announcements-empty-state"><p style="color:var(--accent-red);">Error loading assignments.</p></div>';
+        }
+    );
 }
 
 // ─── TEACHER ENHANCEMENTS (MY STUDENTS / AGENDA) ─────────────────────
+let _myStudentsData = [];
+
 async function loadTeacherMyStudents() {
-    const panel = document.getElementById('teacher-my-students-panel');
     const list = document.getElementById('teacher-my-students-list');
-    if (!panel || !list || !currentUser) return;
-    list.innerHTML = '<p style="color:var(--text-muted);">Loading...</p>';
+    if (!list || !currentUser) return;
+    list.innerHTML = '<div class="announcements-empty-state"><p>Loading students...</p></div>';
     try {
         const studentsSnapshot = await getDocs(query(collection(db, "users"), where("role", "==", "student"), where("assignedTeacherId", "==", currentUser.uid)));
-        if (studentsSnapshot.empty) { list.innerHTML = '<p style="color:var(--text-muted);">No students assigned to you yet.</p>'; return; }
-        list.innerHTML = '';
-        studentsSnapshot.forEach(d => {
-            const student = d.data();
-            const item = document.createElement('div');
-            item.style.cssText = 'padding:8px 12px;border:1px solid var(--border-color);border-radius:var(--border-radius);margin-bottom:6px;background:var(--bg-primary);';
-            item.innerHTML = `<div style="font-weight:600;color:var(--text-primary);">${escapeHTML(student.displayName || 'Unknown')}</div><div style="font-size:0.8rem;color:var(--text-muted);">${escapeHTML(student.email || '')}</div>`;
-            list.appendChild(item);
+        _myStudentsData = [];
+        studentsSnapshot.forEach(d => { _myStudentsData.push({ uid: d.id, ...d.data() }); });
+
+        // Update count badge
+        const countBadge = document.getElementById('teacher-students-count-badge');
+        if (countBadge) countBadge.textContent = `${_myStudentsData.length} Student${_myStudentsData.length !== 1 ? 's' : ''}`;
+
+        renderMyStudentsList(_myStudentsData);
+
+        // Setup search
+        const searchInput = document.getElementById('my-students-search');
+        if (searchInput) {
+            searchInput.addEventListener('input', debounce(() => {
+                const searchVal = searchInput.value.trim().toLowerCase();
+                if (!searchVal) { renderMyStudentsList(_myStudentsData); return; }
+                const filtered = _myStudentsData.filter(s =>
+                    (s.displayName || '').toLowerCase().includes(searchVal) ||
+                    (s.email || '').toLowerCase().includes(searchVal) ||
+                    (s.batches || []).some(b => b.toLowerCase().includes(searchVal))
+                );
+                renderMyStudentsList(filtered);
+            }, 250));
+        }
+    } catch (error) {
+        console.error("Error loading my students:", error);
+        list.innerHTML = '<div class="announcements-empty-state"><p style="color:var(--accent-red);">Error loading students. Please refresh.</p></div>';
+    }
+}
+
+function renderMyStudentsList(students) {
+    const list = document.getElementById('teacher-my-students-list');
+    if (!list) return;
+
+    if (students.length === 0) {
+        list.innerHTML = `
+            <div class="announcements-empty-state" style="grid-column: 1 / -1;">
+                <div class="empty-icon-large">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M7 14s-1 0-1-1 1-4 5-4 5 3 5 4-1 1-1 1H7zm4-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/>
+                        <path fill-rule="evenodd" d="M5.216 14A2.238 2.238 0 0 1 5 13c0-1.355.68-2.75 1.936-3.72A6.325 6.325 0 0 0 5 9c-4 0-5 3-5 4s1 1 1 1h4.216z"/>
+                        <path d="M4.5 8a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z"/>
+                    </svg>
+                </div>
+                <p>No students assigned to you yet.</p>
+            </div>`;
+        return;
+    }
+
+    list.innerHTML = students.map(student => {
+        const name = student.displayName || 'Unknown';
+        const initials = name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+        const batches = (student.batches || []).filter(b => !b.startsWith('__'));
+        const batchTags = batches.map(b => `<span class="student-batch-tag">${escapeHTML(b)}</span>`).join('');
+
+        return `
+            <div class="student-card-enhanced" data-student-uid="${student.uid}">
+                <div class="student-card-top">
+                    <div class="student-avatar">${escapeHTML(initials)}</div>
+                    <div class="student-card-info">
+                        <h4>${escapeHTML(name)}</h4>
+                        <div class="student-email">${escapeHTML(student.email || '')}</div>
+                        ${batchTags ? `<div class="student-batches">${batchTags}</div>` : ''}
+                    </div>
+                </div>
+                <div class="student-card-actions">
+                    <button class="btn-action send-assignment-btn" data-uid="${student.uid}" data-name="${escapeHTML(name)}">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M9.293 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V4.707A1 1 0 0 0 13.707 4L10 .293A1 1 0 0 0 9.293 0zM9.5 3.5v-2l3 3h-2a1 1 0 0 1-1-1z"/>
+                        </svg>
+                        Assignment
+                    </button>
+                    <button class="btn-action send-message-btn" data-uid="${student.uid}" data-name="${escapeHTML(name)}" data-email="${escapeHTML(student.email || '')}">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M0 4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V4zm2-1a1 1 0 0 0-1 1v.217l7 4.2 7-4.2V4a1 1 0 0 0-1-1H2zm13 2.383-4.758 2.855L15 11.114v-5.73zm-.034 6.878L9.271 8.82 8 9.583 6.728 8.82l-5.694 3.44A1 1 0 0 0 2 13h12a1 1 0 0 0 .966-.739zM1 11.114l4.758-2.876L1 5.383v5.73z"/>
+                        </svg>
+                        Message
+                    </button>
+                </div>
+            </div>`;
+    }).join('');
+
+    // Wire up action buttons
+    list.querySelectorAll('.send-assignment-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const assignmentModal = document.getElementById('assignment-modal');
+            if (assignmentModal) assignmentModal.classList.add('active');
+            // Pre-select this student
+            const uid = btn.dataset.uid;
+            const name = btn.dataset.name;
+            if (!_assignmentSelectedStudents) _assignmentSelectedStudents = [];
+            if (!_assignmentSelectedStudents.find(s => s.uid === uid)) {
+                _assignmentSelectedStudents.push({ uid, name });
+                renderAssignmentSelectedStudents();
+            }
         });
-    } catch (error) { console.error("Error loading my students:", error); list.innerHTML = '<p style="color:var(--accent-red);">Error loading students.</p>'; }
+    });
+
+    list.querySelectorAll('.send-message-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            openMessageModal(btn.dataset.uid, btn.dataset.name, btn.dataset.email);
+        });
+    });
 }
 
 function renderTeacherAgenda() {
@@ -1125,6 +1418,7 @@ async function initTeacherEnhancements() {
     if (!currentUser || currentUser.isAdmin) return;
     await loadTeacherMyStudents();
     renderTeacherAgenda();
+    setupMessageModal();
 }
 
 // ─── ADMIN DASHBOARD ─────────────────────────────────────────────────
@@ -1186,6 +1480,7 @@ async function initAdminDashboard() {
     // Also load teacher enhancements for admin (my students + agenda)
     await loadTeacherMyStudents();
     renderTeacherAgenda();
+    setupMessageModal();
 }
 
 
@@ -1302,10 +1597,18 @@ export async function initTeacherDashboard(user, userData) {
 export function handleSectionChange(section) {
     if (section === 'salary-history') {
         renderSalaryHistory();
-    } else if (section === 'teacher-overview') { // Bug #20
+    } else if (section === 'teacher-overview') {
         renderTeacherOverview();
-    } else if (section === 'schedule') {
-        // Maybe refresh schedule or verify stats?
-        // updateAllDashboardStats(); // optional
+    } else if (section === 'my-students') {
+        loadTeacherMyStudents();
+    } else if (section === 'assignments') {
+        loadAssignmentHistory();
+    } else if (section === 'announcements') {
+        // Mark announcements as seen
+        localStorage.setItem('lastSeenAnnouncement', Date.now().toString());
+        const notificationDotEl = document.getElementById('notification-dot');
+        if (notificationDotEl) notificationDotEl.classList.add('hidden');
+        const sidebarBadge = document.getElementById('sidebar-notification-dot');
+        if (sidebarBadge) sidebarBadge.classList.add('hidden');
     }
 }

@@ -160,6 +160,29 @@ service cloud.firestore {
     }
     
     // ============================================
+    // MESSAGES COLLECTION
+    // ============================================
+    match /messages/{messageId} {
+      // Users can read messages sent to them or sent by them
+      allow read: if isAuthenticated() && (
+        resource.data.fromId == request.auth.uid ||
+        resource.data.toId == request.auth.uid ||
+        isAdmin()
+      );
+
+      // Teachers and admins can create messages
+      allow create: if isTeacherOrAdmin() &&
+        request.resource.data.fromId == request.auth.uid;
+
+      // Recipients can mark messages as read
+      allow update: if isAuthenticated() &&
+        resource.data.toId == request.auth.uid;
+
+      // Only admins can delete messages
+      allow delete: if isAdmin();
+    }
+
+    // ============================================
     // DENY ALL OTHER ACCESS
     // ============================================
     match /{document=**} {
