@@ -23,6 +23,10 @@ import {
     openAnnouncementModal,
     listenForAnnouncements,
     loadSharedData,
+    loadInlineTeachers,
+    loadInlineStudents,
+    loadInlineBatches,
+    loadInlineAnnouncements,
     allTeachersData as sharedTeachersData,
     allBatchesData as sharedBatchesData
 } from './admin-shared.js';
@@ -157,15 +161,8 @@ export async function initAdminPage(user, userData) {
         }
     });
 
-    // Wire section Open Manager buttons to modals
-    const teacherMgmtBtn = document.getElementById('open-teacher-mgmt-btn');
-    if (teacherMgmtBtn) teacherMgmtBtn.addEventListener('click', () => openTeacherManagementModal());
-    const studentMgmtBtn = document.getElementById('open-student-mgmt-btn');
-    if (studentMgmtBtn) studentMgmtBtn.addEventListener('click', () => openStudentManagementModal());
-    const batchMgmtBtn = document.getElementById('open-batch-mgmt-btn');
-    if (batchMgmtBtn) batchMgmtBtn.addEventListener('click', () => openBatchManagementModal());
-    const announcementsMgmtBtn = document.getElementById('open-announcements-mgmt-btn');
-    if (announcementsMgmtBtn) announcementsMgmtBtn.addEventListener('click', () => openAnnouncementModal());
+    // Wire "+" toggle buttons for inline create forms
+    setupFormToggles();
 
     showNotification(`Welcome, Admin ${user.originalDisplayName}! Dashboard loaded.`, 'success');
 }
@@ -189,11 +186,11 @@ function setupSectionNavigation() {
             const targetSection = document.getElementById(`section-${section}`);
             if (targetSection) targetSection.classList.remove('hidden');
 
-            // Open modals for management sections
-            if (section === 'manage-teachers') openTeacherManagementModal();
-            if (section === 'manage-students') openStudentManagementModal();
-            if (section === 'manage-batches') openBatchManagementModal();
-            if (section === 'announcements') openAnnouncementModal();
+            // Load inline data for management sections
+            if (section === 'manage-teachers') loadInlineTeachers();
+            if (section === 'manage-students') loadInlineStudents();
+            if (section === 'manage-batches') loadInlineBatches();
+            if (section === 'announcements') loadInlineAnnouncements();
 
             // Initialize teacher overview when switching to it
             if (section === 'teacher-overview') {
@@ -248,16 +245,13 @@ function setupQuickActions() {
     const quickTeachers = document.getElementById('quick-action-teachers');
 
     if (quickStudents) quickStudents.addEventListener('click', () => {
-        openStudentManagementModal();
-        activateNavItem('manage-students');
+        navigateToSection('manage-students');
     });
     if (quickBatches) quickBatches.addEventListener('click', () => {
-        openBatchManagementModal();
-        activateNavItem('manage-batches');
+        navigateToSection('manage-batches');
     });
     if (quickTeachers) quickTeachers.addEventListener('click', () => {
-        openTeacherManagementModal();
-        activateNavItem('manage-teachers');
+        navigateToSection('manage-teachers');
     });
 }
 
@@ -265,6 +259,17 @@ function activateNavItem(section) {
     document.querySelectorAll('.sidebar-nav .nav-item').forEach(n => n.classList.remove('active'));
     const navItem = document.querySelector(`.sidebar-nav .nav-item[data-section="${section}"]`);
     if (navItem) navItem.classList.add('active');
+}
+
+function navigateToSection(section) {
+    activateNavItem(section);
+    document.querySelectorAll('.dashboard-section').forEach(s => s.classList.add('hidden'));
+    const targetSection = document.getElementById(`section-${section}`);
+    if (targetSection) targetSection.classList.remove('hidden');
+    if (section === 'manage-teachers') loadInlineTeachers();
+    if (section === 'manage-students') loadInlineStudents();
+    if (section === 'manage-batches') loadInlineBatches();
+    if (section === 'announcements') loadInlineAnnouncements();
 }
 
 // =============================================
@@ -449,8 +454,28 @@ async function renderTeacherWeeklyOverview(startDate) {
     }
 }
 
-// ─── ADMIN TEACHER MANAGEMENT (Moved to admin-shared.js) ────────────────────────────────────────
-// Logic imported from admin-shared.js
+// ─── FORM TOGGLE SETUP ──────────────────────────────────────────
+function setupFormToggles() {
+    const toggles = [
+        { btnId: 'toggle-teacher-form', formId: 'inline-teacher-create-form' },
+        { btnId: 'toggle-student-form', formId: 'inline-student-create-form' },
+        { btnId: 'toggle-batch-form', formId: 'inline-batch-create-form' },
+        { btnId: 'toggle-announcement-form', formId: 'inline-announcement-create-form' },
+    ];
 
-
-// (Functions removed - now using admin-shared.js)
+    toggles.forEach(({ btnId, formId }) => {
+        const btn = document.getElementById(btnId);
+        const form = document.getElementById(formId);
+        if (btn && form) {
+            btn.addEventListener('click', () => {
+                const isCollapsed = form.classList.contains('collapsed');
+                form.classList.toggle('collapsed');
+                // Rotate the + icon
+                const icon = btn.querySelector('i');
+                if (icon) {
+                    icon.style.transform = isCollapsed ? 'rotate(45deg)' : 'rotate(0deg)';
+                }
+            });
+        }
+    });
+}

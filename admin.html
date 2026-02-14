@@ -256,78 +256,206 @@
         </div>
 
         <!-- ============================================ -->
-        <!-- SECTION: Manage Teachers (inline, not modal) -->
+        <!-- SECTION: Teacher Base (inline)               -->
         <!-- ============================================ -->
         <div id="section-manage-teachers" class="dashboard-section hidden">
-            <div class="section-header">
-                <div>
-                    <h2>Manage Teachers</h2>
-                    <p class="section-subtitle">Add, view, and manage teacher accounts</p>
+            <div class="base-header">
+                <div class="base-header-left">
+                    <i class="fas fa-chalkboard-teacher base-header-icon"></i>
+                    <h2>Teacher Base</h2>
                 </div>
-                <button class="btn btn-primary" id="open-teacher-mgmt-btn">Open Manager</button>
+                <div class="base-header-right">
+                    <div class="base-search-wrapper">
+                        <i class="fas fa-search base-search-icon"></i>
+                        <input type="text" id="inline-teacher-search" class="base-search" placeholder="Search teachers...">
+                    </div>
+                    <button class="base-add-btn" id="toggle-teacher-form" title="Add Teacher">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </div>
             </div>
-            <div class="management-section-content">
-                <div class="management-card">
-                    <h3>Teacher Accounts</h3>
-                    <p>Create new teacher accounts, view existing teachers, and manage permissions.</p>
+            <div id="inline-teacher-create-form" class="base-create-form collapsed">
+                <h4 class="base-form-title">Add New Teacher</h4>
+                <div class="base-form-grid">
+                    <div class="base-form-field">
+                        <label for="new-teacher-name">Full Name</label>
+                        <input type="text" id="new-teacher-name" placeholder="Enter full name" required>
+                    </div>
+                    <div class="base-form-field">
+                        <label for="new-teacher-email">Email Address</label>
+                        <input type="email" id="new-teacher-email" placeholder="teacher@example.com" required>
+                    </div>
+                    <div class="base-form-field">
+                        <label for="new-teacher-password">Password</label>
+                        <input type="password" id="new-teacher-password" placeholder="Min 6 characters" required>
+                    </div>
                 </div>
+                <button id="create-teacher-button" class="btn btn-success base-form-submit">Create Teacher Account</button>
+            </div>
+            <div class="base-table-wrapper">
+                <table class="base-table" id="inline-teachers-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Added</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="inline-teachers-list">
+                        <tr><td colspan="4" class="base-table-empty">Loading teachers...</td></tr>
+                    </tbody>
+                </table>
             </div>
         </div>
 
         <!-- ============================================ -->
-        <!-- SECTION: Manage Students (inline, not modal) -->
+        <!-- SECTION: Student Base (inline)               -->
         <!-- ============================================ -->
         <div id="section-manage-students" class="dashboard-section hidden">
-            <div class="section-header">
-                <div>
-                    <h2>Manage Students</h2>
-                    <p class="section-subtitle">Add, view, and manage student accounts</p>
+            <div class="base-header">
+                <div class="base-header-left">
+                    <i class="fas fa-user-graduate base-header-icon"></i>
+                    <h2>Student Base</h2>
                 </div>
-                <button class="btn btn-primary" id="open-student-mgmt-btn">Open Manager</button>
+                <div class="base-header-right">
+                    <div class="base-search-wrapper">
+                        <i class="fas fa-search base-search-icon"></i>
+                        <input type="text" id="inline-student-search" class="base-search" placeholder="Search students...">
+                    </div>
+                    <button class="base-add-btn" id="toggle-student-form" title="Add Student">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </div>
             </div>
-            <div class="management-section-content">
-                <div class="management-card">
-                    <h3>Student Accounts</h3>
-                    <p>Create student accounts, assign them to teachers and batches, and manage their access.</p>
+            <div id="inline-student-create-form" class="base-create-form collapsed">
+                <h4 class="base-form-title">Add New Student</h4>
+                <div class="base-form-grid">
+                    <div class="base-form-field">
+                        <label for="new-student-name">Full Name</label>
+                        <input type="text" id="new-student-name" placeholder="Enter full name" required>
+                    </div>
+                    <div class="base-form-field">
+                        <label for="new-student-email">Email Address</label>
+                        <input type="email" id="new-student-email" placeholder="student@example.com" required>
+                    </div>
+                    <div class="base-form-field">
+                        <label for="new-student-password">Password</label>
+                        <input type="password" id="new-student-password" placeholder="Min 6 characters" required>
+                    </div>
+                    <div class="base-form-field">
+                        <label>Batch</label>
+                        <div id="new-student-batch-container">
+                            <select id="new-student-batch-select">
+                                <option value="">-- Select Batch --</option>
+                            </select>
+                            <div id="new-student-batch-chips" class="base-batch-chips"></div>
+                        </div>
+                    </div>
+                    <div class="base-form-field">
+                        <label for="new-student-teacher">Assign to Teacher</label>
+                        <select id="new-student-teacher">
+                            <option value="">-- No Teacher Assigned --</option>
+                        </select>
+                    </div>
                 </div>
+                <button id="create-student-button" class="btn btn-success base-form-submit">Create Student Account</button>
+            </div>
+            <div class="base-table-wrapper">
+                <table class="base-table" id="inline-students-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Batches</th>
+                            <th>Teacher</th>
+                            <th>Added</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="inline-students-list">
+                        <tr><td colspan="6" class="base-table-empty">Loading students...</td></tr>
+                    </tbody>
+                </table>
             </div>
         </div>
 
         <!-- ============================================ -->
-        <!-- SECTION: Manage Batches (inline, not modal)  -->
+        <!-- SECTION: Batch Base (inline)                 -->
         <!-- ============================================ -->
         <div id="section-manage-batches" class="dashboard-section hidden">
-            <div class="section-header">
-                <div>
-                    <h2>Manage Batches</h2>
-                    <p class="section-subtitle">Create and organize class batches</p>
+            <div class="base-header">
+                <div class="base-header-left">
+                    <i class="fas fa-layer-group base-header-icon"></i>
+                    <h2>Batch Base</h2>
                 </div>
-                <button class="btn btn-primary" id="open-batch-mgmt-btn">Open Manager</button>
+                <div class="base-header-right">
+                    <div class="base-search-wrapper">
+                        <i class="fas fa-search base-search-icon"></i>
+                        <input type="text" id="inline-batch-search" class="base-search" placeholder="Search batches...">
+                    </div>
+                    <button class="base-add-btn" id="toggle-batch-form" title="Add Batch">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </div>
             </div>
-            <div class="management-section-content">
-                <div class="management-card">
-                    <h3>Batch Organization</h3>
-                    <p>Create new batches, organize students into groups, and manage batch settings.</p>
+            <div id="inline-batch-create-form" class="base-create-form collapsed">
+                <h4 class="base-form-title">Add New Batch</h4>
+                <div class="base-form-grid base-form-grid-inline">
+                    <div class="base-form-field" style="flex:1;">
+                        <label for="new-batch-name">Batch Name</label>
+                        <input type="text" id="new-batch-name" placeholder="e.g., Grade 8, Python Batch">
+                    </div>
+                    <button id="add-batch-button" class="btn btn-success base-form-submit-inline">Add Batch</button>
                 </div>
+            </div>
+            <div class="base-table-wrapper">
+                <table class="base-table" id="inline-batches-table">
+                    <thead>
+                        <tr>
+                            <th>Batch Name</th>
+                            <th>Created</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="inline-batches-list">
+                        <tr><td colspan="3" class="base-table-empty">Loading batches...</td></tr>
+                    </tbody>
+                </table>
             </div>
         </div>
 
         <!-- ============================================ -->
-        <!-- SECTION: Announcements (inline, not modal)   -->
+        <!-- SECTION: Announcements Base (inline)         -->
         <!-- ============================================ -->
         <div id="section-announcements" class="dashboard-section hidden">
-            <div class="section-header">
-                <div>
-                    <h2>Announcements</h2>
-                    <p class="section-subtitle">Create and manage announcements for all users</p>
+            <div class="base-header">
+                <div class="base-header-left">
+                    <i class="fas fa-bullhorn base-header-icon"></i>
+                    <h2>Announcements Base</h2>
                 </div>
-                <button class="btn btn-primary" id="open-announcements-mgmt-btn">Open Manager</button>
+                <div class="base-header-right">
+                    <div class="base-search-wrapper">
+                        <i class="fas fa-search base-search-icon"></i>
+                        <input type="text" id="inline-announcement-search" class="base-search" placeholder="Search announcements...">
+                    </div>
+                    <button class="base-add-btn" id="toggle-announcement-form" title="New Announcement">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </div>
             </div>
-            <div class="management-section-content">
-                <div class="management-card">
-                    <h3>Announcement Manager</h3>
-                    <p>Publish new announcements, edit existing ones, and manage announcement history.</p>
+            <div id="inline-announcement-create-form" class="base-create-form collapsed">
+                <h4 class="base-form-title">Create New Announcement</h4>
+                <div class="base-form-grid">
+                    <div class="base-form-field" style="grid-column: 1 / -1;">
+                        <label for="new-announcement-textarea">Announcement Message</label>
+                        <textarea id="new-announcement-textarea" placeholder="Type your announcement message here..." rows="3"></textarea>
+                    </div>
                 </div>
+                <button id="publish-new-announcement-button" class="btn btn-success base-form-submit">Publish Announcement</button>
+            </div>
+            <div id="inline-announcements-list" class="base-announcements-list">
+                <div class="base-table-empty">Loading announcements...</div>
             </div>
         </div>
     </main>

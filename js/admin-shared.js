@@ -25,31 +25,72 @@ async function getIdToken() {
     throw new Error("No authenticated user");
 }
 
+function formatTimestamp(ts) {
+    if (!ts) return '—';
+    let date;
+    if (ts.seconds) {
+        date = new Date(ts.seconds * 1000);
+    } else if (ts._seconds) {
+        date = new Date(ts._seconds * 1000);
+    } else if (typeof ts === 'string') {
+        date = new Date(ts);
+    } else {
+        return '—';
+    }
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+// ─── DATA STATE ────────────────────────────────────────────────
+export let allTeachersData = [];
+export let allBatchesData = [];
+
+export async function loadSharedData() {
+    try {
+        const token = await getIdToken();
+        // Load Teachers
+        const tResp = await fetch('/api/list-teachers', { headers: { 'Authorization': `Bearer ${token}` } });
+        const tData = await tResp.json();
+        if (tResp.ok && tData.teachers) {
+            allTeachersData = tData.teachers.map(t => ({ id: t.uid, ...t }));
+        }
+
+        // Load Batches
+        const q = query(collection(db, "batches"), orderBy("createdAt", "desc"));
+        const snapshot = await getDocs(q);
+        allBatchesData = [];
+        snapshot.forEach(docSnap => {
+            allBatchesData.push({ id: docSnap.id, ...docSnap.data() });
+        });
+    } catch (e) {
+        console.error("Error loading shared admin data:", e);
+    }
+}
+
 // ─── TEACHER MANAGEMENT ────────────────────────────────────────
+let _loadInlineTeachersFn = null;
+
 export function setupTeacherManagement() {
-    const teacherModal = document.getElementById('teacher-management-modal');
-    const closeBtn = document.getElementById('close-teacher-modal-button');
-    const teachersList = document.getElementById('teachers-list');
     const createBtn = document.getElementById('create-teacher-button');
-    const searchInput = document.getElementById('teacher-search-input'); // Added search input handling
+    const searchInput = document.getElementById('inline-teacher-search') || document.getElementById('teacher-search-input');
 
-    if (!teacherModal) return;
+    // Also support modal if present (for teacher.js admin view)
+    const teacherModal = document.getElementById('teacher-management-modal');
+    if (teacherModal) {
+        const closeBtn = document.getElementById('close-teacher-modal-button');
+        if (closeBtn) closeBtn.addEventListener('click', () => teacherModal.classList.remove('active'));
+        teacherModal.addEventListener('click', (e) => {
+            if (e.target === teacherModal) teacherModal.classList.remove('active');
+        });
 
-    // Attach to window for global access if needed (or just export a launcher)
-    window.openTeacherManagementModal = function () {
-        teacherModal.classList.add('active');
-        loadTeachersList();
-    };
-
-    if (closeBtn) closeBtn.addEventListener('click', () => teacherModal.classList.remove('active'));
-    if (teacherModal) teacherModal.addEventListener('click', (e) => {
-        if (e.target === teacherModal) teacherModal.classList.remove('active');
-    });
+        window.openTeacherManagementModal = function () {
+            teacherModal.classList.add('active');
+            loadInlineTeachers();
+        };
+    }
 
     if (searchInput) {
         searchInput.addEventListener('input', debounce(() => {
-            const q = searchInput.value.trim().toLowerCase();
-            loadTeachersList(q);
+            loadInlineTeachers(searchInput.value.trim().toLowerCase());
         }, 300));
     }
 
@@ -82,39 +123,76 @@ export function setupTeacherManagement() {
                 if (emailInput) emailInput.value = '';
                 if (passInput) passInput.value = '';
 
-                loadTeachersList();
+                loadInlineTeachers();
             } catch (error) {
                 showNotification(`Error: ${error.message}`, "error");
             } finally {
-                createBtn.disabled = false; createBtn.textContent = 'Create Teacher';
+                createBtn.disabled = false; createBtn.textContent = 'Create Teacher Account';
             }
         });
     }
+}
 
-    async function loadTeachersList(searchQuery = '') {
-        if (!teachersList) return;
-        teachersList.innerHTML = '<p style="text-align:center;color:var(--text-muted);">Loading...</p>';
-        try {
-            const token = await getIdToken();
-            const response = await fetch('/api/list-teachers', { headers: { 'Authorization': `Bearer ${token}` } });
-            const data = await response.json();
-            if (!response.ok) throw new Error(data.message || 'Failed');
+export async function loadInlineTeachers(searchQuery = '') {
+    const tbody = document.getElementById('inline-teachers-list');
+    const legacyList = document.getElementById('teachers-list');
+    const container = tbody || legacyList;
+    if (!container) return;
+    const isTable = !!tbody;
+    container.innerHTML = isTable
+        ? '<tr><td colspan="4" class="base-table-empty">Loading teachers...</td></tr>'
+        : '<p style="text-align:center;color:var(--text-muted);">Loading...</p>';
 
-            let teachers = data.teachers || [];
+    try {
+        const token = await getIdToken();
+        const response = await fetch('/api/list-teachers', { headers: { 'Authorization': `Bearer ${token}` } });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.message || 'Failed');
 
-            if (searchQuery) {
-                teachers = teachers.filter(t =>
-                    (t.displayName || '').toLowerCase().includes(searchQuery) ||
-                    (t.email || '').toLowerCase().includes(searchQuery)
-                );
-            }
+        let teachers = data.teachers || [];
 
-            if (teachers.length === 0) {
-                teachersList.innerHTML = '<p style="color:var(--text-muted);">No teachers found.</p>';
-                return;
-            }
+        // Sort by createdAt desc (newest first), fallback to name
+        teachers.sort((a, b) => {
+            const da = a.createdAt ? (a.createdAt.seconds || a.createdAt._seconds || 0) : 0;
+            const db2 = b.createdAt ? (b.createdAt.seconds || b.createdAt._seconds || 0) : 0;
+            return db2 - da;
+        });
 
-            teachersList.innerHTML = '';
+        if (searchQuery) {
+            teachers = teachers.filter(t =>
+                (t.displayName || '').toLowerCase().includes(searchQuery) ||
+                (t.email || '').toLowerCase().includes(searchQuery)
+            );
+        }
+
+        if (teachers.length === 0) {
+            container.innerHTML = isTable
+                ? '<tr><td colspan="4" class="base-table-empty">No teachers found.</td></tr>'
+                : '<p style="color:var(--text-muted);">No teachers found.</p>';
+            return;
+        }
+
+        if (isTable) {
+            container.innerHTML = teachers.map(teacher => `
+                <tr class="base-table-row">
+                    <td>
+                        <div class="base-cell-name">
+                            <div class="base-avatar">${(teacher.displayName || 'T').charAt(0).toUpperCase()}</div>
+                            <span>${escapeHTML(teacher.displayName || 'Unknown')}</span>
+                        </div>
+                    </td>
+                    <td class="base-cell-email">${escapeHTML(teacher.email)}</td>
+                    <td class="base-cell-date">${formatTimestamp(teacher.createdAt)}</td>
+                    <td>
+                        <button class="btn btn-danger btn-small delete-teacher-inline-btn" data-uid="${teacher.uid}" data-name="${escapeHTML(teacher.displayName || '')}">
+                            <i class="fas fa-trash-alt"></i> Delete
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        } else {
+            // Legacy card-based rendering for modal
+            container.innerHTML = '';
             teachers.forEach(teacher => {
                 const card = document.createElement('div');
                 card.style.cssText = 'display:flex;justify-content:space-between;align-items:center;padding:16px;border:1px solid var(--border-color);border-radius:var(--border-radius);margin-bottom:12px;background:var(--bg-primary);box-shadow:0 2px 4px rgba(0,0,0,0.05);transition:transform 0.2s ease;';
@@ -125,60 +203,35 @@ export function setupTeacherManagement() {
                         <div style="font-weight:600;color:var(--text-primary);">${escapeHTML(teacher.displayName || 'Unknown')}</div>
                         <div style="font-size:0.8rem;color:var(--text-muted);">${escapeHTML(teacher.email)}</div>
                     </div>
-                    <button class="btn btn-danger btn-small delete-teacher-btn" data-uid="${teacher.uid}" data-name="${escapeHTML(teacher.displayName)}">Delete</button>
+                    <button class="btn btn-danger btn-small delete-teacher-inline-btn" data-uid="${teacher.uid}" data-name="${escapeHTML(teacher.displayName || '')}">Delete</button>
                 `;
-
-                const deleteBtn = card.querySelector('.delete-teacher-btn');
-                if (deleteBtn) {
-                    deleteBtn.addEventListener('click', async () => {
-                        if (!confirm(`Delete teacher "${teacher.displayName}"?`)) return;
-                        try {
-                            const t = await getIdToken();
-                            const r = await fetch('/api/delete-teacher', {
-                                method: 'DELETE',
-                                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${t}` },
-                                body: JSON.stringify({ uid: teacher.uid })
-                            });
-                            const d = await r.json();
-                            if (!r.ok) throw new Error(d.message);
-                            showNotification(`Teacher deleted.`, 'success');
-                            loadTeachersList();
-                        } catch (e) {
-                            showNotification(`Error: ${e.message}`, "error");
-                        }
-                    });
-                }
-                teachersList.appendChild(card);
+                container.appendChild(card);
             });
-        } catch (error) {
-            teachersList.innerHTML = `<p style="color:var(--accent-red);">Error: ${error.message}</p>`;
-        }
-    }
-}
-
-// ─── DATA STATE ────────────────────────────────────────────────
-export let allTeachersData = [];
-export let allBatchesData = [];
-
-export async function loadSharedData() {
-    try {
-        const token = await getIdToken();
-        // Load Teachers
-        const tResp = await fetch('/api/list-teachers', { headers: { 'Authorization': `Bearer ${token}` } });
-        const tData = await tResp.json();
-        if (tResp.ok && tData.teachers) {
-            allTeachersData = tData.teachers.map(t => ({ id: t.uid, ...t }));
         }
 
-        // Load Batches (Realtime)
-        const q = query(collection(db, "batches"), orderBy("createdAt", "desc"));
-        const snapshot = await getDocs(q); // Initial load
-        allBatchesData = [];
-        snapshot.forEach(docSnap => {
-            allBatchesData.push({ id: docSnap.id, ...docSnap.data() });
+        container.querySelectorAll('.delete-teacher-inline-btn').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                if (!confirm(`Delete teacher "${btn.dataset.name}"?`)) return;
+                try {
+                    const t = await getIdToken();
+                    const r = await fetch('/api/delete-teacher', {
+                        method: 'DELETE',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${t}` },
+                        body: JSON.stringify({ uid: btn.dataset.uid })
+                    });
+                    const d = await r.json();
+                    if (!r.ok) throw new Error(d.message);
+                    showNotification('Teacher deleted.', 'success');
+                    loadInlineTeachers();
+                } catch (e) {
+                    showNotification(`Error: ${e.message}`, 'error');
+                }
+            });
         });
-    } catch (e) {
-        console.error("Error loading shared admin data:", e);
+    } catch (error) {
+        container.innerHTML = isTable
+            ? `<tr><td colspan="4" class="base-table-empty" style="color:var(--accent-red);">Error: ${error.message}</td></tr>`
+            : `<p style="color:var(--accent-red);">Error: ${error.message}</p>`;
     }
 }
 
@@ -186,41 +239,42 @@ export async function loadSharedData() {
 let _selectedNewStudentBatches = [];
 
 export function setupStudentManagement() {
-    const studentModal = document.getElementById('student-management-modal');
-    const closeBtn = document.getElementById('close-student-modal-button');
-    const studentsListContainer = document.getElementById('students-list');
     const createBtn = document.getElementById('create-student-button');
-    const searchInput = document.getElementById('student-search-input');
+    const searchInput = document.getElementById('inline-student-search') || document.getElementById('student-search-input');
 
-    if (!studentModal) return;
+    // Also support modal if present
+    const studentModal = document.getElementById('student-management-modal');
+    if (studentModal) {
+        const closeBtn = document.getElementById('close-student-modal-button');
+        if (closeBtn) closeBtn.addEventListener('click', () => studentModal.classList.remove('active'));
+        studentModal.addEventListener('click', (e) => {
+            if (e.target === studentModal) studentModal.classList.remove('active');
+        });
 
-    window.openStudentManagementModal = function () {
-        studentModal.classList.add('active');
-        populateStudentTeacherDropdown();
-        loadStudentsList();
-    };
-
-    if (closeBtn) closeBtn.addEventListener('click', () => studentModal.classList.remove('active'));
-    if (studentModal) studentModal.addEventListener('click', (e) => {
-        if (e.target === studentModal) studentModal.classList.remove('active');
-    });
+        window.openStudentManagementModal = function () {
+            studentModal.classList.add('active');
+            populateStudentDropdowns();
+            loadInlineStudents();
+        };
+    }
 
     if (searchInput) {
         searchInput.addEventListener('input', debounce(() => {
-            loadStudentsList(searchInput.value.trim().toLowerCase());
+            loadInlineStudents(searchInput.value.trim().toLowerCase());
         }, 300));
     }
 
-    function populateStudentTeacherDropdown() {
+    function populateStudentDropdowns() {
         const teacherSelect = document.getElementById('new-student-teacher');
-        if (!teacherSelect) return;
-        teacherSelect.innerHTML = '<option value="">-- Assign Teacher --</option>';
-        allTeachersData.forEach(t => {
-            const opt = document.createElement('option');
-            opt.value = t.id;
-            opt.textContent = t.displayName || t.email;
-            teacherSelect.appendChild(opt);
-        });
+        if (teacherSelect) {
+            teacherSelect.innerHTML = '<option value="">-- No Teacher Assigned --</option>';
+            allTeachersData.forEach(t => {
+                const opt = document.createElement('option');
+                opt.value = t.id;
+                opt.textContent = t.displayName || t.email;
+                teacherSelect.appendChild(opt);
+            });
+        }
     }
 
     // New student batch select
@@ -241,6 +295,9 @@ export function setupStudentManagement() {
             newStudentBatchSelect.value = '';
         });
     }
+
+    // Populate teacher dropdown on setup
+    populateStudentDropdowns();
 
     if (createBtn) {
         createBtn.addEventListener('click', async () => {
@@ -275,46 +332,104 @@ export function setupStudentManagement() {
                 _selectedNewStudentBatches = [];
                 if (newStudentBatchChips) newStudentBatchChips.innerHTML = '';
 
-                loadStudentsList();
+                loadInlineStudents();
             } catch (error) {
                 showNotification(`Error: ${error.message}`, "error");
             } finally {
-                createBtn.disabled = false; createBtn.textContent = 'Create Student';
+                createBtn.disabled = false; createBtn.textContent = 'Create Student Account';
             }
         });
     }
+}
 
-    async function loadStudentsList(searchQuery = '') {
-        if (!studentsListContainer) return;
-        studentsListContainer.innerHTML = '<p style="text-align:center;color:var(--text-muted);">Loading...</p>';
-        try {
-            const token = await getIdToken();
-            const response = await fetch('/api/list-students', { headers: { 'Authorization': `Bearer ${token}` } });
-            const data = await response.json();
-            if (!response.ok) throw new Error(data.message || 'Failed');
+export async function loadInlineStudents(searchQuery = '') {
+    const tbody = document.getElementById('inline-students-list');
+    const legacyList = document.getElementById('students-list');
+    const container = tbody || legacyList;
+    if (!container) return;
+    const isTable = !!tbody;
+    container.innerHTML = isTable
+        ? '<tr><td colspan="6" class="base-table-empty">Loading students...</td></tr>'
+        : '<p style="text-align:center;color:var(--text-muted);">Loading...</p>';
 
-            let students = data.students || [];
-            if (searchQuery) {
-                students = students.filter(s =>
-                    (s.displayName || '').toLowerCase().includes(searchQuery) ||
-                    (s.email || '').toLowerCase().includes(searchQuery)
-                );
-            }
+    try {
+        const token = await getIdToken();
+        const response = await fetch('/api/list-students', { headers: { 'Authorization': `Bearer ${token}` } });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.message || 'Failed');
 
-            if (students.length === 0) {
-                studentsListContainer.innerHTML = '<p style="color:var(--text-muted);">No students found.</p>';
-                return;
-            }
+        let students = data.students || [];
 
-            studentsListContainer.innerHTML = '';
+        // Sort newest first
+        students.sort((a, b) => {
+            const da = a.createdAt ? (a.createdAt.seconds || a.createdAt._seconds || 0) : 0;
+            const db2 = b.createdAt ? (b.createdAt.seconds || b.createdAt._seconds || 0) : 0;
+            return db2 - da;
+        });
+
+        if (searchQuery) {
+            students = students.filter(s =>
+                (s.displayName || '').toLowerCase().includes(searchQuery) ||
+                (s.email || '').toLowerCase().includes(searchQuery) ||
+                (s.assignedTeacherName || '').toLowerCase().includes(searchQuery)
+            );
+        }
+
+        if (students.length === 0) {
+            container.innerHTML = isTable
+                ? '<tr><td colspan="6" class="base-table-empty">No students found.</td></tr>'
+                : '<p style="color:var(--text-muted);">No students found.</p>';
+            return;
+        }
+
+        if (isTable) {
+            container.innerHTML = students.map(student => {
+                const batchNames = (student.batches || []).filter(b => !b.startsWith('__')).join(', ') || 'None';
+                const teacherName = student.assignedTeacherName || '—';
+
+                return `
+                    <tr class="base-table-row">
+                        <td>
+                            <div class="base-cell-name">
+                                <div class="base-avatar student">${(student.displayName || 'S').charAt(0).toUpperCase()}</div>
+                                <span>${escapeHTML(student.displayName || 'Unknown')}</span>
+                            </div>
+                        </td>
+                        <td class="base-cell-email">${escapeHTML(student.email)}</td>
+                        <td><span class="base-badge">${escapeHTML(batchNames)}</span></td>
+                        <td class="base-cell-teacher">${escapeHTML(teacherName)}</td>
+                        <td class="base-cell-date">${formatTimestamp(student.createdAt)}</td>
+                        <td class="base-cell-actions">
+                            <button class="btn btn-secondary btn-small edit-student-btn" data-uid="${student.uid}">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-danger btn-small delete-student-inline-btn" data-uid="${student.uid}" data-name="${escapeHTML(student.displayName || '')}">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    <tr class="student-edit-row hidden" data-uid="${student.uid}">
+                        <td colspan="6">
+                            <div class="student-edit-form" data-uid="${student.uid}">
+                                <select class="edit-batch-select form-select"><option value="">Add batch...</option></select>
+                                <div class="edit-batch-chips" data-selected='${JSON.stringify(student.batches || [])}'></div>
+                                <select class="edit-teacher-select form-select"><option value="">-- Assign Teacher --</option></select>
+                                <button class="btn btn-primary btn-small save-student-edit-btn" style="margin-top:8px;">Save</button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        } else {
+            // Legacy card-based rendering for modal
+            container.innerHTML = '';
             students.forEach(student => {
-                const card = document.createElement('div'); card.className = 'student-card';
+                const batchNames = (student.batches || []).filter(b => !b.startsWith('__')).join(', ') || 'None';
+                const card = document.createElement('div');
+                card.className = 'student-card';
                 card.style.cssText = 'margin-bottom:12px;box-shadow:0 2px 4px rgba(0,0,0,0.05);border:1px solid var(--border-color);border-radius:var(--border-radius);background:var(--bg-primary);padding:16px;transition:all 0.2s ease;';
                 card.onmouseover = () => card.style.transform = 'translateY(-2px)';
                 card.onmouseout = () => card.style.transform = 'translateY(0)';
-
-                const batchNames = (student.batches || []).filter(b => !b.startsWith('__')).join(', ') || 'None';
-
                 card.innerHTML = `
                     <div class="student-card-info">
                         <div style="font-weight:600;color:var(--text-primary);">${escapeHTML(student.displayName || 'Unknown')}</div>
@@ -328,95 +443,79 @@ export function setupStudentManagement() {
                     </div>
                     <div class="student-card-actions">
                         <button class="btn btn-secondary btn-small edit-student-btn" data-uid="${student.uid}">Edit</button>
-                        <button class="btn btn-danger btn-small delete-student-btn" data-uid="${student.uid}" data-name="${escapeHTML(student.displayName)}">Delete</button>
+                        <button class="btn btn-danger btn-small delete-student-inline-btn" data-uid="${student.uid}" data-name="${escapeHTML(student.displayName || '')}">Delete</button>
                     </div>
                 `;
-
-                // Add Delete Listener
-                card.querySelector('.delete-student-btn').addEventListener('click', async () => {
-                    if (!confirm(`Delete student "${student.displayName}"?`)) return;
-                    try {
-                        const t = await getIdToken();
-                        const r = await fetch('/api/delete-student', {
-                            method: 'DELETE',
-                            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${t}` },
-                            body: JSON.stringify({ uid: student.uid })
-                        });
-                        const d = await r.json();
-                        if (!r.ok) throw new Error(d.message);
-                        showNotification('Student deleted.', 'success');
-                        loadStudentsList();
-                    } catch (e) {
-                        showNotification(`Error: ${e.message}`, 'error');
-                    }
-                });
-
-                studentsListContainer.appendChild(card);
+                container.appendChild(card);
             });
-        } catch (error) {
-            studentsListContainer.innerHTML = `<p style="color:var(--accent-red);">Error: ${error.message}</p>`;
-        }
-    }
-}
-
-// ─── BATCH MANAGEMENT ──────────────────────────────────────────
-export function setupBatchManagement() {
-    const batchModal = document.getElementById('batch-management-modal');
-    const closeBtn = document.getElementById('close-batch-modal-button');
-    const addBtn = document.getElementById('add-batch-button');
-    const nameInput = document.getElementById('new-batch-name');
-    const batchesList = document.getElementById('batches-list');
-
-    if (!batchModal) return;
-
-    window.openBatchManagementModal = function () {
-        batchModal.classList.add('active');
-        renderBatchesList();
-    };
-
-    if (closeBtn) closeBtn.addEventListener('click', () => {
-        batchModal.classList.remove('active');
-        if (nameInput) nameInput.value = '';
-    });
-
-    if (batchModal) batchModal.addEventListener('click', (e) => {
-        if (e.target === batchModal) batchModal.classList.remove('active');
-    });
-
-    function renderBatchesList() {
-        if (!batchesList) return;
-        if (allBatchesData.length === 0) {
-            batchesList.innerHTML = '<div style="text-align:center;padding:2rem;color:var(--text-muted);">No batches yet.</div>';
-            return;
         }
 
-        batchesList.innerHTML = allBatchesData.map(b => `
-            <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border:1px solid var(--border-color);border-radius:var(--border-radius);margin-bottom:8px;background:var(--bg-primary);">
-                <div><span style="font-weight:600;color:var(--text-primary);">${escapeHTML(b.name)}</span></div>
-                <button class="btn btn-danger btn-small delete-batch-btn" data-id="${b.id}" data-name="${escapeHTML(b.name)}">Delete</button>
-            </div>
-        `).join('');
-
-        batchesList.querySelectorAll('.delete-batch-btn').forEach(btn => {
+        // Delete listeners
+        container.querySelectorAll('.delete-student-inline-btn').forEach(btn => {
             btn.addEventListener('click', async () => {
-                if (!confirm(`Delete batch "${btn.dataset.name}"?`)) return;
+                if (!confirm(`Delete student "${btn.dataset.name}"?`)) return;
                 try {
-                    await deleteDoc(doc(db, "batches", btn.dataset.id));
-                    showNotification('Batch deleted.', 'success');
-                    // Batches reload via realtime/reloadSharedData if we were using it, 
-                    // but here we might need to manually trigger or wait for listener
-                    // actually setupBatchManagement re-renders on open.
-                    // For now, let's just remove element or reload.
-                    // Since allBatchesData is loaded once in loadSharedData, we might be stale.
-                    // Ideally we should use onSnapshot in loadSharedData.
-                    // For now, let's re-fetch.
-                    await loadSharedData();
-                    renderBatchesList();
+                    const t = await getIdToken();
+                    const r = await fetch('/api/delete-student', {
+                        method: 'DELETE',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${t}` },
+                        body: JSON.stringify({ uid: btn.dataset.uid })
+                    });
+                    const d = await r.json();
+                    if (!r.ok) throw new Error(d.message);
+                    showNotification('Student deleted.', 'success');
+                    loadInlineStudents();
                 } catch (e) {
                     showNotification(`Error: ${e.message}`, 'error');
                 }
             });
         });
+
+        // Edit toggle listeners (table mode)
+        if (isTable) {
+            container.querySelectorAll('.edit-student-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const uid = btn.dataset.uid;
+                    const editRow = container.querySelector(`.student-edit-row[data-uid="${uid}"]`);
+                    if (editRow) editRow.classList.toggle('hidden');
+                });
+            });
+        }
+    } catch (error) {
+        container.innerHTML = isTable
+            ? `<tr><td colspan="6" class="base-table-empty" style="color:var(--accent-red);">Error: ${error.message}</td></tr>`
+            : `<p style="color:var(--accent-red);">Error: ${error.message}</p>`;
+    }
+}
+
+// ─── BATCH MANAGEMENT ──────────────────────────────────────────
+export function setupBatchManagement() {
+    const addBtn = document.getElementById('add-batch-button');
+    const nameInput = document.getElementById('new-batch-name');
+
+    // Also support modal if present
+    const batchModal = document.getElementById('batch-management-modal');
+    if (batchModal) {
+        const closeBtn = document.getElementById('close-batch-modal-button');
+        if (closeBtn) closeBtn.addEventListener('click', () => {
+            batchModal.classList.remove('active');
+            if (nameInput) nameInput.value = '';
+        });
+        batchModal.addEventListener('click', (e) => {
+            if (e.target === batchModal) batchModal.classList.remove('active');
+        });
+
+        window.openBatchManagementModal = function () {
+            batchModal.classList.add('active');
+            loadInlineBatches();
+        };
+    }
+
+    const searchInput = document.getElementById('inline-batch-search');
+    if (searchInput) {
+        searchInput.addEventListener('input', debounce(() => {
+            loadInlineBatches(searchInput.value.trim().toLowerCase());
+        }, 300));
     }
 
     if (addBtn) {
@@ -433,7 +532,7 @@ export function setupBatchManagement() {
                 showNotification(`Batch "${name}" added!`, 'success');
                 if (nameInput) nameInput.value = '';
                 await loadSharedData();
-                renderBatchesList();
+                loadInlineBatches();
             } catch (error) {
                 showNotification(`Error: ${error.message}`, 'error');
             } finally {
@@ -443,6 +542,84 @@ export function setupBatchManagement() {
     }
 }
 
+export async function loadInlineBatches(searchQuery = '') {
+    const tbody = document.getElementById('inline-batches-list');
+    const legacyList = document.getElementById('batches-list');
+    const container = tbody || legacyList;
+    if (!container) return;
+    const isTable = !!tbody;
+    container.innerHTML = isTable
+        ? '<tr><td colspan="3" class="base-table-empty">Loading batches...</td></tr>'
+        : '<p style="text-align:center;color:var(--text-muted);">Loading...</p>';
+
+    // Refresh batch data
+    try {
+        const q = query(collection(db, "batches"), orderBy("createdAt", "desc"));
+        const snapshot = await getDocs(q);
+        allBatchesData = [];
+        snapshot.forEach(docSnap => {
+            allBatchesData.push({ id: docSnap.id, ...docSnap.data() });
+        });
+    } catch (e) {
+        console.error("Error refreshing batches:", e);
+    }
+
+    let batches = [...allBatchesData];
+
+    if (searchQuery) {
+        batches = batches.filter(b =>
+            (b.name || '').toLowerCase().includes(searchQuery)
+        );
+    }
+
+    if (batches.length === 0) {
+        container.innerHTML = isTable
+            ? '<tr><td colspan="3" class="base-table-empty">No batches found.</td></tr>'
+            : '<div style="text-align:center;padding:2rem;color:var(--text-muted);">No batches yet.</div>';
+        return;
+    }
+
+    if (isTable) {
+        container.innerHTML = batches.map(b => `
+            <tr class="base-table-row">
+                <td>
+                    <div class="base-cell-name">
+                        <div class="base-avatar batch"><i class="fas fa-layer-group"></i></div>
+                        <span>${escapeHTML(b.name)}</span>
+                    </div>
+                </td>
+                <td class="base-cell-date">${formatTimestamp(b.createdAt)}</td>
+                <td>
+                    <button class="btn btn-danger btn-small delete-batch-inline-btn" data-id="${b.id}" data-name="${escapeHTML(b.name)}">
+                        <i class="fas fa-trash-alt"></i> Delete
+                    </button>
+                </td>
+            </tr>
+        `).join('');
+    } else {
+        container.innerHTML = batches.map(b => `
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border:1px solid var(--border-color);border-radius:var(--border-radius);margin-bottom:8px;background:var(--bg-primary);">
+                <div><span style="font-weight:600;color:var(--text-primary);">${escapeHTML(b.name)}</span></div>
+                <button class="btn btn-danger btn-small delete-batch-inline-btn" data-id="${b.id}" data-name="${escapeHTML(b.name)}">Delete</button>
+            </div>
+        `).join('');
+    }
+
+    container.querySelectorAll('.delete-batch-inline-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            if (!confirm(`Delete batch "${btn.dataset.name}"?`)) return;
+            try {
+                await deleteDoc(doc(db, "batches", btn.dataset.id));
+                showNotification('Batch deleted.', 'success');
+                await loadSharedData();
+                loadInlineBatches();
+            } catch (e) {
+                showNotification(`Error: ${e.message}`, 'error');
+            }
+        });
+    });
+}
+
 // ─── EDIT FORM BATCH DROPDOWN ──────────────────────────────────
 export function setupEditFormBatchDropdown() {
     document.addEventListener('click', (e) => {
@@ -450,11 +627,15 @@ export function setupEditFormBatchDropdown() {
         if (!editBtn) return;
 
         const uid = editBtn.dataset.uid;
+        // Support both inline table edit rows and modal edit forms
+        const editRow = document.querySelector(`.student-edit-row[data-uid="${uid}"]`);
         const form = document.querySelector(`.student-edit-form[data-uid="${uid}"]`);
         if (!form) return;
 
-        form.classList.toggle('hidden');
-        if (form.classList.contains('hidden')) return;
+        if (editRow) editRow.classList.toggle('hidden');
+        else if (form) form.classList.toggle('hidden');
+
+        if ((editRow && editRow.classList.contains('hidden')) || (form && form.classList.contains('hidden'))) return;
 
         const selectEl = form.querySelector('.edit-batch-select');
         const chipsEl = form.querySelector('.edit-batch-chips');
@@ -471,7 +652,6 @@ export function setupEditFormBatchDropdown() {
             chipsEl.dataset.selected = JSON.stringify(updated);
         });
 
-        // Teacher dropdown
         if (teacherSelect) {
             teacherSelect.innerHTML = '<option value="">-- Assign Teacher --</option>';
             allTeachersData.forEach(t => {
@@ -482,7 +662,6 @@ export function setupEditFormBatchDropdown() {
             });
         }
 
-        // Batch select change
         selectEl.onchange = function () {
             const val = selectEl.value;
             if (val && !currentBatches.includes(val)) {
@@ -498,9 +677,6 @@ export function setupEditFormBatchDropdown() {
         };
 
         if (saveBtn) {
-            // Remove old listeners to avoid duplicates? 
-            // Better to use onclick property or Clone node
-            // For simplicity in this refactor, we assume one listener per session or usage of on-event
             saveBtn.onclick = async () => {
                 const batches = JSON.parse(chipsEl.dataset.selected || '[]');
                 const assignedTeacherId = teacherSelect ? teacherSelect.value : '';
@@ -516,7 +692,8 @@ export function setupEditFormBatchDropdown() {
                     const d = await r.json();
                     if (!r.ok) throw new Error(d.message);
                     showNotification('Student updated!', 'success');
-                    form.classList.add('hidden');
+                    if (editRow) editRow.classList.add('hidden');
+                    loadInlineStudents();
                 } catch (e) {
                     showNotification(`Error: ${e.message}`, 'error');
                 } finally {
@@ -528,12 +705,11 @@ export function setupEditFormBatchDropdown() {
 }
 
 // ─── ANNOUNCEMENT MANAGEMENT ───────────────────────────────────
-// ─── ANNOUNCEMENT MANAGEMENT ───────────────────────────────────
 export function openAnnouncementModal() {
     const modal = document.getElementById('admin-announcements-manager-modal');
     if (modal) {
         modal.classList.add('active');
-        loadAnnouncementsHistory();
+        loadInlineAnnouncements();
     }
 }
 
@@ -541,8 +717,14 @@ export function setupAnnouncementManagement() {
     const publishBtn = document.getElementById('publish-new-announcement-button');
     const textarea = document.getElementById('new-announcement-textarea');
 
-    // Make available globally if needed for HTML onclicks, but prefer imports
     window.openAnnouncementModal = openAnnouncementModal;
+
+    const searchInput = document.getElementById('inline-announcement-search');
+    if (searchInput) {
+        searchInput.addEventListener('input', debounce(() => {
+            loadInlineAnnouncements(searchInput.value.trim().toLowerCase());
+        }, 300));
+    }
 
     if (publishBtn) {
         publishBtn.addEventListener('click', async () => {
@@ -555,7 +737,7 @@ export function setupAnnouncementManagement() {
             try {
                 await addDoc(collection(db, "announcements"), {
                     text,
-                    message: text, // legacy support
+                    message: text,
                     createdByName: _currentUser.displayName || _currentUser.email,
                     createdAt: serverTimestamp(),
                     isDeleted: false
@@ -563,7 +745,8 @@ export function setupAnnouncementManagement() {
 
                 if (textarea) textarea.value = '';
                 showNotification("Announcement published!", "success");
-                // Listener will auto-update
+                // Reload inline list
+                setTimeout(() => loadInlineAnnouncements(), 500);
             } catch (error) {
                 showNotification(`Error: ${error.message}`, "error");
             } finally {
@@ -581,43 +764,56 @@ export function listenForAnnouncements() {
 
     const q = query(collection(db, "announcements"), orderBy("createdAt", "desc"), limit(1));
     _announcementUnsub = onSnapshot(q, (snapshot) => {
-        // This could update a "Latest Announcement" widget on the dashboard if we had one.
-        // For the history list inside the modal, we use loadAnnouncementsHistory.
+        // Could update a dashboard widget
     }, (error) => {
         console.error("Error listening to announcements:", error);
     });
 }
 
-export function loadAnnouncementsHistory() {
-    const historyList = document.getElementById('announcements-history-list');
-    if (!historyList) return;
+let _inlineAnnouncementUnsub = null;
 
-    historyList.innerHTML = '<p style="text-align:center;color:var(--text-muted);">Loading...</p>';
+export function loadInlineAnnouncements(searchQuery = '') {
+    const listContainer = document.getElementById('inline-announcements-list') || document.getElementById('announcements-history-list');
+    if (!listContainer) return;
 
-    // Realtime listener for the list
+    listContainer.innerHTML = '<div class="base-table-empty">Loading announcements...</div>';
+
+    // Clean up previous listener
+    if (_inlineAnnouncementUnsub) _inlineAnnouncementUnsub();
+
     const q = query(collection(db, "announcements"), orderBy("createdAt", "desc"), limit(50));
-    onSnapshot(q, (snapshot) => {
-        const items = [];
+    _inlineAnnouncementUnsub = onSnapshot(q, (snapshot) => {
+        let items = [];
         snapshot.forEach(d => items.push({ id: d.id, ...d.data() }));
 
+        if (searchQuery) {
+            items = items.filter(a =>
+                (a.text || a.message || '').toLowerCase().includes(searchQuery) ||
+                (a.createdByName || '').toLowerCase().includes(searchQuery)
+            );
+        }
+
         if (items.length === 0) {
-            historyList.innerHTML = '<p style="text-align:center;color:var(--text-muted);">No announcements.</p>';
+            listContainer.innerHTML = '<div class="base-table-empty">No announcements found.</div>';
             return;
         }
 
-        historyList.innerHTML = items.map(a => `
-            <div class="announcement-item" style="display:flex;justify-content:space-between;align-items:start;padding:12px;border:1px solid var(--border-color);border-radius:var(--border-radius);margin-bottom:8px;background:var(--bg-primary);">
-                <div>
-                    <p style="margin:0;font-size:0.95rem;color:var(--text-primary);">${escapeHTML(a.text || a.message || '')}</p>
-                    <small style="color:var(--text-muted);font-size:0.8rem;">
-                        ${a.createdAt ? new Date(a.createdAt.seconds * 1000).toLocaleString() : ''} · by ${escapeHTML(a.createdByName || 'Admin')}
-                    </small>
+        listContainer.innerHTML = items.map(a => `
+            <div class="base-announcement-card">
+                <div class="base-announcement-content">
+                    <p class="base-announcement-text">${escapeHTML(a.text || a.message || '')}</p>
+                    <div class="base-announcement-meta">
+                        <span><i class="fas fa-user"></i> ${escapeHTML(a.createdByName || 'Admin')}</span>
+                        <span><i class="fas fa-clock"></i> ${a.createdAt ? new Date(a.createdAt.seconds * 1000).toLocaleString() : '—'}</span>
+                    </div>
                 </div>
-                <button class="btn btn-danger btn-small delete-announcement-btn" data-id="${a.id}" style="margin-left:8px;">Delete</button>
+                <button class="btn btn-danger btn-small delete-announcement-inline-btn" data-id="${a.id}">
+                    <i class="fas fa-trash-alt"></i>
+                </button>
             </div>
         `).join('');
 
-        historyList.querySelectorAll('.delete-announcement-btn').forEach(btn => {
+        listContainer.querySelectorAll('.delete-announcement-inline-btn').forEach(btn => {
             btn.addEventListener('click', async () => {
                 if (!confirm("Delete this announcement?")) return;
                 try {
@@ -629,8 +825,12 @@ export function loadAnnouncementsHistory() {
             });
         });
     }, (error) => {
-        console.error("Error loading announcements history:", error);
-        historyList.innerHTML = '<p style="color:var(--accent-red);">Error loading history.</p>';
+        console.error("Error loading announcements:", error);
+        listContainer.innerHTML = '<div class="base-table-empty" style="color:var(--accent-red);">Error loading announcements.</div>';
     });
 }
 
+// Legacy export for modal-based history (used by announcement modal if still present)
+export function loadAnnouncementsHistory() {
+    loadInlineAnnouncements();
+}
