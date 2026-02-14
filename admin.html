@@ -267,10 +267,12 @@
                 <div class="base-header-right">
                     <div class="base-search-wrapper">
                         <i class="fas fa-search base-search-icon"></i>
-                        <input type="text" id="inline-teacher-search" class="base-search" placeholder="Search teachers...">
+                        <input type="text" id="inline-teacher-search" class="base-search"
+                            placeholder="Search teachers...">
                     </div>
-                    <button class="base-add-btn" id="toggle-teacher-form" title="Add Teacher">
+                    <button class="base-add-btn base-add-btn-lg" id="toggle-teacher-form" title="Add Teacher">
                         <i class="fas fa-plus"></i>
+                        <span>Add Teacher</span>
                     </button>
                 </div>
             </div>
@@ -290,20 +292,26 @@
                         <input type="password" id="new-teacher-password" placeholder="Min 6 characters" required>
                     </div>
                 </div>
-                <button id="create-teacher-button" class="btn btn-success base-form-submit">Create Teacher Account</button>
+                <button id="create-teacher-button" class="btn btn-success base-form-submit">Create Teacher
+                    Account</button>
             </div>
             <div class="base-table-wrapper">
                 <table class="base-table" id="inline-teachers-table">
                     <thead>
                         <tr>
-                            <th>Name</th>
-                            <th>Email</th>
-                            <th>Added</th>
+                            <th class="sortable-th" data-sort="name" data-table="teachers">Name <span
+                                    class="sort-indicator"></span></th>
+                            <th class="sortable-th" data-sort="email" data-table="teachers">Email <span
+                                    class="sort-indicator"></span></th>
+                            <th class="sortable-th" data-sort="date" data-table="teachers">Added <span
+                                    class="sort-indicator"></span></th>
                             <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody id="inline-teachers-list">
-                        <tr><td colspan="4" class="base-table-empty">Loading teachers...</td></tr>
+                        <tr>
+                            <td colspan="4" class="base-table-empty">Loading teachers...</td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
@@ -321,10 +329,12 @@
                 <div class="base-header-right">
                     <div class="base-search-wrapper">
                         <i class="fas fa-search base-search-icon"></i>
-                        <input type="text" id="inline-student-search" class="base-search" placeholder="Search students...">
+                        <input type="text" id="inline-student-search" class="base-search"
+                            placeholder="Search students...">
                     </div>
-                    <button class="base-add-btn" id="toggle-student-form" title="Add Student">
+                    <button class="base-add-btn base-add-btn-lg" id="toggle-student-form" title="Add Student">
                         <i class="fas fa-plus"></i>
+                        <span>Add Student</span>
                     </button>
                 </div>
             </div>
@@ -359,22 +369,29 @@
                         </select>
                     </div>
                 </div>
-                <button id="create-student-button" class="btn btn-success base-form-submit">Create Student Account</button>
+                <button id="create-student-button" class="btn btn-success base-form-submit">Create Student
+                    Account</button>
             </div>
             <div class="base-table-wrapper">
                 <table class="base-table" id="inline-students-table">
                     <thead>
                         <tr>
-                            <th>Name</th>
-                            <th>Email</th>
+                            <th class="sortable-th" data-sort="name" data-table="students">Name <span
+                                    class="sort-indicator"></span></th>
+                            <th class="sortable-th" data-sort="email" data-table="students">Email <span
+                                    class="sort-indicator"></span></th>
                             <th>Batches</th>
-                            <th>Teacher</th>
-                            <th>Added</th>
+                            <th class="sortable-th" data-sort="teacher" data-table="students">Teacher <span
+                                    class="sort-indicator"></span></th>
+                            <th class="sortable-th" data-sort="date" data-table="students">Added <span
+                                    class="sort-indicator"></span></th>
                             <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody id="inline-students-list">
-                        <tr><td colspan="6" class="base-table-empty">Loading students...</td></tr>
+                        <tr>
+                            <td colspan="6" class="base-table-empty">Loading students...</td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
@@ -394,8 +411,9 @@
                         <i class="fas fa-search base-search-icon"></i>
                         <input type="text" id="inline-batch-search" class="base-search" placeholder="Search batches...">
                     </div>
-                    <button class="base-add-btn" id="toggle-batch-form" title="Add Batch">
+                    <button class="base-add-btn base-add-btn-lg" id="toggle-batch-form" title="Add Batch">
                         <i class="fas fa-plus"></i>
+                        <span>Add Batch</span>
                     </button>
                 </div>
             </div>
@@ -413,13 +431,17 @@
                 <table class="base-table" id="inline-batches-table">
                     <thead>
                         <tr>
-                            <th>Batch Name</th>
-                            <th>Created</th>
+                            <th class="sortable-th" data-sort="name" data-table="batches">Batch Name <span
+                                    class="sort-indicator"></span></th>
+                            <th class="sortable-th" data-sort="date" data-table="batches">Created <span
+                                    class="sort-indicator"></span></th>
                             <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody id="inline-batches-list">
-                        <tr><td colspan="3" class="base-table-empty">Loading batches...</td></tr>
+                        <tr>
+                            <td colspan="3" class="base-table-empty">Loading batches...</td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
@@ -432,15 +454,17 @@
             <div class="base-header">
                 <div class="base-header-left">
                     <i class="fas fa-bullhorn base-header-icon"></i>
-                    <h2>Announcements Base</h2>
+                    <h2>Announcements</h2>
                 </div>
                 <div class="base-header-right">
                     <div class="base-search-wrapper">
                         <i class="fas fa-search base-search-icon"></i>
-                        <input type="text" id="inline-announcement-search" class="base-search" placeholder="Search announcements...">
+                        <input type="text" id="inline-announcement-search" class="base-search"
+                            placeholder="Search announcements...">
                     </div>
-                    <button class="base-add-btn" id="toggle-announcement-form" title="New Announcement">
+                    <button class="base-add-btn base-add-btn-lg" id="toggle-announcement-form" title="New Announcement">
                         <i class="fas fa-plus"></i>
+                        <span>New Announcement</span>
                     </button>
                 </div>
             </div>
@@ -449,10 +473,12 @@
                 <div class="base-form-grid">
                     <div class="base-form-field" style="grid-column: 1 / -1;">
                         <label for="new-announcement-textarea">Announcement Message</label>
-                        <textarea id="new-announcement-textarea" placeholder="Type your announcement message here..." rows="3"></textarea>
+                        <textarea id="new-announcement-textarea" placeholder="Type your announcement message here..."
+                            rows="3"></textarea>
                     </div>
                 </div>
-                <button id="publish-new-announcement-button" class="btn btn-success base-form-submit">Publish Announcement</button>
+                <button id="publish-new-announcement-button" class="btn btn-success base-form-submit">Publish
+                    Announcement</button>
             </div>
             <div id="inline-announcements-list" class="base-announcements-list">
                 <div class="base-table-empty">Loading announcements...</div>
@@ -467,186 +493,19 @@
     <!-- Notifications -->
     <div id="notifications"></div>
 
-    <!-- Announcement Manager Modal -->
+    <!-- Announcement Manager Modal (history-only, create form is inline above) -->
     <div id="admin-announcements-manager-modal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>Manage Announcements</h3>
+                <h3>Announcement History</h3>
                 <button class="close-button" id="close-admin-manager-modal-button">&times;</button>
             </div>
-
-            <div id="create-announcement-section"
-                style="background-color: var(--bg-primary); padding: 20px; border-radius: var(--border-radius); border: 1px solid var(--border-color); margin-bottom: 2rem;">
-                <h4
-                    style="color: var(--accent-secondary); margin-top: 0; margin-bottom: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
-                    Create New Announcement</h4>
-                <p style="color: var(--text-muted); margin-top: -0.5rem; margin-bottom: 1.5rem; font-size: 0.9em;">This
-                    message will be pushed to all teachers and added to the history below.</p>
-                <label for="new-announcement-textarea">Announcement Message:</label>
-                <textarea id="new-announcement-textarea" placeholder="Type your message here..."></textarea>
-                <button id="publish-new-announcement-button" class="btn btn-success" style="width:100%;">Publish New
-                    Announcement</button>
-            </div>
-
-            <h4 style="color: var(--accent-secondary); margin-top: 0; margin-bottom: 1rem;">Announcement History</h4>
-            <div id="announcements-history-list" style="max-height: 40vh; overflow-y: auto; padding-right: 10px;">
+            <div id="announcements-history-list" style="max-height: 60vh; overflow-y: auto; padding-right: 10px;">
             </div>
         </div>
     </div>
 
-    <!-- Teacher Management Modal -->
-    <div id="teacher-management-modal" class="modal">
-        <div class="modal-content" style="max-width: 700px; max-height: 85vh; overflow-y: auto;">
-            <div class="modal-header">
-                <h3>Manage Teachers</h3>
-                <button class="close-button" id="close-teacher-modal-button">&times;</button>
-            </div>
-
-            <!-- Create New Teacher Section -->
-            <div id="create-teacher-section"
-                style="background-color: var(--bg-primary); padding: 20px; border-radius: var(--border-radius); border: 1px solid var(--border-color); margin-bottom: 2rem;">
-                <h4
-                    style="color: var(--accent-green); margin-top: 0; margin-bottom: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
-                    Add New Teacher
-                </h4>
-                <div style="display: grid; gap: 1rem;">
-                    <div>
-                        <label for="new-teacher-name">Teacher Name:</label>
-                        <input type="text" id="new-teacher-name" placeholder="Enter full name" required>
-                    </div>
-                    <div>
-                        <label for="new-teacher-email">Email Address:</label>
-                        <input type="email" id="new-teacher-email" placeholder="teacher@example.com" required>
-                    </div>
-                    <div>
-                        <label for="new-teacher-password">Password:</label>
-                        <input type="password" id="new-teacher-password" placeholder="Minimum 6 characters" required>
-                    </div>
-                    <button id="create-teacher-button" class="btn btn-success" style="width:100%;">
-                        Create Teacher Account
-                    </button>
-                </div>
-            </div>
-
-            <!-- Existing Teachers List -->
-            <h4 style="color: var(--accent-secondary); margin-top: 0; margin-bottom: 1rem;">
-                Existing Teachers
-            </h4>
-            <div style="margin-bottom: 1rem;">
-                <input type="text" id="teacher-search-input" placeholder="Search teachers by name or email..."
-                    style="width: 100%; padding: 0.6rem 1rem; border-radius: var(--border-radius); border: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-primary);">
-            </div>
-            <div id="teachers-list" style="max-height: 40vh; overflow-y: auto; padding-right: 10px;">
-                <div id="teachers-loader" style="text-align: center; padding: 2rem; color: var(--text-muted);">
-                    Loading teachers...
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Student Management Modal -->
-    <div id="student-management-modal" class="modal">
-        <div class="modal-content" style="max-width: 700px; max-height: 85vh; overflow-y: auto;">
-            <div class="modal-header">
-                <h3>Manage Students</h3>
-                <button class="close-button" id="close-student-modal-button">&times;</button>
-            </div>
-
-            <!-- Create New Student Section -->
-            <div id="create-student-section"
-                style="background-color: var(--bg-primary); padding: 20px; border-radius: var(--border-radius); border: 1px solid var(--border-color); margin-bottom: 2rem;">
-                <h4
-                    style="color: var(--accent-green); margin-top: 0; margin-bottom: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
-                    Add New Student
-                </h4>
-                <div style="display: grid; gap: 1rem;">
-                    <div>
-                        <label for="new-student-name">Student Name:</label>
-                        <input type="text" id="new-student-name" placeholder="Enter full name" required>
-                    </div>
-                    <div>
-                        <label for="new-student-email">Email Address:</label>
-                        <input type="email" id="new-student-email" placeholder="student@example.com" required>
-                    </div>
-                    <div>
-                        <label for="new-student-password">Password:</label>
-                        <input type="password" id="new-student-password" placeholder="Minimum 6 characters" required>
-                    </div>
-                    <div>
-                        <label>Batch:</label>
-                        <div id="new-student-batch-container" style="position: relative;">
-                            <select id="new-student-batch-select" style="width: 100%;">
-                                <option value="">-- Select Batch --</option>
-                            </select>
-                            <div id="new-student-batch-chips"
-                                style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px;"></div>
-                        </div>
-                    </div>
-                    <div>
-                        <label for="new-student-teacher">Assign to Teacher:</label>
-                        <select id="new-student-teacher" style="width: 100%;">
-                            <option value="">-- No Teacher Assigned --</option>
-                        </select>
-                    </div>
-                    <button id="create-student-button" class="btn btn-success" style="width:100%;">
-                        Create Student Account
-                    </button>
-                </div>
-            </div>
-
-            <!-- Existing Students List -->
-            <h4 style="color: var(--accent-secondary); margin-top: 0; margin-bottom: 1rem;">
-                Existing Students
-            </h4>
-            <div style="margin-bottom: 1rem;">
-                <input type="text" id="student-search-input" placeholder="Search students by name, email, or teacher..."
-                    style="width: 100%; padding: 0.6rem 1rem; border-radius: var(--border-radius); border: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-primary);">
-            </div>
-            <div id="students-list" style="max-height: 40vh; overflow-y: auto; padding-right: 10px;">
-                <div id="students-loader" style="text-align: center; padding: 2rem; color: var(--text-muted);">
-                    Loading students...
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Batch Management Modal -->
-    <div id="batch-management-modal" class="modal">
-        <div class="modal-content" style="max-width: 550px; max-height: 85vh; overflow-y: auto;">
-            <div class="modal-header">
-                <h3>Manage Batches</h3>
-                <button class="close-button" id="close-batch-modal-button">&times;</button>
-            </div>
-
-            <!-- Add New Batch Section -->
-            <div
-                style="background-color: var(--bg-primary); padding: 20px; border-radius: var(--border-radius); border: 1px solid var(--border-color); margin-bottom: 2rem;">
-                <h4
-                    style="color: var(--accent-green); margin-top: 0; margin-bottom: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
-                    Add New Batch
-                </h4>
-                <div style="display: flex; gap: 10px; align-items: flex-end;">
-                    <div style="flex: 1;">
-                        <label for="new-batch-name">Batch Name:</label>
-                        <input type="text" id="new-batch-name" placeholder="e.g., Grade 8, Python Batch"
-                            style="margin-bottom: 0;">
-                    </div>
-                    <button id="add-batch-button" class="btn btn-success" style="height: 46px; white-space: nowrap;">Add
-                        Batch</button>
-                </div>
-            </div>
-
-            <!-- Existing Batches List -->
-            <h4 style="color: var(--accent-secondary); margin-top: 0; margin-bottom: 1rem;">
-                Existing Batches
-            </h4>
-            <div id="batches-list" style="max-height: 40vh; overflow-y: auto; padding-right: 10px;">
-                <div style="text-align: center; padding: 2rem; color: var(--text-muted);">
-                    No batches added yet.
-                </div>
-            </div>
-        </div>
-    </div>
+    <!-- Legacy modals removed – inline section forms handle all CRUD -->
 
     <!-- ============================================ -->
     <!-- SCRIPTS                                      -->

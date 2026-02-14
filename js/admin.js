@@ -28,7 +28,8 @@ import {
     loadInlineBatches,
     loadInlineAnnouncements,
     allTeachersData as sharedTeachersData,
-    allBatchesData as sharedBatchesData
+    allBatchesData as sharedBatchesData,
+    setupTableSorting
 } from './admin-shared.js';
 
 // --- State ---
@@ -47,10 +48,7 @@ let _selectedNewStudentBatches = [];
 let adminTotalStudents, adminTotalTeachers, adminTotalBatches, adminTotalRevenue;
 let revenueBreakdownList;
 let overviewGridContainer, overviewWeekDisplay, overviewPrevWeekButton, overviewNextWeekButton;
-let teacherManagementModal, teachersList, createTeacherButton, newTeacherName, newTeacherEmail, newTeacherPassword, teacherSearchInput;
-let studentManagementModal, studentsList, createStudentButton, newStudentName, newStudentEmail, newStudentPassword, newStudentBatchSelect, newStudentBatchChips, newStudentTeacher, studentSearchInput;
-let batchManagementModal, batchesList, addBatchButton, newBatchNameInput;
-let announcementModal, announcementsHistoryList, newAnnouncementTextarea, publishNewAnnouncementButton;
+let announcementModal, announcementsHistoryList;
 
 async function getIdToken() {
     const user = auth.currentUser;
@@ -73,31 +71,8 @@ export async function initAdminPage(user, userData) {
     overviewWeekDisplay = document.getElementById('overview-week-display');
     overviewPrevWeekButton = document.getElementById('overview-prev-week-button');
     overviewNextWeekButton = document.getElementById('overview-next-week-button');
-    teacherManagementModal = document.getElementById('teacher-management-modal');
-    teachersList = document.getElementById('teachers-list');
-    createTeacherButton = document.getElementById('create-teacher-button');
-    newTeacherName = document.getElementById('new-teacher-name');
-    newTeacherEmail = document.getElementById('new-teacher-email');
-    newTeacherPassword = document.getElementById('new-teacher-password');
-    teacherSearchInput = document.getElementById('teacher-search-input');
-    studentManagementModal = document.getElementById('student-management-modal');
-    studentsList = document.getElementById('students-list');
-    createStudentButton = document.getElementById('create-student-button');
-    newStudentName = document.getElementById('new-student-name');
-    newStudentEmail = document.getElementById('new-student-email');
-    newStudentPassword = document.getElementById('new-student-password');
-    newStudentBatchSelect = document.getElementById('new-student-batch-select');
-    newStudentBatchChips = document.getElementById('new-student-batch-chips');
-    newStudentTeacher = document.getElementById('new-student-teacher');
-    studentSearchInput = document.getElementById('student-search-input');
-    batchManagementModal = document.getElementById('batch-management-modal');
-    batchesList = document.getElementById('batches-list');
-    addBatchButton = document.getElementById('add-batch-button');
-    newBatchNameInput = document.getElementById('new-batch-name');
     announcementModal = document.getElementById('admin-announcements-manager-modal');
     announcementsHistoryList = document.getElementById('announcements-history-list');
-    newAnnouncementTextarea = document.getElementById('new-announcement-textarea');
-    publishNewAnnouncementButton = document.getElementById('publish-new-announcement-button');
 
     // Verify admin
     if (!currentUser.isAdmin) {
@@ -164,6 +139,9 @@ export async function initAdminPage(user, userData) {
     // Wire "+" toggle buttons for inline create forms
     setupFormToggles();
 
+    // Enable column sorting on tables
+    setupTableSorting();
+
     showNotification(`Welcome, Admin ${user.originalDisplayName}! Dashboard loaded.`, 'success');
 }
 
@@ -211,29 +189,18 @@ function setupSectionNavigation() {
 // MODAL HANDLERS
 // =============================================
 function setupModalHandlers() {
-    // Close buttons
-    const closeButtons = {
-        'close-admin-manager-modal-button': announcementModal,
-        'close-teacher-modal-button': teacherManagementModal,
-        'close-student-modal-button': studentManagementModal,
-        'close-batch-modal-button': batchManagementModal,
-    };
-
-    Object.entries(closeButtons).forEach(([btnId, modal]) => {
-        const btn = document.getElementById(btnId);
-        if (btn && modal) {
-            btn.addEventListener('click', () => modal.classList.remove('active'));
-        }
-    });
+    // Close button for announcement history modal
+    const closeBtn = document.getElementById('close-admin-manager-modal-button');
+    if (closeBtn && announcementModal) {
+        closeBtn.addEventListener('click', () => announcementModal.classList.remove('active'));
+    }
 
     // Close on overlay click
-    [teacherManagementModal, studentManagementModal, batchManagementModal, announcementModal].forEach(modal => {
-        if (modal) {
-            modal.addEventListener('click', (e) => {
-                if (e.target === modal) modal.classList.remove('active');
-            });
-        }
-    });
+    if (announcementModal) {
+        announcementModal.addEventListener('click', (e) => {
+            if (e.target === announcementModal) announcementModal.classList.remove('active');
+        });
+    }
 }
 
 // =============================================

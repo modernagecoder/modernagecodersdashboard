@@ -113,7 +113,7 @@ export function setupTeacherManagement() {
                 const response = await fetch('/api/create-teacher', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                    body: JSON.stringify({ name, email, password })
+                    body: JSON.stringify({ displayName: name, email, password })
                 });
                 const data = await response.json();
                 if (!response.ok) throw new Error(data.message || 'Failed');
@@ -319,7 +319,7 @@ export function setupStudentManagement() {
                 const response = await fetch('/api/create-student', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                    body: JSON.stringify({ name, email, password, assignedTeacherId, batches: _selectedNewStudentBatches })
+                    body: JSON.stringify({ displayName: name, email, password, assignedTeacherId, batches: _selectedNewStudentBatches })
                 });
                 const data = await response.json();
                 if (!response.ok) throw new Error(data.message || 'Failed');
@@ -833,4 +833,59 @@ export function loadInlineAnnouncements(searchQuery = '') {
 // Legacy export for modal-based history (used by announcement modal if still present)
 export function loadAnnouncementsHistory() {
     loadInlineAnnouncements();
+}
+
+// ===== TABLE SORTING =====
+export function setupTableSorting() {
+    document.querySelectorAll('.sortable-th').forEach(th => {
+        th.addEventListener('click', () => {
+            const sortKey = th.dataset.sort;
+            const tableId = th.dataset.table;
+            const table = th.closest('table');
+            if (!table) return;
+
+            const tbody = table.querySelector('tbody');
+            if (!tbody) return;
+
+            // Toggle sort direction
+            const wasAsc = th.classList.contains('sort-asc');
+            // Clear all sort classes on sibling headers
+            th.closest('tr').querySelectorAll('.sortable-th').forEach(h => {
+                h.classList.remove('sort-asc', 'sort-desc');
+            });
+            const direction = wasAsc ? 'desc' : 'asc';
+            th.classList.add(`sort-${direction}`);
+
+            // Get all data rows (skip edit rows)
+            const rows = Array.from(tbody.querySelectorAll('tr.base-table-row'));
+            if (rows.length === 0) return;
+
+            const colIndex = Array.from(th.parentNode.children).indexOf(th);
+
+            rows.sort((a, b) => {
+                const aCell = a.children[colIndex];
+                const bCell = b.children[colIndex];
+                if (!aCell || !bCell) return 0;
+
+                let aVal = (aCell.textContent || '').trim().toLowerCase();
+                let bVal = (bCell.textContent || '').trim().toLowerCase();
+
+                // Date sort
+                if (sortKey === 'date') {
+                    const aDate = new Date(aVal);
+                    const bDate = new Date(bVal);
+                    if (!isNaN(aDate) && !isNaN(bDate)) {
+                        return direction === 'asc' ? aDate - bDate : bDate - aDate;
+                    }
+                }
+
+                // String sort
+                const cmp = aVal.localeCompare(bVal);
+                return direction === 'asc' ? cmp : -cmp;
+            });
+
+            // Re-append rows in sorted order
+            rows.forEach(row => tbody.appendChild(row));
+        });
+    });
 }
