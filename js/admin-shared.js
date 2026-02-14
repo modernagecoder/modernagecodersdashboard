@@ -183,10 +183,22 @@ export async function loadInlineTeachers(searchQuery = '') {
                     </td>
                     <td class="base-cell-email">${escapeHTML(teacher.email)}</td>
                     <td class="base-cell-date">${formatTimestamp(teacher.createdAt)}</td>
-                    <td>
-                        <button class="btn btn-danger btn-small delete-teacher-inline-btn" data-uid="${teacher.uid}" data-name="${escapeHTML(teacher.displayName || '')}">
-                            <i class="fas fa-trash-alt"></i> Delete
+                    <td class="base-cell-actions">
+                        <button class="btn btn-secondary btn-small edit-teacher-inline-btn" data-uid="${teacher.uid}" data-name="${escapeHTML(teacher.displayName || '')}">
+                            <i class="fas fa-edit"></i>
                         </button>
+                        <button class="btn btn-danger btn-small delete-teacher-inline-btn" data-uid="${teacher.uid}" data-name="${escapeHTML(teacher.displayName || '')}">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </td>
+                </tr>
+                <tr class="teacher-edit-row hidden" data-uid="${teacher.uid}">
+                    <td colspan="4">
+                        <div class="inline-edit-form">
+                            <input type="text" class="edit-teacher-name-input form-input" value="${escapeHTML(teacher.displayName || '')}" placeholder="Teacher name">
+                            <button class="btn btn-primary btn-small save-teacher-edit-btn" data-uid="${teacher.uid}">Save</button>
+                            <button class="btn btn-secondary btn-small cancel-teacher-edit-btn" data-uid="${teacher.uid}">Cancel</button>
+                        </div>
                     </td>
                 </tr>
             `).join('');
@@ -203,12 +215,64 @@ export async function loadInlineTeachers(searchQuery = '') {
                         <div style="font-weight:600;color:var(--text-primary);">${escapeHTML(teacher.displayName || 'Unknown')}</div>
                         <div style="font-size:0.8rem;color:var(--text-muted);">${escapeHTML(teacher.email)}</div>
                     </div>
-                    <button class="btn btn-danger btn-small delete-teacher-inline-btn" data-uid="${teacher.uid}" data-name="${escapeHTML(teacher.displayName || '')}">Delete</button>
+                    <div style="display:flex;gap:8px;">
+                        <button class="btn btn-secondary btn-small edit-teacher-inline-btn" data-uid="${teacher.uid}" data-name="${escapeHTML(teacher.displayName || '')}"><i class="fas fa-edit"></i></button>
+                        <button class="btn btn-danger btn-small delete-teacher-inline-btn" data-uid="${teacher.uid}" data-name="${escapeHTML(teacher.displayName || '')}"><i class="fas fa-trash-alt"></i></button>
+                    </div>
                 `;
                 container.appendChild(card);
             });
         }
 
+        // Edit toggle listeners
+        container.querySelectorAll('.edit-teacher-inline-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const uid = btn.dataset.uid;
+                const editRow = container.querySelector(`.teacher-edit-row[data-uid="${uid}"]`);
+                if (editRow) editRow.classList.toggle('hidden');
+            });
+        });
+
+        // Cancel edit listeners
+        container.querySelectorAll('.cancel-teacher-edit-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const uid = btn.dataset.uid;
+                const editRow = container.querySelector(`.teacher-edit-row[data-uid="${uid}"]`);
+                if (editRow) editRow.classList.add('hidden');
+            });
+        });
+
+        // Save edit listeners
+        container.querySelectorAll('.save-teacher-edit-btn').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                const uid = btn.dataset.uid;
+                const editRow = container.querySelector(`.teacher-edit-row[data-uid="${uid}"]`);
+                const nameInput = editRow ? editRow.querySelector('.edit-teacher-name-input') : null;
+                if (!nameInput || !nameInput.value.trim()) {
+                    showNotification('Name cannot be empty.', 'warning');
+                    return;
+                }
+                btn.disabled = true; btn.textContent = 'Saving...';
+                try {
+                    const t = await getIdToken();
+                    const r = await fetch('/api/update-teacher', {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${t}` },
+                        body: JSON.stringify({ uid, displayName: nameInput.value.trim() })
+                    });
+                    const d = await r.json();
+                    if (!r.ok) throw new Error(d.message);
+                    showNotification('Teacher updated!', 'success');
+                    loadInlineTeachers();
+                } catch (e) {
+                    showNotification(`Error: ${e.message}`, 'error');
+                } finally {
+                    btn.disabled = false; btn.textContent = 'Save';
+                }
+            });
+        });
+
+        // Delete listeners
         container.querySelectorAll('.delete-teacher-inline-btn').forEach(btn => {
             btn.addEventListener('click', async () => {
                 if (!confirm(`Delete teacher "${btn.dataset.name}"?`)) return;
@@ -589,10 +653,22 @@ export async function loadInlineBatches(searchQuery = '') {
                     </div>
                 </td>
                 <td class="base-cell-date">${formatTimestamp(b.createdAt)}</td>
-                <td>
-                    <button class="btn btn-danger btn-small delete-batch-inline-btn" data-id="${b.id}" data-name="${escapeHTML(b.name)}">
-                        <i class="fas fa-trash-alt"></i> Delete
+                <td class="base-cell-actions">
+                    <button class="btn btn-secondary btn-small edit-batch-inline-btn" data-id="${b.id}" data-name="${escapeHTML(b.name)}">
+                        <i class="fas fa-edit"></i>
                     </button>
+                    <button class="btn btn-danger btn-small delete-batch-inline-btn" data-id="${b.id}" data-name="${escapeHTML(b.name)}">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </td>
+            </tr>
+            <tr class="batch-edit-row hidden" data-id="${b.id}">
+                <td colspan="3">
+                    <div class="inline-edit-form">
+                        <input type="text" class="edit-batch-name-input form-input" value="${escapeHTML(b.name)}" placeholder="Batch name">
+                        <button class="btn btn-primary btn-small save-batch-edit-btn" data-id="${b.id}">Save</button>
+                        <button class="btn btn-secondary btn-small cancel-batch-edit-btn" data-id="${b.id}">Cancel</button>
+                    </div>
                 </td>
             </tr>
         `).join('');
@@ -600,11 +676,57 @@ export async function loadInlineBatches(searchQuery = '') {
         container.innerHTML = batches.map(b => `
             <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border:1px solid var(--border-color);border-radius:var(--border-radius);margin-bottom:8px;background:var(--bg-primary);">
                 <div><span style="font-weight:600;color:var(--text-primary);">${escapeHTML(b.name)}</span></div>
-                <button class="btn btn-danger btn-small delete-batch-inline-btn" data-id="${b.id}" data-name="${escapeHTML(b.name)}">Delete</button>
+                <div style="display:flex;gap:8px;">
+                    <button class="btn btn-secondary btn-small edit-batch-inline-btn" data-id="${b.id}" data-name="${escapeHTML(b.name)}"><i class="fas fa-edit"></i></button>
+                    <button class="btn btn-danger btn-small delete-batch-inline-btn" data-id="${b.id}" data-name="${escapeHTML(b.name)}"><i class="fas fa-trash-alt"></i></button>
+                </div>
             </div>
         `).join('');
     }
 
+    // Edit toggle listeners
+    container.querySelectorAll('.edit-batch-inline-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const id = btn.dataset.id;
+            const editRow = container.querySelector(`.batch-edit-row[data-id="${id}"]`);
+            if (editRow) editRow.classList.toggle('hidden');
+        });
+    });
+
+    // Cancel edit listeners
+    container.querySelectorAll('.cancel-batch-edit-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const id = btn.dataset.id;
+            const editRow = container.querySelector(`.batch-edit-row[data-id="${id}"]`);
+            if (editRow) editRow.classList.add('hidden');
+        });
+    });
+
+    // Save batch edit listeners
+    container.querySelectorAll('.save-batch-edit-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const id = btn.dataset.id;
+            const editRow = container.querySelector(`.batch-edit-row[data-id="${id}"]`);
+            const nameInput = editRow ? editRow.querySelector('.edit-batch-name-input') : null;
+            if (!nameInput || !nameInput.value.trim()) {
+                showNotification('Batch name cannot be empty.', 'warning');
+                return;
+            }
+            btn.disabled = true; btn.textContent = 'Saving...';
+            try {
+                await updateDoc(doc(db, "batches", id), { name: nameInput.value.trim() });
+                showNotification('Batch renamed!', 'success');
+                await loadSharedData();
+                loadInlineBatches();
+            } catch (e) {
+                showNotification(`Error: ${e.message}`, 'error');
+            } finally {
+                btn.disabled = false; btn.textContent = 'Save';
+            }
+        });
+    });
+
+    // Delete listeners
     container.querySelectorAll('.delete-batch-inline-btn').forEach(btn => {
         btn.addEventListener('click', async () => {
             if (!confirm(`Delete batch "${btn.dataset.name}"?`)) return;
@@ -799,7 +921,7 @@ export function loadInlineAnnouncements(searchQuery = '') {
         }
 
         listContainer.innerHTML = items.map(a => `
-            <div class="base-announcement-card">
+            <div class="base-announcement-card" data-id="${a.id}">
                 <div class="base-announcement-content">
                     <p class="base-announcement-text">${escapeHTML(a.text || a.message || '')}</p>
                     <div class="base-announcement-meta">
@@ -807,12 +929,70 @@ export function loadInlineAnnouncements(searchQuery = '') {
                         <span><i class="fas fa-clock"></i> ${a.createdAt ? new Date(a.createdAt.seconds * 1000).toLocaleString() : '—'}</span>
                     </div>
                 </div>
-                <button class="btn btn-danger btn-small delete-announcement-inline-btn" data-id="${a.id}">
-                    <i class="fas fa-trash-alt"></i>
-                </button>
+                <div class="base-announcement-actions">
+                    <button class="btn btn-secondary btn-small edit-announcement-inline-btn" data-id="${a.id}" data-text="${escapeHTML(a.text || a.message || '')}">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn btn-danger btn-small delete-announcement-inline-btn" data-id="${a.id}">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="announcement-edit-row hidden" data-id="${a.id}">
+                <div class="inline-edit-form">
+                    <textarea class="edit-announcement-text-input form-input" rows="3" placeholder="Edit announcement...">${escapeHTML(a.text || a.message || '')}</textarea>
+                    <div style="display:flex;gap:8px;margin-top:8px;">
+                        <button class="btn btn-primary btn-small save-announcement-edit-btn" data-id="${a.id}">Save</button>
+                        <button class="btn btn-secondary btn-small cancel-announcement-edit-btn" data-id="${a.id}">Cancel</button>
+                    </div>
+                </div>
             </div>
         `).join('');
 
+        // Edit toggle
+        listContainer.querySelectorAll('.edit-announcement-inline-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const id = btn.dataset.id;
+                const editRow = listContainer.querySelector(`.announcement-edit-row[data-id="${id}"]`);
+                if (editRow) editRow.classList.toggle('hidden');
+            });
+        });
+
+        // Cancel edit
+        listContainer.querySelectorAll('.cancel-announcement-edit-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const id = btn.dataset.id;
+                const editRow = listContainer.querySelector(`.announcement-edit-row[data-id="${id}"]`);
+                if (editRow) editRow.classList.add('hidden');
+            });
+        });
+
+        // Save announcement edit
+        listContainer.querySelectorAll('.save-announcement-edit-btn').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                const id = btn.dataset.id;
+                const editRow = listContainer.querySelector(`.announcement-edit-row[data-id="${id}"]`);
+                const textInput = editRow ? editRow.querySelector('.edit-announcement-text-input') : null;
+                if (!textInput || !textInput.value.trim()) {
+                    showNotification('Announcement cannot be empty.', 'warning');
+                    return;
+                }
+                btn.disabled = true; btn.textContent = 'Saving...';
+                try {
+                    await updateDoc(doc(db, "announcements", id), {
+                        text: textInput.value.trim(),
+                        message: textInput.value.trim()
+                    });
+                    showNotification('Announcement updated!', 'success');
+                } catch (e) {
+                    showNotification(`Error: ${e.message}`, 'error');
+                } finally {
+                    btn.disabled = false; btn.textContent = 'Save';
+                }
+            });
+        });
+
+        // Delete
         listContainer.querySelectorAll('.delete-announcement-inline-btn').forEach(btn => {
             btn.addEventListener('click', async () => {
                 if (!confirm("Delete this announcement?")) return;

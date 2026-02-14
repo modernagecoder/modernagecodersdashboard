@@ -24,33 +24,28 @@ module.exports = async (req, res) => {
             throw { status: 403, message: 'Not authorized' };
         }
 
-        const usersSnapshot = await db.collection('users').get();
-        const teachers = [];
-        const admins = [];
+        // Only fetch users with role === 'teacher' (not students or admins)
+        const teachersSnapshot = await db.collection('users')
+            .where('role', '==', 'teacher')
+            .orderBy('displayName')
+            .get();
 
-        usersSnapshot.forEach(doc => {
+        const teachers = [];
+        teachersSnapshot.forEach(doc => {
             const userData = doc.data();
-            const userInfo = {
+            teachers.push({
                 uid: doc.id,
                 email: userData.email,
                 displayName: userData.displayName,
                 role: userData.role,
                 createdAt: userData.createdAt
-            };
-
-            if (userData.role === 'admin') {
-                admins.push(userInfo);
-            } else {
-                teachers.push(userInfo);
-            }
+            });
         });
 
         res.status(200).json({
             success: true,
             teachers,
-            admins,
-            totalTeachers: teachers.length,
-            totalAdmins: admins.length
+            totalTeachers: teachers.length
         });
 
     } catch (error) {
