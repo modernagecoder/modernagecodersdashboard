@@ -3,7 +3,8 @@
 // =============================================================
 
 import {
-    db, collection, query, where, onSnapshot, orderBy, getDocs, limit
+    db, storage, collection, query, where, onSnapshot, orderBy, getDocs, limit,
+    addDoc, serverTimestamp, storageRef, uploadBytes, getDownloadURL
 } from './firebase-config.js';
 
 import {
@@ -92,6 +93,27 @@ export async function initStudentDashboard(user, userData) {
         renderStudentAssignments();
         updateStudentStats();
     });
+
+    // --- Real-time listener for student's own submissions ---
+    if (window._unsubStudentSubmissions) window._unsubStudentSubmissions();
+
+    window._studentSubmissions = {};
+    const submissionsQuery = query(
+        collection(db, "submissions"),
+        where("studentId", "==", user.uid),
+        orderBy("submittedAt", "desc")
+    );
+    window._unsubStudentSubmissions = onSnapshot(submissionsQuery, (snapshot) => {
+        window._studentSubmissions = {};
+        snapshot.forEach(docSnap => {
+            const data = { id: docSnap.id, ...docSnap.data() };
+            window._studentSubmissions[data.assignmentId] = data;
+        });
+        renderStudentAssignments();
+    });
+
+    // --- Setup submission modal ---
+    setupSubmissionModal(user);
 
     // --- Real-time listener for announcements (Bug #33) ---
     const studentNotificationBell = document.getElementById('student-notification-bell');
@@ -375,6 +397,16 @@ function renderStudentAssignments() {
                 }).join('')}
             </div>` : '';
 
+        const submission = (window._studentSubmissions || {})[asn.id];
+        const isSubmitted = !!submission;
+        const submissionStatusHtml = isSubmitted
+            ? `<span class="submission-status-badge submitted">
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" viewBox="0 0 16 16"><path d="M10.97 4.97a.75.75 0 0 1 1.07 1.05l-3.99 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425z"/></svg>
+                Submitted</span>`
+            : `<button class="btn-submit-homework" data-assignment-id="${asn.id}" data-assignment-title="${escapeHTML(asn.title)}" data-teacher-id="${asn.teacherId || ''}">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16"><path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/><path d="M7.646 1.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1-.708.708L8.5 2.707V11.5a.5.5 0 0 1-1 0V2.707L5.354 4.854a.5.5 0 1 1-.708-.708l3-3z"/></svg>
+                Submit Homework</button>`;
+
         return `
             <div class="assignment-card">
                 <div class="assignment-header">
@@ -384,13 +416,23 @@ function renderStudentAssignments() {
                 <div class="assignment-due">${dueText}</div>
                 ${asn.description ? `<div class="assignment-desc">${escapeHTML(asn.description)}</div>` : ''}
                 ${attachmentsHtml}
-                <div class="assignment-teacher">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" fill="currentColor" viewBox="0 0 16 16"><path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4zm-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10c-2.29 0-3.516.68-4.168 1.332-.678.678-.83 1.418-.832 1.664h10z"/></svg>
-                    ${escapeHTML(asn.teacherName || 'Teacher')}
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-top: 6px;">
+                    <div class="assignment-teacher">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" fill="currentColor" viewBox="0 0 16 16"><path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4zm-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10c-2.29 0-3.516.68-4.168 1.332-.678.678-.83 1.418-.832 1.664h10z"/></svg>
+                        ${escapeHTML(asn.teacherName || 'Teacher')}
+                    </div>
+                    ${submissionStatusHtml}
                 </div>
             </div>
         `;
     }).join('');
+
+    // Wire submit buttons
+    container.querySelectorAll('.btn-submit-homework').forEach(btn => {
+        btn.addEventListener('click', () => {
+            openSubmissionModal(btn.dataset.assignmentId, btn.dataset.assignmentTitle, btn.dataset.teacherId);
+        });
+    });
 }
 
 async function renderStudentAttendance(user) {
@@ -509,4 +551,165 @@ function renderAttendanceHeatmap(container, records) {
     }
 
     container.innerHTML = html;
+}
+
+// ─── SUBMISSION MODAL LOGIC ──────────────────────────────────────────
+let _submissionSelectedFiles = [];
+let _currentStudentUser = null;
+
+function setupSubmissionModal(user) {
+    _currentStudentUser = user;
+
+    const modal = document.getElementById('submission-modal');
+    const closeBtn = document.getElementById('close-submission-modal-btn');
+    const fileInput = document.getElementById('submission-file-input');
+    const fileUploadArea = document.getElementById('submission-file-upload-area');
+    const submitBtn = document.getElementById('submit-homework-btn');
+
+    if (!modal) return;
+
+    if (closeBtn) closeBtn.addEventListener('click', () => modal.classList.remove('active'));
+    modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.remove('active'); });
+
+    // File upload area
+    if (fileUploadArea && fileInput) {
+        fileUploadArea.addEventListener('click', () => fileInput.click());
+        fileUploadArea.addEventListener('dragover', (e) => { e.preventDefault(); fileUploadArea.classList.add('drag-over'); });
+        fileUploadArea.addEventListener('dragleave', () => fileUploadArea.classList.remove('drag-over'));
+        fileUploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            fileUploadArea.classList.remove('drag-over');
+            handleSubmissionFiles(e.dataTransfer.files);
+        });
+        fileInput.addEventListener('change', () => {
+            handleSubmissionFiles(fileInput.files);
+            fileInput.value = '';
+        });
+    }
+
+    // Submit button
+    if (submitBtn) {
+        submitBtn.addEventListener('click', handleSubmitHomework);
+    }
+}
+
+function handleSubmissionFiles(filesList) {
+    const maxSize = 10 * 1024 * 1024;
+    for (const file of filesList) {
+        if (file.size > maxSize) {
+            showNotification(`"${file.name}" is too large (max 10MB).`, 'warning');
+            continue;
+        }
+        if (_submissionSelectedFiles.find(f => f.name === file.name && f.size === file.size)) continue;
+        _submissionSelectedFiles.push(file);
+    }
+    renderSubmissionFileList();
+}
+
+function renderSubmissionFileList() {
+    const container = document.getElementById('submission-file-list');
+    if (!container) return;
+    if (_submissionSelectedFiles.length === 0) { container.innerHTML = ''; return; }
+    container.innerHTML = _submissionSelectedFiles.map((file, index) => {
+        const ext = file.name.split('.').pop().toLowerCase();
+        const isImg = ['png', 'jpg', 'jpeg', 'gif', 'webp'].includes(ext);
+        const isPdf = ext === 'pdf';
+        const iconClass = isPdf ? 'pdf' : isImg ? 'img' : 'doc';
+        const iconText = isPdf ? 'PDF' : isImg ? 'IMG' : 'DOC';
+        const sizeStr = file.size < 1024 ? `${file.size} B` : file.size < 1048576 ? `${(file.size / 1024).toFixed(1)} KB` : `${(file.size / 1048576).toFixed(1)} MB`;
+        return `
+            <div class="file-list-item">
+                <div class="file-icon ${iconClass}">${iconText}</div>
+                <div class="file-info">
+                    <div class="file-name">${escapeHTML(file.name)}</div>
+                    <div class="file-size">${sizeStr}</div>
+                </div>
+                <button class="file-remove" data-index="${index}" title="Remove">&times;</button>
+            </div>`;
+    }).join('');
+    container.querySelectorAll('.file-remove').forEach(btn => {
+        btn.addEventListener('click', () => {
+            _submissionSelectedFiles.splice(parseInt(btn.dataset.index), 1);
+            renderSubmissionFileList();
+        });
+    });
+}
+
+function openSubmissionModal(assignmentId, assignmentTitle, teacherId) {
+    const modal = document.getElementById('submission-modal');
+    if (!modal) return;
+
+    _submissionSelectedFiles = [];
+    renderSubmissionFileList();
+
+    document.getElementById('submission-assignment-title').textContent = assignmentTitle;
+    document.getElementById('submission-assignment-id').value = assignmentId;
+    document.getElementById('submission-teacher-id').value = teacherId;
+    document.getElementById('submission-note').value = '';
+
+    modal.classList.add('active');
+}
+
+async function handleSubmitHomework() {
+    const user = _currentStudentUser;
+    if (!user) return;
+
+    const assignmentId = document.getElementById('submission-assignment-id').value;
+    const teacherId = document.getElementById('submission-teacher-id').value;
+    const note = document.getElementById('submission-note').value.trim();
+    const submitBtn = document.getElementById('submit-homework-btn');
+
+    if (_submissionSelectedFiles.length === 0) {
+        showNotification("Please attach at least one file.", "warning");
+        return;
+    }
+
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span class="spinner" style="width:16px;height:16px;border-width:2px;display:inline-block;vertical-align:-3px;margin-right:6px;"></span> Submitting...';
+
+    const progressEl = document.getElementById('submission-upload-progress');
+    const statusEl = document.getElementById('submission-upload-status');
+
+    try {
+        let attachments = [];
+        if (progressEl) progressEl.classList.remove('hidden');
+
+        for (let i = 0; i < _submissionSelectedFiles.length; i++) {
+            const file = _submissionSelectedFiles[i];
+            if (statusEl) statusEl.textContent = `Uploading ${i + 1} of ${_submissionSelectedFiles.length}: ${file.name}...`;
+            const filePath = `submissions/${user.uid}/${assignmentId}/${Date.now()}_${file.name}`;
+            const fileRef = storageRef(storage, filePath);
+            await uploadBytes(fileRef, file);
+            const url = await getDownloadURL(fileRef);
+            const ext = file.name.split('.').pop().toLowerCase();
+            attachments.push({ name: file.name, url, type: ext, size: file.size });
+        }
+
+        if (progressEl) progressEl.classList.add('hidden');
+
+        await addDoc(collection(db, "submissions"), {
+            assignmentId,
+            studentId: user.uid,
+            studentName: user.displayName || user.originalDisplayName || 'Student',
+            teacherId,
+            attachments,
+            note,
+            submittedAt: serverTimestamp(),
+            status: 'submitted'
+        });
+
+        showNotification("Homework submitted successfully!", "success");
+        _submissionSelectedFiles = [];
+        renderSubmissionFileList();
+        const modal = document.getElementById('submission-modal');
+        if (modal) modal.classList.remove('active');
+
+    } catch (error) {
+        console.error("Error submitting homework:", error);
+        showNotification(`Error: ${error.message}`, "error");
+        if (progressEl) progressEl.classList.add('hidden');
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" style="vertical-align:-2px;margin-right:6px;"><path d="M15.854.146a.5.5 0 0 1 .11.54l-5.819 14.547a.5.5 0 0 1-.928.021L6.5 10.217l-4.996-2.717a.5.5 0 0 1 .021-.928L16.394.036a.5.5 0 0 1 .46.11z"/></svg> Submit Homework';
+    }
 }

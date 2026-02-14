@@ -6486,3 +6486,322 @@ body {
         grid-template-columns: 1fr !important;
     }
 }
+
+/* ============================================
+   SUBMISSION SYSTEM STYLES
+   ============================================ */
+
+/* Submission status badges */
+.submission-status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+}
+
+.submission-status-badge.submitted {
+    color: var(--accent-green);
+    background: rgba(158, 206, 106, 0.15);
+}
+
+.submission-status-badge.not-submitted {
+    color: var(--text-muted);
+    background: rgba(255, 255, 255, 0.05);
+}
+
+/* Submit homework button on assignment cards */
+.btn-submit-homework {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--accent-green);
+    background: rgba(158, 206, 106, 0.1);
+    border: 1px solid rgba(158, 206, 106, 0.3);
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-top: 8px;
+}
+
+.btn-submit-homework:hover {
+    background: rgba(158, 206, 106, 0.2);
+    border-color: var(--accent-green);
+}
+
+.btn-submit-homework:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.btn-submit-homework.already-submitted {
+    color: var(--text-muted);
+    background: rgba(255, 255, 255, 0.03);
+    border-color: var(--border-color);
+    cursor: default;
+}
+
+/* Submission modal file upload area */
+.submission-file-upload-area {
+    border: 2px dashed var(--border-color);
+    border-radius: var(--border-radius);
+    padding: 1.5rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: var(--bg-primary);
+}
+
+.submission-file-upload-area:hover,
+.submission-file-upload-area.drag-over {
+    border-color: var(--accent-green);
+    background: rgba(158, 206, 106, 0.05);
+}
+
+/* Teacher: View Submissions button */
+.btn-view-submissions {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--accent-secondary);
+    background: rgba(78, 205, 196, 0.1);
+    border: 1px solid rgba(78, 205, 196, 0.3);
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-view-submissions:hover {
+    background: rgba(78, 205, 196, 0.2);
+    border-color: var(--accent-secondary);
+}
+
+/* Submission count badge on teacher assignment cards */
+.submission-count-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--accent-secondary);
+    background: rgba(78, 205, 196, 0.12);
+}
+
+/* Teacher submissions viewer list */
+.submissions-viewer-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 60vh;
+    overflow-y: auto;
+    padding-right: 6px;
+}
+
+.submission-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    transition: border-color 0.2s;
+}
+
+.submission-item:hover {
+    border-color: var(--accent-secondary);
+}
+
+.submission-item .student-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--bg-tertiary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    flex-shrink: 0;
+}
+
+.submission-item .student-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.submission-item .student-name {
+    font-weight: 600;
+    font-size: 0.88rem;
+    color: var(--text-primary);
+}
+
+.submission-item .submission-date {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-top: 2px;
+}
+
+.submission-item .submission-files {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 4px;
+}
+
+.submission-item .submission-note {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin-top: 4px;
+    font-style: italic;
+}
+
+/* Assignment search/filter bar */
+.assignment-filter-bar {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+}
+
+.assignment-filter-bar input[type="text"] {
+    flex: 1;
+    min-width: 200px;
+    padding: 8px 14px;
+    border-radius: var(--border-radius);
+    border: 1px solid var(--border-color);
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font-size: 0.85rem;
+}
+
+.assignment-filter-bar select {
+    padding: 8px 12px;
+    border-radius: var(--border-radius);
+    border: 1px solid var(--border-color);
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font-size: 0.85rem;
+    min-width: 140px;
+}
+
+/* Send to All toggle */
+.send-to-all-toggle {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    margin-bottom: 8px;
+}
+
+.send-to-all-toggle label {
+    margin-bottom: 0;
+    font-weight: 500;
+    font-size: 0.85rem;
+    cursor: pointer;
+    user-select: none;
+    color: var(--text-secondary);
+}
+
+.toggle-switch {
+    position: relative;
+    width: 40px;
+    height: 22px;
+    flex-shrink: 0;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--bg-tertiary);
+    border-radius: 22px;
+    transition: 0.3s;
+}
+
+.toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 16px;
+    width: 16px;
+    left: 3px;
+    bottom: 3px;
+    background-color: var(--text-muted);
+    border-radius: 50%;
+    transition: 0.3s;
+}
+
+.toggle-switch input:checked + .toggle-slider {
+    background-color: var(--accent-green);
+}
+
+.toggle-switch input:checked + .toggle-slider:before {
+    transform: translateX(18px);
+    background-color: white;
+}
+
+/* Student: My Submissions section */
+.my-submissions-section {
+    margin-top: 1.5rem;
+}
+
+.my-submissions-section h4 {
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.my-submission-card {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding: 12px 16px;
+    margin-bottom: 8px;
+    transition: border-color 0.2s;
+}
+
+.my-submission-card:hover {
+    border-color: var(--accent-green);
+}
+
+.my-submission-card .submission-title {
+    font-weight: 600;
+    font-size: 0.88rem;
+    color: var(--text-primary);
+}
+
+.my-submission-card .submission-meta {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-top: 4px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}

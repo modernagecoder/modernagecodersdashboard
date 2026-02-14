@@ -1067,6 +1067,8 @@ let _assignmentSelectedStudents = [];
 let _assignmentSelectedFiles = [];
 let _currentAssignmentTab = 'active';
 let _unsubAssignmentsListener = null;
+let _assignmentSearchQuery = '';
+let _assignmentFilterBatch = '';
 
 function populateAssignmentBatchDropdown() {
     const batchSelect = document.getElementById('assignment-batch');
@@ -1110,6 +1112,11 @@ function setupAssignmentPosting() {
             if (titleInput) titleInput.value = '';
             if (descInput) descInput.value = '';
             if (dueDateInput) dueDateInput.value = '';
+            // Reset Send to All toggle
+            const sendToggle = document.getElementById('assignment-send-to-all-toggle');
+            const indivSel = document.getElementById('assignment-individual-selection');
+            if (sendToggle) sendToggle.checked = false;
+            if (indivSel) indivSel.style.display = '';
             assignmentModal.classList.add('active');
         });
     }
@@ -1159,6 +1166,32 @@ function setupAssignmentPosting() {
             });
             renderAssignmentSelectedStudents();
             showNotification(`Selected all ${_myStudentsData.length} students`, 'info');
+        });
+    }
+
+    // Send to All toggle
+    const sendToAllToggle = document.getElementById('assignment-send-to-all-toggle');
+    const individualSelection = document.getElementById('assignment-individual-selection');
+    if (sendToAllToggle) {
+        sendToAllToggle.addEventListener('change', () => {
+            if (sendToAllToggle.checked) {
+                if (individualSelection) individualSelection.style.display = 'none';
+                // Auto-select all students
+                if (_myStudentsData && _myStudentsData.length > 0) {
+                    _assignmentSelectedStudents = _myStudentsData.map(s => ({
+                        uid: s.uid, name: s.displayName || s.email
+                    }));
+                    showNotification(`All ${_myStudentsData.length} students selected`, 'info');
+                } else {
+                    showNotification("No students assigned to you yet.", "warning");
+                    sendToAllToggle.checked = false;
+                    return;
+                }
+            } else {
+                if (individualSelection) individualSelection.style.display = '';
+                _assignmentSelectedStudents = [];
+            }
+            renderAssignmentSelectedStudents();
         });
     }
 
@@ -1335,8 +1368,40 @@ function setupAssignmentPosting() {
         });
     });
 
+    // Assignment search/filter
+    const searchInput = document.getElementById('assignment-search-input');
+    const filterBatchSelect = document.getElementById('assignment-filter-batch');
+    if (searchInput) {
+        searchInput.addEventListener('input', debounce(() => {
+            _assignmentSearchQuery = searchInput.value.trim().toLowerCase();
+            loadAssignmentHistory();
+        }, 250));
+    }
+    if (filterBatchSelect) {
+        // Populate filter batch dropdown
+        populateAssignmentFilterBatchDropdown();
+        filterBatchSelect.addEventListener('change', () => {
+            _assignmentFilterBatch = filterBatchSelect.value;
+            loadAssignmentHistory();
+        });
+    }
+
     // Start real-time listener for assignments
     loadAssignmentHistory();
+}
+
+function populateAssignmentFilterBatchDropdown() {
+    const filterSelect = document.getElementById('assignment-filter-batch');
+    if (!filterSelect) return;
+    const currentVal = filterSelect.value;
+    filterSelect.innerHTML = '<option value="">All Batches</option>';
+    allBatchesData.forEach(b => {
+        const opt = document.createElement('option');
+        opt.value = b.name;
+        opt.textContent = b.name;
+        filterSelect.appendChild(opt);
+    });
+    if (currentVal) filterSelect.value = currentVal;
 }
 
 function renderAssignmentSelectedStudents() {
@@ -1362,7 +1427,7 @@ function loadAssignmentHistory() {
 
     _unsubAssignmentsListener = onSnapshot(
         query(collection(db, "assignments"), where("teacherId", "==", currentUser.uid), orderBy("createdAt", "desc")),
-        (snapshot) => {
+        async (snapshot) => {
             const allAssignments = [];
             snapshot.forEach(d => allAssignments.push({ id: d.id, ...d.data() }));
 
@@ -1373,6 +1438,18 @@ function loadAssignmentHistory() {
                 filtered = allAssignments.filter(a => a.status === 'active');
             } else if (_currentAssignmentTab === 'completed') {
                 filtered = allAssignments.filter(a => a.status === 'completed');
+            }
+
+            // Apply search filter
+            if (_assignmentSearchQuery) {
+                filtered = filtered.filter(a =>
+                    (a.title || '').toLowerCase().includes(_assignmentSearchQuery)
+                );
+            }
+
+            // Apply batch filter
+            if (_assignmentFilterBatch) {
+                filtered = filtered.filter(a => a.batch === _assignmentFilterBatch);
             }
 
             if (filtered.length === 0) {
@@ -1388,6 +1465,21 @@ function loadAssignmentHistory() {
                     </div>`;
                 return;
             }
+
+            // Fetch submission counts for all assignments in one batch
+            const assignmentIds = filtered.map(a => a.id);
+            const submissionCounts = {};
+            try {
+                // Fetch submissions for this teacher's assignments
+                const subsSnapshot = await getDocs(
+                    query(collection(db, "submissions"), where("teacherId", "==", currentUser.uid))
+                );
+                subsSnapshot.forEach(d => {
+                    const data = d.data();
+                    if (!submissionCounts[data.assignmentId]) submissionCounts[data.assignmentId] = 0;
+                    submissionCounts[data.assignmentId]++;
+                });
+            } catch (e) { console.error("Error fetching submission counts:", e); }
 
             assignmentsList.innerHTML = filtered.map(a => {
                 const dueDate = a.dueDate ? new Date(a.dueDate + 'T23:59:59') : null;
@@ -1407,11 +1499,18 @@ function loadAssignmentHistory() {
                 const dueDateStr = a.dueDate ? new Date(a.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'No due date';
                 const createdStr = formatTimestampForDisplay(a.createdAt);
 
+                const totalStudents = (a.studentIds || []).length;
+                const subCount = submissionCounts[a.id] || 0;
+                const submissionBadge = `<span class="submission-count-badge">${subCount}/${totalStudents} submitted</span>`;
+
                 return `
                     <div class="assignment-detail-card">
                         <div class="assignment-detail-header">
                             <h4 class="assignment-detail-title">${escapeHTML(a.title)}</h4>
-                            ${statusBadge}
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                ${submissionBadge}
+                                ${statusBadge}
+                            </div>
                         </div>
                         ${a.description ? `<div class="assignment-detail-desc">${escapeHTML(a.description)}</div>` : ''}
                         ${studentChips ? `<div class="assignment-students-list">${studentChips}</div>` : ''}
@@ -1433,8 +1532,14 @@ function loadAssignmentHistory() {
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16">
                                     <path d="M7 14s-1 0-1-1 1-4 5-4 5 3 5 4-1 1-1 1H7zm4-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/>
                                 </svg>
-                                ${(a.studentIds || []).length} student${(a.studentIds || []).length !== 1 ? 's' : ''}
+                                ${totalStudents} student${totalStudents !== 1 ? 's' : ''}
                             </div>
+                            <button class="btn-view-submissions" data-id="${a.id}" data-title="${escapeHTML(a.title)}" data-student-ids='${JSON.stringify(a.studentIds || [])}' data-student-names='${JSON.stringify(a.studentNames || [])}'>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+                                    <path d="M10.97 4.97a.75.75 0 0 1 1.07 1.05l-3.99 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425z"/>
+                                </svg>
+                                View Submissions
+                            </button>
                             ${a.status === 'active' ? `
                                 <button class="btn-action mark-assignment-complete" data-id="${a.id}" style="margin-left:auto; padding:4px 12px; font-size:0.75rem;">
                                     Mark Complete
@@ -1466,12 +1571,111 @@ function loadAssignmentHistory() {
                     } catch (e) { showNotification(`Error: ${e.message}`, "error"); }
                 });
             });
+
+            // Wire view submissions buttons
+            assignmentsList.querySelectorAll('.btn-view-submissions').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    openSubmissionsViewer(
+                        btn.dataset.id,
+                        btn.dataset.title,
+                        JSON.parse(btn.dataset.studentIds),
+                        JSON.parse(btn.dataset.studentNames)
+                    );
+                });
+            });
         },
         (error) => {
             console.error("Error loading assignments:", error);
             assignmentsList.innerHTML = '<div class="announcements-empty-state"><p style="color:var(--accent-red);">Error loading assignments.</p></div>';
         }
     );
+}
+
+// ─── SUBMISSIONS VIEWER ──────────────────────────────────────────────
+async function openSubmissionsViewer(assignmentId, assignmentTitle, studentIds, studentNames) {
+    const modal = document.getElementById('submissions-viewer-modal');
+    const titleEl = document.getElementById('submissions-viewer-title');
+    const summaryEl = document.getElementById('submissions-viewer-summary');
+    const listEl = document.getElementById('submissions-viewer-list');
+
+    if (!modal) return;
+
+    titleEl.textContent = assignmentTitle;
+    listEl.innerHTML = '<div style="text-align: center; padding: 2rem; color: var(--text-muted);">Loading submissions...</div>';
+    modal.classList.add('active');
+
+    // Close button
+    const closeBtn = document.getElementById('close-submissions-viewer-btn');
+    if (closeBtn) {
+        closeBtn.onclick = () => modal.classList.remove('active');
+    }
+    modal.onclick = (e) => { if (e.target === modal) modal.classList.remove('active'); };
+
+    try {
+        // Fetch all submissions for this assignment
+        const subsSnapshot = await getDocs(
+            query(collection(db, "submissions"), where("assignmentId", "==", assignmentId))
+        );
+        const submissions = {};
+        subsSnapshot.forEach(d => {
+            const data = { id: d.id, ...d.data() };
+            submissions[data.studentId] = data;
+        });
+
+        const subCount = Object.keys(submissions).length;
+        summaryEl.textContent = `${subCount} of ${studentIds.length} students have submitted`;
+
+        if (studentIds.length === 0) {
+            listEl.innerHTML = '<div style="text-align: center; padding: 2rem; color: var(--text-muted);">No students assigned to this assignment.</div>';
+            return;
+        }
+
+        listEl.innerHTML = studentIds.map((studentId, idx) => {
+            const studentName = studentNames[idx] || studentId;
+            const initials = studentName.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+            const sub = submissions[studentId];
+
+            if (sub) {
+                const submittedDate = sub.submittedAt ? new Date(sub.submittedAt.seconds * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Unknown';
+                const filesHtml = (sub.attachments || []).map(att => {
+                    const isPdf = att.name.toLowerCase().endsWith('.pdf');
+                    const isImage = /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(att.name);
+                    const chipClass = isPdf ? 'pdf-chip' : isImage ? 'img-chip' : '';
+                    return `<a href="${att.url}" target="_blank" rel="noopener" class="attachment-chip ${chipClass}" style="font-size:0.72rem;padding:2px 8px;">${escapeHTML(att.name)}</a>`;
+                }).join('');
+                const noteHtml = sub.note ? `<div class="submission-note">"${escapeHTML(sub.note)}"</div>` : '';
+
+                return `
+                    <div class="submission-item">
+                        <div class="student-avatar" style="background: rgba(158,206,106,0.2); color: var(--accent-green);">${initials}</div>
+                        <div class="student-info">
+                            <div class="student-name">${escapeHTML(studentName)}</div>
+                            <div class="submission-date">
+                                <span class="submission-status-badge submitted" style="margin-right:6px;">Submitted</span>
+                                ${submittedDate}
+                            </div>
+                            <div class="submission-files">${filesHtml}</div>
+                            ${noteHtml}
+                        </div>
+                    </div>`;
+            } else {
+                return `
+                    <div class="submission-item">
+                        <div class="student-avatar">${initials}</div>
+                        <div class="student-info">
+                            <div class="student-name">${escapeHTML(studentName)}</div>
+                            <div class="submission-date">
+                                <span class="submission-status-badge not-submitted">Not Submitted</span>
+                            </div>
+                        </div>
+                    </div>`;
+            }
+        }).join('');
+
+    } catch (error) {
+        console.error("Error loading submissions:", error);
+        listEl.innerHTML = '<div style="text-align: center; padding: 2rem; color: var(--accent-red);">Error loading submissions.</div>';
+    }
 }
 
 // ─── TEACHER ENHANCEMENTS (MY STUDENTS / AGENDA) ─────────────────────
@@ -1790,6 +1994,7 @@ export function handleSectionChange(section) {
     } else if (section === 'my-students') {
         loadTeacherMyStudents();
     } else if (section === 'assignments') {
+        populateAssignmentFilterBatchDropdown();
         loadAssignmentHistory();
     } else if (section === 'announcements') {
         // Mark announcements as seen
