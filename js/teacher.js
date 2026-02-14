@@ -920,19 +920,40 @@ function setupAnnouncements() {
             if (!data.isDeleted) announcements.push({ id: d.id, ...data });
         });
 
+        // Helper to format Firestore timestamp
+        function formatAnnouncementDate(ts) {
+            if (!ts) return '';
+            try {
+                // Firestore Timestamp object has .seconds and .nanoseconds
+                let date;
+                if (ts.seconds) {
+                    date = new Date(ts.seconds * 1000);
+                } else if (ts.toDate) {
+                    date = ts.toDate();
+                } else {
+                    date = new Date(ts);
+                }
+                if (isNaN(date.getTime())) return '';
+                return date.toLocaleString('en-US', {
+                    month: 'short', day: 'numeric', year: 'numeric',
+                    hour: 'numeric', minute: '2-digit', hour12: true
+                });
+            } catch (e) { return ''; }
+        }
+
         // Helper to build announcement card HTML
         function buildAnnouncementCard(a) {
-            const authorName = a.createdByName || a.author || 'Admin';
-            const initials = authorName.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+            const authorName = 'Modern Age Coders Team';
+            const initials = 'MC';
             const messageText = a.message || a.text || '';
-            const timeStr = formatTimestampForDisplay(a.createdAt);
+            const timeStr = formatAnnouncementDate(a.createdAt);
             return `
                 <div class="announcement-feed-card">
                     <div class="announcement-feed-header">
-                        <div class="announcement-feed-avatar">${escapeHTML(initials)}</div>
+                        <div class="announcement-feed-avatar">${initials}</div>
                         <div>
                             <div class="announcement-feed-author">${escapeHTML(authorName)}</div>
-                            <div class="announcement-feed-time">${timeStr}</div>
+                            <div class="announcement-feed-time">${timeStr || 'Just now'}</div>
                         </div>
                         <span class="announcement-feed-badge">Announcement</span>
                     </div>
