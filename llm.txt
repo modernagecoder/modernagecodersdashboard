@@ -1,0 +1,24 @@
+# Modern Age Coders Dashboard
+
+> A comprehensive class scheduling and management platform for coding education.
+
+## Overview
+This website serves as the central dashboard for Modern Age Coders, an online coding academy. It provides specialized interfaces for:
+
+- **Admins**: To manage students, teachers, batches, announcements, and view platform analytics.
+- **Teachers**: To manage their weekly class schedules, view assigned students, track earnings, and mark attendance.
+- **Students**: To view upcoming classes, access assignments, and track their attendance history.
+
+## Tech Stack
+- **Frontend**: HTML5, CSS3, Vanilla JavaScript (ES6+ modules).
+- **Backend/Database**: Firebase (Authentication, Firestore).
+- **Hosting**: Vercel / Firebase Hosting.
+
+## Core Pages
+- [Login / Landing](https://dashboard.modernagecoder.com/)
+- [Admin Dashboard](https://dashboard.modernagecoder.com/admin.html)
+- [Teacher Dashboard](https://dashboard.modernagecoder.com/teacher.html)
+- [Student Dashboard](https://dashboard.modernagecoder.com/student.html)
+
+## Purpose
+The platform efficiently orchestrates the logistics of online coding classes, ensuring seamless coordination between administration, educators, and learners.
