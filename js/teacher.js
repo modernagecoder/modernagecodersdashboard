@@ -4,9 +4,10 @@
 // =====================================================================
 
 import {
-    auth, db, collection, doc, addDoc, updateDoc, deleteDoc, getDoc, getDocs,
+    auth, db, storage, collection, doc, addDoc, updateDoc, deleteDoc, getDoc, getDocs,
     query, where, orderBy, limit, onSnapshot, serverTimestamp, writeBatch,
-    getCountFromServer, onAuthStateChanged
+    getCountFromServer, onAuthStateChanged,
+    storageRef, uploadBytes, getDownloadURL
 } from './firebase-config.js';
 
 import {
@@ -1063,8 +1064,23 @@ function openMessageModal(studentUid, studentName, studentEmail) {
 
 // ─── ASSIGNMENT POSTING ──────────────────────────────────────────────
 let _assignmentSelectedStudents = [];
+let _assignmentSelectedFiles = [];
 let _currentAssignmentTab = 'active';
 let _unsubAssignmentsListener = null;
+
+function populateAssignmentBatchDropdown() {
+    const batchSelect = document.getElementById('assignment-batch');
+    if (!batchSelect) return;
+    const currentVal = batchSelect.value;
+    batchSelect.innerHTML = '<option value="">-- All Batches --</option>';
+    allBatchesData.forEach(b => {
+        const opt = document.createElement('option');
+        opt.value = b.name;
+        opt.textContent = b.name;
+        batchSelect.appendChild(opt);
+    });
+    if (currentVal) batchSelect.value = currentVal;
+}
 
 function setupAssignmentPosting() {
     const postBtn = document.getElementById('save-assignment-button');
@@ -1073,6 +1089,9 @@ function setupAssignmentPosting() {
     const dueDateInput = document.getElementById('assignment-due-date');
     const studentSearchInput = document.getElementById('assignment-students-search');
     const studentResults = document.getElementById('assignment-students-dropdown');
+    const fileInput = document.getElementById('assignment-file-input');
+    const fileUploadArea = document.getElementById('assignment-file-upload-area');
+    const fileListContainer = document.getElementById('assignment-file-list');
 
     if (!postBtn) return;
 
@@ -1084,7 +1103,13 @@ function setupAssignmentPosting() {
     if (openAssignmentBtn && assignmentModal) {
         openAssignmentBtn.addEventListener('click', () => {
             _assignmentSelectedStudents = [];
+            _assignmentSelectedFiles = [];
             renderAssignmentSelectedStudents();
+            renderAssignmentFileList();
+            populateAssignmentBatchDropdown();
+            if (titleInput) titleInput.value = '';
+            if (descInput) descInput.value = '';
+            if (dueDateInput) dueDateInput.value = '';
             assignmentModal.classList.add('active');
         });
     }
@@ -1101,6 +1126,105 @@ function setupAssignmentPosting() {
         flatpickr(dueDateInput, { dateFormat: 'Y-m-d', minDate: 'today' });
     }
 
+    // Batch dropdown: when batch changes, auto-select students from that batch
+    const batchSelect = document.getElementById('assignment-batch');
+    if (batchSelect) {
+        batchSelect.addEventListener('change', () => {
+            const selectedBatch = batchSelect.value;
+            if (!selectedBatch || !_myStudentsData) return;
+            const batchStudents = _myStudentsData.filter(s =>
+                (s.batches || []).includes(selectedBatch) &&
+                !_assignmentSelectedStudents.find(sel => sel.uid === s.uid)
+            );
+            batchStudents.forEach(s => {
+                _assignmentSelectedStudents.push({ uid: s.uid, name: s.displayName || s.email });
+            });
+            renderAssignmentSelectedStudents();
+            if (batchStudents.length > 0) showNotification(`Added ${batchStudents.length} student(s) from ${selectedBatch}`, 'info');
+        });
+    }
+
+    // Select All button
+    const selectAllBtn = document.getElementById('assignment-select-all-btn');
+    if (selectAllBtn) {
+        selectAllBtn.addEventListener('click', () => {
+            if (!_myStudentsData || _myStudentsData.length === 0) {
+                showNotification("No students assigned to you yet.", "warning");
+                return;
+            }
+            _myStudentsData.forEach(s => {
+                if (!_assignmentSelectedStudents.find(sel => sel.uid === s.uid)) {
+                    _assignmentSelectedStudents.push({ uid: s.uid, name: s.displayName || s.email });
+                }
+            });
+            renderAssignmentSelectedStudents();
+            showNotification(`Selected all ${_myStudentsData.length} students`, 'info');
+        });
+    }
+
+    // ─── FILE UPLOAD ─────────────────────────────────────────
+    if (fileUploadArea && fileInput) {
+        fileUploadArea.addEventListener('click', () => fileInput.click());
+
+        // Drag and drop
+        fileUploadArea.addEventListener('dragover', (e) => { e.preventDefault(); fileUploadArea.classList.add('drag-over'); });
+        fileUploadArea.addEventListener('dragleave', () => fileUploadArea.classList.remove('drag-over'));
+        fileUploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            fileUploadArea.classList.remove('drag-over');
+            handleFilesSelected(e.dataTransfer.files);
+        });
+
+        fileInput.addEventListener('change', () => {
+            handleFilesSelected(fileInput.files);
+            fileInput.value = ''; // Reset so same file can be selected again
+        });
+    }
+
+    function handleFilesSelected(filesList) {
+        const maxSize = 10 * 1024 * 1024; // 10MB
+        for (const file of filesList) {
+            if (file.size > maxSize) {
+                showNotification(`"${file.name}" is too large (max 10MB).`, 'warning');
+                continue;
+            }
+            if (_assignmentSelectedFiles.find(f => f.name === file.name && f.size === file.size)) continue;
+            _assignmentSelectedFiles.push(file);
+        }
+        renderAssignmentFileList();
+    }
+
+    function renderAssignmentFileList() {
+        if (!fileListContainer) return;
+        if (_assignmentSelectedFiles.length === 0) {
+            fileListContainer.innerHTML = '';
+            return;
+        }
+        fileListContainer.innerHTML = _assignmentSelectedFiles.map((file, index) => {
+            const ext = file.name.split('.').pop().toLowerCase();
+            const isImg = ['png', 'jpg', 'jpeg', 'gif', 'webp'].includes(ext);
+            const isPdf = ext === 'pdf';
+            const iconClass = isPdf ? 'pdf' : isImg ? 'img' : 'doc';
+            const iconText = isPdf ? 'PDF' : isImg ? 'IMG' : 'DOC';
+            const sizeStr = file.size < 1024 ? `${file.size} B` : file.size < 1048576 ? `${(file.size / 1024).toFixed(1)} KB` : `${(file.size / 1048576).toFixed(1)} MB`;
+            return `
+                <div class="file-list-item">
+                    <div class="file-icon ${iconClass}">${iconText}</div>
+                    <div class="file-info">
+                        <div class="file-name">${escapeHTML(file.name)}</div>
+                        <div class="file-size">${sizeStr}</div>
+                    </div>
+                    <button class="file-remove" data-index="${index}" title="Remove">&times;</button>
+                </div>`;
+        }).join('');
+        fileListContainer.querySelectorAll('.file-remove').forEach(btn => {
+            btn.addEventListener('click', () => {
+                _assignmentSelectedFiles.splice(parseInt(btn.dataset.index), 1);
+                renderAssignmentFileList();
+            });
+        });
+    }
+
     // Student search - use local student data first, fallback to API
     if (studentSearchInput) {
         studentSearchInput.addEventListener('input', debounce(async () => {
@@ -1111,7 +1235,6 @@ function setupAssignmentPosting() {
             }
             try {
                 let students = [];
-                // Use locally cached students if available
                 if (_myStudentsData && _myStudentsData.length > 0) {
                     students = _myStudentsData.filter(s =>
                         ((s.displayName || '').toLowerCase().includes(searchVal) || (s.email || '').toLowerCase().includes(searchVal)) &&
@@ -1146,30 +1269,60 @@ function setupAssignmentPosting() {
         }, 200));
     }
 
-    // Post assignment
+    // Post assignment with file uploads
     postBtn.addEventListener('click', async () => {
         const title = titleInput ? titleInput.value.trim() : '';
         const description = descInput ? descInput.value.trim() : '';
         const dueDate = dueDateInput ? dueDateInput.value : '';
+        const batch = batchSelect ? batchSelect.value : '';
         if (!title) { showNotification("Assignment title is required.", "warning"); return; }
         if (_assignmentSelectedStudents.length === 0) { showNotification("Please select at least one student.", "warning"); return; }
-        postBtn.disabled = true; postBtn.textContent = 'Posting...';
+        postBtn.disabled = true; postBtn.innerHTML = '<span class="spinner" style="width:16px;height:16px;border-width:2px;display:inline-block;vertical-align:-3px;margin-right:6px;"></span> Posting...';
+
+        const progressEl = document.getElementById('assignment-upload-progress');
+        const statusEl = document.getElementById('assignment-upload-status');
+
         try {
+            // Upload files if any
+            let attachments = [];
+            if (_assignmentSelectedFiles.length > 0) {
+                if (progressEl) progressEl.classList.remove('hidden');
+                for (let i = 0; i < _assignmentSelectedFiles.length; i++) {
+                    const file = _assignmentSelectedFiles[i];
+                    if (statusEl) statusEl.textContent = `Uploading ${i + 1} of ${_assignmentSelectedFiles.length}: ${file.name}...`;
+                    const filePath = `assignments/${currentUser.uid}/${Date.now()}_${file.name}`;
+                    const fileRef = storageRef(storage, filePath);
+                    await uploadBytes(fileRef, file);
+                    const url = await getDownloadURL(fileRef);
+                    const ext = file.name.split('.').pop().toLowerCase();
+                    attachments.push({ name: file.name, url, type: ext, size: file.size });
+                }
+                if (progressEl) progressEl.classList.add('hidden');
+            }
+
             const studentIds = _assignmentSelectedStudents.map(s => s.uid);
             const studentNames = _assignmentSelectedStudents.map(s => s.name);
             await addDoc(collection(db, "assignments"), {
-                title, description, dueDate, teacherId: currentUser.uid, teacherName: currentTeacherName,
-                studentIds, studentNames, createdAt: serverTimestamp(), status: 'active'
+                title, description, dueDate, batch,
+                teacherId: currentUser.uid, teacherName: currentTeacherName,
+                studentIds, studentNames, attachments,
+                createdAt: serverTimestamp(), status: 'active'
             });
             showNotification("Assignment posted successfully!", "success");
             if (titleInput) titleInput.value = '';
             if (descInput) descInput.value = '';
             if (dueDateInput) dueDateInput.value = '';
             _assignmentSelectedStudents = [];
+            _assignmentSelectedFiles = [];
             renderAssignmentSelectedStudents();
+            renderAssignmentFileList();
             if (assignmentModal) assignmentModal.classList.remove('active');
-        } catch (error) { showNotification(`Error: ${error.message}`, "error"); }
-        finally { postBtn.disabled = false; postBtn.textContent = 'Post Assignment'; }
+        } catch (error) {
+            console.error("Error posting assignment:", error);
+            showNotification(`Error: ${error.message}`, "error");
+            if (progressEl) progressEl.classList.add('hidden');
+        }
+        finally { postBtn.disabled = false; postBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" style="vertical-align:-2px;margin-right:6px;"><path d="M15.854.146a.5.5 0 0 1 .11.54l-5.819 14.547a.5.5 0 0 1-.928.021L6.5 10.217l-4.996-2.717a.5.5 0 0 1 .021-.928L16.394.036a.5.5 0 0 1 .46.11z"/></svg> Post Assignment'; }
     });
 
     // Tab buttons
@@ -1287,6 +1440,20 @@ function loadAssignmentHistory() {
                                     Mark Complete
                                 </button>` : ''}
                         </div>
+                        ${(a.attachments && a.attachments.length > 0) ? `
+                        <div class="assignment-attachments">
+                            ${a.attachments.map(att => {
+                                const isPdf = att.name.toLowerCase().endsWith('.pdf');
+                                const isImage = /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(att.name);
+                                const chipClass = isPdf ? 'pdf-chip' : isImage ? 'img-chip' : '';
+                                const icon = isPdf
+                                    ? '<svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16"><path d="M14 14V4.5L9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2zM9.5 3A1.5 1.5 0 0 0 11 4.5h2V14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h5.5v2z"/></svg>'
+                                    : isImage
+                                    ? '<svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16"><path d="M6.002 5.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0z"/><path d="M2.002 1a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V3a2 2 0 0 0-2-2h-12zm12 1a1 1 0 0 1 1 1v6.5l-3.777-1.947a.5.5 0 0 0-.577.093l-3.71 3.71-2.66-1.772a.5.5 0 0 0-.63.062L1.002 12V3a1 1 0 0 1 1-1h12z"/></svg>'
+                                    : '<svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16"><path d="M4.5 3a2.5 2.5 0 0 1 5 0v9a1.5 1.5 0 0 1-3 0V5a.5.5 0 0 1 1 0v7a.5.5 0 0 0 1 0V3a1.5 1.5 0 1 0-3 0v9a2.5 2.5 0 0 0 5 0V5a.5.5 0 0 1 1 0v7a3.5 3.5 0 1 1-7 0V3z"/></svg>';
+                                return `<a href="${att.url}" target="_blank" rel="noopener" class="attachment-chip ${chipClass}">${icon} ${escapeHTML(att.name)}</a>`;
+                            }).join('')}
+                        </div>` : ''}
                     </div>`;
             }).join('');
 

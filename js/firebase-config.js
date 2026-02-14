@@ -12,6 +12,9 @@ import {
     doc, updateDoc, deleteDoc, orderBy, setDoc, getDoc, getDocs, writeBatch,
     getCountFromServer, limit, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import {
+    getStorage, ref as storageRef, uploadBytes, getDownloadURL
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyBrEYubOCWRP-Dowqo9AvxEGFRea1YQzl4",
@@ -25,15 +28,18 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
+const storage = getStorage(app);
 
 // Re-export everything needed by other modules
 export {
-    app, auth, db,
+    app, auth, db, storage,
     // Auth functions
     createUserWithEmailAndPassword, signInWithEmailAndPassword,
     onAuthStateChanged, signOut,
     // Firestore functions
     collection, addDoc, query, where, onSnapshot,
     doc, updateDoc, deleteDoc, orderBy, setDoc, getDoc, getDocs, writeBatch,
-    getCountFromServer, limit, serverTimestamp
+    getCountFromServer, limit, serverTimestamp,
+    // Storage functions
+    storageRef, uploadBytes, getDownloadURL
 };

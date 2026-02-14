@@ -304,6 +304,21 @@ function renderStudentDayClasses(date) {
         const daysUntilDue = Math.ceil((dueDate - new Date()) / (1000 * 60 * 60 * 24));
         const pillClass = daysUntilDue <= 1 ? 'urgent' : daysUntilDue <= 3 ? 'soon' : 'safe';
         const pillText = daysUntilDue <= 0 ? 'Today' : daysUntilDue === 1 ? '1 day left' : `${daysUntilDue}d left`;
+        const dayAttachmentsHtml = (asn.attachments && asn.attachments.length > 0) ? `
+            <div class="assignment-attachments">
+                ${asn.attachments.map(att => {
+                    const isPdf = att.name.toLowerCase().endsWith('.pdf');
+                    const isImage = /\\.(jpg|jpeg|png|gif|webp|svg)$/i.test(att.name);
+                    const chipClass = isPdf ? 'pdf-chip' : isImage ? 'img-chip' : '';
+                    const icon = isPdf
+                        ? '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16"><path d="M14 14V4.5L9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2zM9.5 3A1.5 1.5 0 0 0 11 4.5h2V14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h5.5v2z"/></svg>'
+                        : isImage
+                        ? '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16"><path d="M6.002 5.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0z"/><path d="M2.002 1a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V3a2 2 0 0 0-2-2h-12zm12 1a1 1 0 0 1 1 1v6.5l-3.777-1.947a.5.5 0 0 0-.577.093l-3.71 3.71-2.66-1.772a.5.5 0 0 0-.63.062L1.002 12V3a1 1 0 0 1 1-1h12z"/></svg>'
+                        : '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16"><path d="M4.5 3a2.5 2.5 0 0 1 5 0v9a1.5 1.5 0 0 1-3 0V5a.5.5 0 0 1 1 0v7a.5.5 0 0 0 1 0V3a1.5 1.5 0 1 0-3 0v9a2.5 2.5 0 0 0 5 0V5a.5.5 0 0 1 1 0v7a3.5 3.5 0 1 1-7 0V3z"/></svg>';
+                    return `<a href="${att.url}" target="_blank" rel="noopener" class="attachment-chip ${chipClass}">${icon} ${escapeHTML(att.name)}</a>`;
+                }).join('')}
+            </div>` : '';
+
         html += `
             <div class="assignment-card">
                 <div class="assignment-header">
@@ -312,6 +327,7 @@ function renderStudentDayClasses(date) {
                 </div>
                 <div class="assignment-due">Due: ${dateDisplay}</div>
                 ${asn.description ? `<div class="assignment-desc">${escapeHTML(asn.description)}</div>` : ''}
+                ${dayAttachmentsHtml}
                 <div class="assignment-teacher">
                     <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" fill="currentColor" viewBox="0 0 16 16"><path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4zm-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10c-2.29 0-3.516.68-4.168 1.332-.678.678-.83 1.418-.832 1.664h10z"/></svg>
                     ${escapeHTML(asn.teacherName || 'Teacher')}
@@ -344,6 +360,21 @@ function renderStudentAssignments() {
         const pillText = daysUntilDue <= 0 ? 'Due today' : daysUntilDue === 1 ? '1 day left' : `${daysUntilDue} days left`;
         const dueText = dueDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', weekday: 'short' });
 
+        const attachmentsHtml = (asn.attachments && asn.attachments.length > 0) ? `
+            <div class="assignment-attachments">
+                ${asn.attachments.map(att => {
+                    const isPdf = att.name.toLowerCase().endsWith('.pdf');
+                    const isImage = /\\.(jpg|jpeg|png|gif|webp|svg)$/i.test(att.name);
+                    const chipClass = isPdf ? 'pdf-chip' : isImage ? 'img-chip' : '';
+                    const icon = isPdf
+                        ? '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16"><path d="M14 14V4.5L9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2zM9.5 3A1.5 1.5 0 0 0 11 4.5h2V14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h5.5v2z"/></svg>'
+                        : isImage
+                        ? '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16"><path d="M6.002 5.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0z"/><path d="M2.002 1a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V3a2 2 0 0 0-2-2h-12zm12 1a1 1 0 0 1 1 1v6.5l-3.777-1.947a.5.5 0 0 0-.577.093l-3.71 3.71-2.66-1.772a.5.5 0 0 0-.63.062L1.002 12V3a1 1 0 0 1 1-1h12z"/></svg>'
+                        : '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16"><path d="M4.5 3a2.5 2.5 0 0 1 5 0v9a1.5 1.5 0 0 1-3 0V5a.5.5 0 0 1 1 0v7a.5.5 0 0 0 1 0V3a1.5 1.5 0 1 0-3 0v9a2.5 2.5 0 0 0 5 0V5a.5.5 0 0 1 1 0v7a3.5 3.5 0 1 1-7 0V3z"/></svg>';
+                    return `<a href="${att.url}" target="_blank" rel="noopener" class="attachment-chip ${chipClass}">${icon} ${escapeHTML(att.name)}</a>`;
+                }).join('')}
+            </div>` : '';
+
         return `
             <div class="assignment-card">
                 <div class="assignment-header">
@@ -352,6 +383,7 @@ function renderStudentAssignments() {
                 </div>
                 <div class="assignment-due">${dueText}</div>
                 ${asn.description ? `<div class="assignment-desc">${escapeHTML(asn.description)}</div>` : ''}
+                ${attachmentsHtml}
                 <div class="assignment-teacher">
                     <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" fill="currentColor" viewBox="0 0 16 16"><path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4zm-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10c-2.29 0-3.516.68-4.168 1.332-.678.678-.83 1.418-.832 1.664h10z"/></svg>
                     ${escapeHTML(asn.teacherName || 'Teacher')}
