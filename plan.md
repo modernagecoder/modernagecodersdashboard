@@ -5,6 +5,36 @@ After a comprehensive audit of the entire dashboard codebase (HTML, CSS, JS, API
 
 ---
 
+## LATEST FIX (2026-02-14): `onSnapshot is not defined` in admin-shared.js
+
+### Bug: Missing `onSnapshot` import causes admin dashboard crash
+
+**Console Errors:**
+```
+Uncaught (in promise) ReferenceError: onSnapshot is not defined
+    at listenForAnnouncements (admin-shared.js:583:5)
+    at initAdminPage (admin.js:148:5)
+
+Uncaught ReferenceError: onSnapshot is not defined
+    at loadAnnouncementsHistory (admin-shared.js:599:5)
+    at openAnnouncementModal (admin-shared.js:536:9)
+```
+
+**Root Cause:** `onSnapshot` was used in `admin-shared.js` (lines 583 and 599) for real-time announcement listeners, but was **never added to the import statement** on line 7 when the announcement feature was moved to this shared module.
+
+**Fix Applied:** Added `onSnapshot` to the Firebase import in `admin-shared.js` line 7:
+```javascript
+// BEFORE (broken):
+import { auth, db, collection, query, where, getDocs, deleteDoc, doc, addDoc, serverTimestamp, updateDoc, orderBy, limit } from './firebase-config.js';
+
+// AFTER (fixed):
+import { auth, db, collection, query, where, getDocs, deleteDoc, doc, addDoc, serverTimestamp, updateDoc, orderBy, limit, onSnapshot } from './firebase-config.js';
+```
+
+**Status: FIXED**
+
+---
+
 ## TABLE OF CONTENTS
 1. [CRITICAL BUGS (App-Breaking)](#1-critical-bugs)
 2. [SECURITY VULNERABILITIES](#2-security-vulnerabilities)
