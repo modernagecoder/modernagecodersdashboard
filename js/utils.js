@@ -3,6 +3,7 @@
 // =============================================================
 
 // --- Constants ---
+export const API_BASE_URL = '/api';
 export const TOTAL_LICENSES = 4;
 export const BUFFER_BEFORE_MIN = 10;
 export const BUFFER_AFTER_MIN = 15;
@@ -259,7 +260,7 @@ export async function getIdToken() {
     const { auth } = await import('./firebase-config.js');
     const user = auth.currentUser;
     if (!user) return null;
-    return user.getIdToken();
+    return await user.getIdToken();
 }
 
 // --- Batch Helpers ---

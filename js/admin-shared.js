@@ -476,7 +476,7 @@ export async function loadInlineStudents(searchQuery = '') {
                         <td colspan="6">
                             <div class="student-edit-form" data-uid="${student.uid}">
                                 <select class="edit-batch-select form-select"><option value="">Add batch...</option></select>
-                                <div class="edit-batch-chips" data-selected='${JSON.stringify(student.batches || [])}'></div>
+                                <div class="edit-batch-chips" data-selected='${escapeHTML(JSON.stringify(student.batches || []))}'></div>
                                 <select class="edit-teacher-select form-select"><option value="">-- Assign Teacher --</option></select>
                                 <button class="btn btn-primary btn-small save-student-edit-btn" style="margin-top:8px;">Save</button>
                             </div>
@@ -500,7 +500,7 @@ export async function loadInlineStudents(searchQuery = '') {
                         <div style="font-size:0.8rem;color:var(--text-muted);">${escapeHTML(student.email)} · Batches: ${escapeHTML(batchNames)}</div>
                         <div class="student-edit-form hidden" data-uid="${student.uid}">
                             <select class="edit-batch-select form-select" style="margin-top:8px;"><option value="">Add batch...</option></select>
-                            <div class="edit-batch-chips" data-selected='${JSON.stringify(student.batches || [])}'></div>
+                            <div class="edit-batch-chips" data-selected='${escapeHTML(JSON.stringify(student.batches || []))}'></div>
                             <select class="edit-teacher-select form-select" style="margin-top:8px;"><option value="">-- Assign Teacher --</option></select>
                             <button class="btn btn-primary btn-small save-student-edit-btn" style="margin-top:8px;">Save</button>
                         </div>
@@ -926,7 +926,7 @@ export function loadInlineAnnouncements(searchQuery = '') {
                     <p class="base-announcement-text">${escapeHTML(a.text || a.message || '')}</p>
                     <div class="base-announcement-meta">
                         <span><i class="fas fa-user"></i> ${escapeHTML(a.createdByName || 'Admin')}</span>
-                        <span><i class="fas fa-clock"></i> ${a.createdAt ? new Date(a.createdAt.seconds * 1000).toLocaleString() : '—'}</span>
+                        <span><i class="fas fa-clock"></i> ${a.createdAt?.seconds ? new Date(a.createdAt.seconds * 1000).toLocaleString() : a.createdAt?._seconds ? new Date(a.createdAt._seconds * 1000).toLocaleString() : '—'}</span>
                     </div>
                 </div>
                 <div class="base-announcement-actions">
@@ -1015,12 +1015,18 @@ export function loadAnnouncementsHistory() {
     loadInlineAnnouncements();
 }
 
+// ─── CLEANUP ────────────────────────────────────────────────
+export function cleanupAdminSharedListeners() {
+    if (_announcementUnsub) { _announcementUnsub(); _announcementUnsub = null; }
+    if (_inlineAnnouncementUnsub) { _inlineAnnouncementUnsub(); _inlineAnnouncementUnsub = null; }
+}
+
 // ===== TABLE SORTING =====
 export function setupTableSorting() {
     document.querySelectorAll('.sortable-th').forEach(th => {
         th.addEventListener('click', () => {
             const sortKey = th.dataset.sort;
-            const tableId = th.dataset.table;
+            if (!sortKey) return;
             const table = th.closest('table');
             if (!table) return;
 

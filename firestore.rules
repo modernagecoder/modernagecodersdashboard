@@ -212,6 +212,25 @@ service cloud.firestore {
     }
 
     // ============================================
+    // CLASS JOINS COLLECTION (Zoom join tracking)
+    // ============================================
+    match /classJoins/{joinId} {
+      // Teachers and admins can read all join records (for analytics)
+      // Students can read their own join records
+      allow read: if isAuthenticated() && (
+        isTeacherOrAdmin() ||
+        resource.data.studentId == request.auth.uid
+      );
+
+      // Students can create their own join records
+      allow create: if isAuthenticated() &&
+        request.resource.data.studentId == request.auth.uid;
+
+      // No updates or deletes needed
+      allow update, delete: if false;
+    }
+
+    // ============================================
     // DENY ALL OTHER ACCESS
     // ============================================
     match /{document=**} {

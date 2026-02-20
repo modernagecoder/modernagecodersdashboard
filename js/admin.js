@@ -10,7 +10,7 @@ import {
 
 import {
     getLocalDateString, showNotification, debounce, daysOfWeekDisplay,
-    populateBatchDropdown, renderBatchChips, initCssRgbVars, escapeHTML, initSidebar
+    populateBatchDropdown, renderBatchChips, initCssRgbVars, escapeHTML
 } from './utils.js';
 
 import {
@@ -29,7 +29,8 @@ import {
     loadInlineAnnouncements,
     allTeachersData as sharedTeachersData,
     allBatchesData as sharedBatchesData,
-    setupTableSorting
+    setupTableSorting,
+    cleanupAdminSharedListeners
 } from './admin-shared.js';
 
 // --- State ---
@@ -59,7 +60,6 @@ async function getIdToken() {
 export async function initAdminPage(user, userData) {
     currentUser = user;
     initCssRgbVars();
-    initSidebar(); // Bug #37
 
     // Cache DOM references
     adminTotalStudents = document.getElementById('admin-total-students');
@@ -142,7 +142,12 @@ export async function initAdminPage(user, userData) {
     // Enable column sorting on tables
     setupTableSorting();
 
-    showNotification(`Welcome, Admin ${user.originalDisplayName}! Dashboard loaded.`, 'success');
+    // Cleanup listeners on page unload to prevent memory leaks
+    window.addEventListener('beforeunload', () => {
+        cleanupAdminSharedListeners();
+    });
+
+    showNotification(`Welcome, Admin ${user.displayName || userData?.displayName || user.email}! Dashboard loaded.`, 'success');
 }
 
 // =============================================

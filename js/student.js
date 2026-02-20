@@ -65,6 +65,7 @@ export async function initStudentDashboard(user, userData) {
         });
         updateStudentStats();
         renderStudentUpcomingClasses();
+        renderStudentRecordings();
         const selectedDate = window._studentCalendar?.selectedDates?.[0];
         if (selectedDate) renderStudentDayClasses(selectedDate);
     });
@@ -115,6 +116,22 @@ export async function initStudentDashboard(user, userData) {
     // --- Setup submission modal ---
     setupSubmissionModal(user);
 
+    // --- Zoom join tracking (event delegation) ---
+    document.addEventListener('click', (e) => {
+        const joinBtn = e.target.closest('.btn-join-zoom');
+        if (!joinBtn) return;
+        const slotId = joinBtn.dataset.slotId;
+        const topic = joinBtn.dataset.topic || 'Class';
+        // Fire-and-forget: track the join click
+        addDoc(collection(db, "classJoins"), {
+            slotId,
+            studentId: user.uid,
+            studentName: user.displayName || 'Student',
+            topic,
+            joinedAt: serverTimestamp()
+        }).catch(err => console.error('Failed to track join:', err));
+    });
+
     // --- Real-time listener for announcements (Bug #33) ---
     const studentNotificationBell = document.getElementById('student-notification-bell');
     const studentNotificationDot = document.getElementById('student-notification-dot');
@@ -141,7 +158,7 @@ export async function initStudentDashboard(user, userData) {
         });
     }
 
-    onSnapshot(query(collection(db, "announcements"), orderBy("createdAt", "desc"), limit(10)), (snapshot) => {
+    window._unsubStudentAnnouncements = onSnapshot(query(collection(db, "announcements"), orderBy("createdAt", "desc"), limit(10)), (snapshot) => {
         const announcements = [];
         snapshot.forEach(d => announcements.push({ id: d.id, ...d.data() }));
 
@@ -151,7 +168,7 @@ export async function initStudentDashboard(user, userData) {
         }
 
         const lastSeen = parseInt(localStorage.getItem('studentLastSeenAnnouncement') || '0');
-        const hasNew = announcements.some(a => a.createdAt && (a.createdAt.seconds * 1000) > lastSeen);
+        const hasNew = announcements.some(a => a.createdAt?.seconds && (a.createdAt.seconds * 1000) > lastSeen);
         if (studentNotificationDot) {
             if (hasNew) studentNotificationDot.classList.remove('hidden');
             else studentNotificationDot.classList.add('hidden');
@@ -160,6 +177,14 @@ export async function initStudentDashboard(user, userData) {
 
     // --- Load attendance ---
     await renderStudentAttendance(user);
+
+    // Cleanup Firestore listeners on page unload
+    window.addEventListener('beforeunload', () => {
+        if (window._unsubStudentClasses) window._unsubStudentClasses();
+        if (window._unsubStudentAssignments) window._unsubStudentAssignments();
+        if (window._unsubStudentSubmissions) window._unsubStudentSubmissions();
+        if (window._unsubStudentAnnouncements) window._unsubStudentAnnouncements();
+    });
 }
 
 function populateStudentProfile(user) {
@@ -239,6 +264,34 @@ function updateStudentStats() {
     const pendingAssignments = allAssignments.filter(a => a.dueDate >= todayStr);
     const pendingEl = document.getElementById('student-pending-assignments');
     if (pendingEl) pendingEl.textContent = pendingAssignments.length;
+
+    // --- Classes taken tracker ---
+    const MONTHLY_TARGET = 8;
+    const monthStart = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-01`;
+    const monthEnd = getLocalDateString(new Date(today.getFullYear(), today.getMonth() + 1, 0));
+
+    const monthlyTaken = allClasses.filter(c =>
+        c.status === 'completed' && c.date >= monthStart && c.date <= monthEnd
+    ).length;
+
+    const totalTaken = allClasses.filter(c => c.status === 'completed').length;
+
+    const monthlyEl = document.getElementById('student-monthly-classes');
+    const monthlyProgressEl = document.getElementById('student-monthly-progress');
+    const monthlySubEl = document.getElementById('student-monthly-remaining');
+    if (monthlyEl) monthlyEl.textContent = monthlyTaken;
+    if (monthlyProgressEl) {
+        const pct = Math.min(100, Math.round((monthlyTaken / MONTHLY_TARGET) * 100));
+        monthlyProgressEl.style.width = `${pct}%`;
+        monthlyProgressEl.className = `tracker-bar${pct >= 100 ? ' done' : pct >= 50 ? ' halfway' : ''}`;
+    }
+    if (monthlySubEl) {
+        const rem = Math.max(0, MONTHLY_TARGET - monthlyTaken);
+        monthlySubEl.textContent = rem === 0 ? 'Monthly target reached!' : `${rem} class${rem !== 1 ? 'es' : ''} remaining`;
+    }
+
+    const totalEl = document.getElementById('student-total-classes');
+    if (totalEl) totalEl.textContent = totalTaken;
 }
 
 function renderStudentUpcomingClasses() {
@@ -263,6 +316,14 @@ function renderStudentUpcomingClasses() {
         const displayStart = calculateDisplayStartTime(cls.startTime);
         const displayEnd = calculateDisplayEndTime(cls.startTime, cls.endTime);
         const batchLabel = (cls.batches || []).filter(b => !b.startsWith('__')).join(', ');
+        const zoomHtml = cls.zoomLink ? `
+            <div class="zoom-join-section">
+                <a href="${escapeHTML(cls.zoomLink)}" target="_blank" rel="noopener" class="btn-join-zoom" data-slot-id="${cls.id}" data-topic="${escapeHTML(cls.topic || 'Class')}">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M0 5a2 2 0 0 1 2-2h7.5a2 2 0 0 1 1.983 1.738l3.11-1.382A1 1 0 0 1 16 4.269v7.462a1 1 0 0 1-1.406.913l-3.111-1.382A2 2 0 0 1 9.5 13H2a2 2 0 0 1-2-2V5z"/></svg>
+                    Join Meeting
+                </a>
+                ${cls.zoomPasscode ? `<span class="zoom-passcode">Passcode: <strong>${escapeHTML(cls.zoomPasscode)}</strong></span>` : ''}
+            </div>` : '';
         return `
             <div class="class-event-card">
                 <div class="event-time">${dateDisplay} \u00B7 ${displayStart} \u2013 ${displayEnd}</div>
@@ -272,6 +333,7 @@ function renderStudentUpcomingClasses() {
                     ${escapeHTML(cls.teacherName || 'Teacher')}
                 </div>
                 ${batchLabel ? `<div class="event-batch-badge">${batchLabel}</div>` : ''}
+                ${zoomHtml}
             </div>
         `;
     }).join('');
@@ -306,6 +368,15 @@ function renderStudentDayClasses(date) {
             '<span style="display:inline-flex;align-items:center;gap:3px;color: var(--accent-green); font-size: 0.72rem; font-weight:600;background:rgba(158,206,106,0.15);padding:2px 8px;border-radius:10px;">Completed</span>' :
             '<span style="display:inline-flex;align-items:center;gap:3px;color: var(--accent-secondary); font-size: 0.72rem; font-weight:600;background:rgba(78,205,196,0.15);padding:2px 8px;border-radius:10px;">Scheduled</span>';
 
+        const zoomHtml = cls.zoomLink ? `
+            <div class="zoom-join-section">
+                <a href="${escapeHTML(cls.zoomLink)}" target="_blank" rel="noopener" class="btn-join-zoom" data-slot-id="${cls.id}" data-topic="${escapeHTML(cls.topic || 'Class')}">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M0 5a2 2 0 0 1 2-2h7.5a2 2 0 0 1 1.983 1.738l3.11-1.382A1 1 0 0 1 16 4.269v7.462a1 1 0 0 1-1.406.913l-3.111-1.382A2 2 0 0 1 9.5 13H2a2 2 0 0 1-2-2V5z"/></svg>
+                    Join Meeting
+                </a>
+                ${cls.zoomPasscode ? `<span class="zoom-passcode">Passcode: <strong>${escapeHTML(cls.zoomPasscode)}</strong></span>` : ''}
+            </div>` : '';
+
         html += `
             <div class="class-event-card">
                 <div style="display: flex; justify-content: space-between; align-items: center;">
@@ -317,6 +388,7 @@ function renderStudentDayClasses(date) {
                     <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" viewBox="0 0 16 16"><path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4zm-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10c-2.29 0-3.516.68-4.168 1.332-.678.678-.83 1.418-.832 1.664h10z"/></svg>
                     ${escapeHTML(cls.teacherName || 'Teacher')}
                 </div>
+                ${zoomHtml}
             </div>
         `;
     });
@@ -326,20 +398,7 @@ function renderStudentDayClasses(date) {
         const daysUntilDue = Math.ceil((dueDate - new Date()) / (1000 * 60 * 60 * 24));
         const pillClass = daysUntilDue <= 1 ? 'urgent' : daysUntilDue <= 3 ? 'soon' : 'safe';
         const pillText = daysUntilDue <= 0 ? 'Today' : daysUntilDue === 1 ? '1 day left' : `${daysUntilDue}d left`;
-        const dayAttachmentsHtml = (asn.attachments && asn.attachments.length > 0) ? `
-            <div class="assignment-attachments">
-                ${asn.attachments.map(att => {
-                    const isPdf = att.name.toLowerCase().endsWith('.pdf');
-                    const isImage = /\\.(jpg|jpeg|png|gif|webp|svg)$/i.test(att.name);
-                    const chipClass = isPdf ? 'pdf-chip' : isImage ? 'img-chip' : '';
-                    const icon = isPdf
-                        ? '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16"><path d="M14 14V4.5L9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2zM9.5 3A1.5 1.5 0 0 0 11 4.5h2V14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h5.5v2z"/></svg>'
-                        : isImage
-                        ? '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16"><path d="M6.002 5.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0z"/><path d="M2.002 1a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V3a2 2 0 0 0-2-2h-12zm12 1a1 1 0 0 1 1 1v6.5l-3.777-1.947a.5.5 0 0 0-.577.093l-3.71 3.71-2.66-1.772a.5.5 0 0 0-.63.062L1.002 12V3a1 1 0 0 1 1-1h12z"/></svg>'
-                        : '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16"><path d="M4.5 3a2.5 2.5 0 0 1 5 0v9a1.5 1.5 0 0 1-3 0V5a.5.5 0 0 1 1 0v7a.5.5 0 0 0 1 0V3a1.5 1.5 0 1 0-3 0v9a2.5 2.5 0 0 0 5 0V5a.5.5 0 0 1 1 0v7a3.5 3.5 0 1 1-7 0V3z"/></svg>';
-                    return `<a href="${att.url}" target="_blank" rel="noopener" class="attachment-chip ${chipClass}">${icon} ${escapeHTML(att.name)}</a>`;
-                }).join('')}
-            </div>` : '';
+        const dayAttachmentsHtml = renderAttachments(asn.attachments);
 
         html += `
             <div class="assignment-card">
@@ -359,6 +418,49 @@ function renderStudentDayClasses(date) {
     });
 
     container.innerHTML = html;
+}
+
+function renderStudentRecordings() {
+    const container = document.getElementById('student-recordings-list');
+    if (!container) return;
+
+    const allClasses = window._allStudentClasses || [];
+    const recordings = allClasses
+        .filter(c => c.status === 'completed' && c.recordingLink)
+        .sort((a, b) => (b.date || '').localeCompare(a.date || ''))
+        .slice(0, 30);
+
+    if (recordings.length === 0) {
+        container.innerHTML = '<div class="empty-state" style="padding: 2rem;"><div class="empty-icon" style="font-size:1.5rem; opacity:0.4;">\u2014</div><div>No recordings available yet</div></div>';
+        return;
+    }
+
+    container.innerHTML = recordings.map(cls => {
+        const dateObj = new Date(cls.date.replace(/-/g, '/'));
+        const dateDisplay = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', weekday: 'short' });
+        const displayStart = calculateDisplayStartTime(cls.startTime);
+        const displayEnd = calculateDisplayEndTime(cls.startTime, cls.endTime);
+        return `
+            <div class="recording-card">
+                <div class="recording-info">
+                    <div class="recording-topic">${escapeHTML(cls.topic || 'Class Session')}</div>
+                    <div class="recording-meta">
+                        <span>${dateDisplay}</span>
+                        <span>\u00B7</span>
+                        <span>${displayStart} \u2013 ${displayEnd}</span>
+                    </div>
+                    <div class="recording-teacher">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" fill="currentColor" viewBox="0 0 16 16"><path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4zm-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10c-2.29 0-3.516.68-4.168 1.332-.678.678-.83 1.418-.832 1.664h10z"/></svg>
+                        ${escapeHTML(cls.teacherName || 'Teacher')}
+                    </div>
+                </div>
+                <a href="${escapeHTML(cls.recordingLink)}" target="_blank" rel="noopener" class="btn-watch-recording">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="m11.596 8.697-6.363 3.692c-.54.313-1.233-.066-1.233-.697V4.308c0-.63.692-1.01 1.233-.696l6.363 3.692a.802.802 0 0 1 0 1.393z"/></svg>
+                    Watch
+                </a>
+            </div>
+        `;
+    }).join('');
 }
 
 function renderStudentAssignments() {
@@ -382,20 +484,7 @@ function renderStudentAssignments() {
         const pillText = daysUntilDue <= 0 ? 'Due today' : daysUntilDue === 1 ? '1 day left' : `${daysUntilDue} days left`;
         const dueText = dueDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', weekday: 'short' });
 
-        const attachmentsHtml = (asn.attachments && asn.attachments.length > 0) ? `
-            <div class="assignment-attachments">
-                ${asn.attachments.map(att => {
-                    const isPdf = att.name.toLowerCase().endsWith('.pdf');
-                    const isImage = /\\.(jpg|jpeg|png|gif|webp|svg)$/i.test(att.name);
-                    const chipClass = isPdf ? 'pdf-chip' : isImage ? 'img-chip' : '';
-                    const icon = isPdf
-                        ? '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16"><path d="M14 14V4.5L9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2zM9.5 3A1.5 1.5 0 0 0 11 4.5h2V14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h5.5v2z"/></svg>'
-                        : isImage
-                        ? '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16"><path d="M6.002 5.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0z"/><path d="M2.002 1a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V3a2 2 0 0 0-2-2h-12zm12 1a1 1 0 0 1 1 1v6.5l-3.777-1.947a.5.5 0 0 0-.577.093l-3.71 3.71-2.66-1.772a.5.5 0 0 0-.63.062L1.002 12V3a1 1 0 0 1 1-1h12z"/></svg>'
-                        : '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16"><path d="M4.5 3a2.5 2.5 0 0 1 5 0v9a1.5 1.5 0 0 1-3 0V5a.5.5 0 0 1 1 0v7a.5.5 0 0 0 1 0V3a1.5 1.5 0 1 0-3 0v9a2.5 2.5 0 0 0 5 0V5a.5.5 0 0 1 1 0v7a3.5 3.5 0 1 1-7 0V3z"/></svg>';
-                    return `<a href="${att.url}" target="_blank" rel="noopener" class="attachment-chip ${chipClass}">${icon} ${escapeHTML(att.name)}</a>`;
-                }).join('')}
-            </div>` : '';
+        const attachmentsHtml = renderAttachments(asn.attachments);
 
         const submission = (window._studentSubmissions || {})[asn.id];
         const isSubmitted = !!submission;
@@ -407,16 +496,21 @@ function renderStudentAssignments() {
                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16"><path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/><path d="M7.646 1.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1-.708.708L8.5 2.707V11.5a.5.5 0 0 1-1 0V2.707L5.354 4.854a.5.5 0 1 1-.708-.708l3-3z"/></svg>
                 Submit Homework</button>`;
 
+        const borderColor = pillClass === 'urgent' ? 'var(--accent-red)' : pillClass === 'soon' ? 'var(--accent-yellow)' : 'var(--accent-green)';
+
         return `
-            <div class="assignment-card">
+            <div class="assignment-card" style="border-left-color: ${borderColor};">
                 <div class="assignment-header">
                     <div class="assignment-title">${escapeHTML(asn.title)}</div>
                     <span class="assignment-due-pill ${pillClass}">${pillText}</span>
                 </div>
-                <div class="assignment-due">${dueText}</div>
+                <div class="assignment-due">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" fill="currentColor" viewBox="0 0 16 16" style="vertical-align:-1px;margin-right:3px;"><path d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5zM1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4H1z"/></svg>
+                    Due: ${dueText}
+                </div>
                 ${asn.description ? `<div class="assignment-desc">${escapeHTML(asn.description)}</div>` : ''}
                 ${attachmentsHtml}
-                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-top: 6px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-top: 8px;">
                     <div class="assignment-teacher">
                         <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" fill="currentColor" viewBox="0 0 16 16"><path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4zm-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10c-2.29 0-3.516.68-4.168 1.332-.678.678-.83 1.418-.832 1.664h10z"/></svg>
                         ${escapeHTML(asn.teacherName || 'Teacher')}
@@ -551,6 +645,54 @@ function renderAttendanceHeatmap(container, records) {
     }
 
     container.innerHTML = html;
+}
+
+// ─── ATTACHMENT RENDERING HELPERS ────────────────────────────────────
+
+/**
+ * Renders assignment attachments: images as thumbnail cards, others as chips.
+ */
+function renderAttachments(attachments) {
+    if (!attachments || attachments.length === 0) return '';
+
+    const images = attachments.filter(att => /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(att.name));
+    const others = attachments.filter(att => !/\.(jpg|jpeg|png|gif|webp|svg)$/i.test(att.name));
+
+    let html = '<div class="assignment-attachments">';
+
+    // Image previews grid
+    if (images.length > 0) {
+        html += `<div class="assignment-image-grid">`;
+        images.forEach(att => {
+            html += `
+                <a href="${att.url}" target="_blank" rel="noopener" class="assignment-image-card" title="${escapeHTML(att.name)}">
+                    <div class="assignment-image-wrapper">
+                        <img src="${att.url}" alt="${escapeHTML(att.name)}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+                        <div class="img-fallback" style="display:none;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16"><path d="M6.002 5.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0z"/><path d="M2.002 1a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V3a2 2 0 0 0-2-2h-12zm12 1a1 1 0 0 1 1 1v6.5l-3.777-1.947a.5.5 0 0 0-.577.093l-3.71 3.71-2.66-1.772a.5.5 0 0 0-.63.062L1.002 12V3a1 1 0 0 1 1-1h12z"/></svg>
+                            <span>Image</span>
+                        </div>
+                    </div>
+                    <div class="assignment-image-caption">${escapeHTML(att.name)}</div>
+                </a>`;
+        });
+        html += `</div>`;
+    }
+
+    // Other attachments as chips
+    if (others.length > 0) {
+        others.forEach(att => {
+            const isPdf = att.name.toLowerCase().endsWith('.pdf');
+            const chipClass = isPdf ? 'pdf-chip' : '';
+            const icon = isPdf
+                ? '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16"><path d="M14 14V4.5L9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2zM9.5 3A1.5 1.5 0 0 0 11 4.5h2V14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h5.5v2z"/></svg>'
+                : '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16"><path d="M4.5 3a2.5 2.5 0 0 1 5 0v9a1.5 1.5 0 0 1-3 0V5a.5.5 0 0 1 1 0v7a.5.5 0 0 0 1 0V3a1.5 1.5 0 1 0-3 0v9a2.5 2.5 0 0 0 5 0V5a.5.5 0 0 1 1 0v7a3.5 3.5 0 1 1-7 0V3z"/></svg>';
+            html += `<a href="${att.url}" target="_blank" rel="noopener" class="attachment-chip ${chipClass}">${icon} ${escapeHTML(att.name)}</a>`;
+        });
+    }
+
+    html += '</div>';
+    return html;
 }
 
 // ─── SUBMISSION MODAL LOGIC ──────────────────────────────────────────
